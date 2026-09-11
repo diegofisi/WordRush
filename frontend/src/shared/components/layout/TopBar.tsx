@@ -13,6 +13,8 @@ interface TopBarProps {
   context?: ReactNode;
   /** Page-specific chips (penalty, hint) rendered before the global controls. */
   actions?: ReactNode;
+  /** "Salir de la partida", rendered next to the player identity. */
+  leaveAction?: ReactNode;
   playerName?: string;
   playerBadge?: string;
   connectionLabel?: string;
@@ -23,6 +25,7 @@ interface TopBarProps {
 export const TopBar = ({
   context,
   actions,
+  leaveAction,
   playerName,
   playerBadge,
   connectionLabel,
@@ -61,6 +64,7 @@ export const TopBar = ({
         {actions}
         <LangSegmented />
         <ThemeToggle />
+        {leaveAction}
         {playerName ? (
           <div className="flex items-center gap-2.5 pl-1">
             <Avatar name={playerName} tone="accent" size={34} />

@@ -52,6 +52,45 @@ Maximum possible per round: 50 seconds (5 letters × 10). With repeated letters 
 - The hint letter does **not** add the 5 s for a yellow. If you later place it in green, it adds only 5 s.
 - Keeping the hint scores points: see `03-scoring-system.md`.
 
+## Leaving on purpose
+- Every screen has a way out: "Salir de la sala" ("Leave room") in the waiting room and
+  "Salir de la partida" ("Leave game") in the top bar of the game and the results, with a
+  confirmation that says the clock keeps running for the others.
+- Leaving is **not** a disconnection: the seat is freed for good. The stored session stops
+  working, so coming back with it gives "sesión expirada" ("session expired").
+- Mid-round, the round of whoever leaves is closed at once, so the room stops waiting for
+  them: it ends when everybody still in it has finished. They do not appear in that round's
+  breakdown nor in the accumulated table.
+- If the one who leaves was the host, the oldest remaining **connected** player becomes host.
+- The rest of the room is told: the player is greyed out as "Salió" ("Left") in the rivals
+  panel, the feed shows "Bruno salió de la sala" (plus "Ana es ahora anfitrión de la sala"
+  when the host changed) and a short notice appears.
+- If nobody is left in the room it is deleted; if only disconnected players remain, the
+  round ends on the clock and the game is marked finished (same rule as below).
+
+## One game at a time
+A browser holds **one** session (`wordrush.session` in `localStorage`), so it can be in one
+room at a time. There is never a doubt about "which game do I go back to".
+
+- **Home page with a live session.** Opening `/` first tries to re-enter the stored room.
+  If it is still alive (waiting room, playing or between rounds), the create and join forms
+  are not shown: a "Tienes una partida en curso" ("You have a game in progress") card takes
+  their place with the room code, what is going on in it and two actions: **Reanudar**
+  ("Resume"), which goes to the right screen, and **Abandonar la partida** ("Leave it"),
+  which frees the seat and brings back the normal home page.
+- **Invitation link with a live session** (`/?code=XXXX`). The same card, with one extra
+  line: "Abandónala para entrar en XXXX" ("Leave it to join XXXX"). Leaving shows the
+  reduced invite view for XXXX.
+- **A dead session never nags.** If re-entering fails (the room is gone, the game finished,
+  the token no longer works), the session is dropped silently and the ordinary home page is
+  shown. The "sesión expirada" notice is only for somebody who was thrown out of a room, not
+  for a plain visit to the home page.
+- **Creating or joining with a live session is refused**, both in the client and in the
+  server (`already_in_room`). The screens above make it unreachable; the check is the net.
+- **Two tabs, one session.** The newest tab to re-enter takes the seat. The older one gets a
+  full-screen "Esta partida está abierta en otra pestaña" ("This game is open in another
+  tab") notice with a "Usar esta pestaña" ("Use this tab") button that takes the seat back.
+
 ## Disconnections and room lifetime
 - The player's session is stored in the browser (`localStorage`). If they close the tab or lose internet and come back while the game is still running, they re-enter in their place with their board and their clock exactly as they were (the clock does not stop for a disconnection).
 - If they come back when the game has already finished or the room no longer exists, they see a "sesión expirada" ("session expired") message and go back to the start.

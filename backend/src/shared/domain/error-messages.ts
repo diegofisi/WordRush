@@ -17,6 +17,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   hint_already_used: 'You already used your hint this round',
   cooldown: 'Too fast, wait a moment',
   not_in_room: 'You are not in a room',
+  already_in_room: 'You are already in another room; leave it first',
   session_expired: 'Your session has expired',
   internal: 'Unexpected server error',
 };

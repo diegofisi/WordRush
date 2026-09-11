@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 2;
+export const CONTRACT_VERSION = 3;
 
 export type Language = 'es' | 'en';
 export type TileColor = 'green' | 'yellow' | 'gray';
@@ -207,6 +207,7 @@ export type ErrorCode =
   | 'hint_already_used'
   | 'cooldown'
   | 'not_in_room'
+  | 'already_in_room'
   | 'session_expired'
   | 'internal';
 
@@ -302,15 +303,30 @@ export interface SolvedPayload {
   secondsLeft: number;
 }
 
+/** A player gave up their seat for good (`room:leave`), not a disconnection. */
+export interface PlayerLeftPayload {
+  playerId: string;
+  name: string;
+  /** Set when the leaver was the host and the room promoted somebody else. */
+  newHostId: string | null;
+}
+
+/** The same player rejoined from another socket; this one is no longer bound. */
+export interface SessionReplacedPayload {
+  roomCode: string;
+}
+
 export interface ServerToClientEvents {
   'lobby:update': (lobby: LobbyState) => void;
   'round:start': (round: RoundState) => void;
   'player:progress': (progress: PlayerProgress) => void;
   'player:solved': (payload: SolvedPayload) => void;
   'player:hint': (payload: { playerId: string }) => void;
+  'player:left': (payload: PlayerLeftPayload) => void;
   'time:penalty': (payload: PenaltyPayload) => void;
   'round:end': (payload: RoundEndPayload) => void;
   'game:end': (payload: GameEndPayload) => void;
   'reaction:show': (payload: { playerId: string; emote: Emote }) => void;
+  'session:replaced': (payload: SessionReplacedPayload) => void;
   error: (payload: ErrorPayload) => void;
 }

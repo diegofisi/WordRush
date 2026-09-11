@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import { leaveRoom as emitLeave } from '@/core/session/api/leave-room/leaveRoom';
 import { rejoinRoom } from '@/core/session/api/rejoin-room/rejoinRoom';
 import { ensureConnected, socket } from '@/core/session/lib/socket';
 import {
@@ -62,6 +63,8 @@ interface SessionState {
   bootstrapped: boolean;
   /** A stored session was dropped because its room ended or vanished. */
   expired: boolean;
+  /** The same player rejoined from another tab; this one lost the socket seat. */
+  replaced: boolean;
 }
 
 interface SessionActions {
@@ -70,8 +73,18 @@ interface SessionActions {
   clearSession: (options?: { expired?: boolean }) => void;
   dismissExpired: () => void;
   markBootstrapped: () => void;
-  /** Re-emits `room:rejoin` with the stored session (single-flight); clears it on fatal errors. */
-  rejoin: (options?: { initial?: boolean }) => Promise<FullState | null>;
+  /** Emits `room:leave` and forgets the session regardless of the server's answer. */
+  leaveRoom: () => Promise<void>;
+  /** True while a stored session still belongs to a room that has not finished. */
+  hasLiveSession: () => boolean;
+  /** Takes the seat back in this tab after a `session:replaced`. */
+  resumeHere: () => Promise<FullState | null>;
+  /**
+   * Re-emits `room:rejoin` with the stored session (single-flight); clears it
+   * on fatal errors. `quiet` drops a dead session without the expiry notice,
+   * for a plain visit to the home page.
+   */
+  rejoin: (options?: { initial?: boolean; quiet?: boolean }) => Promise<FullState | null>;
 }
 
 let bound = false;
@@ -83,6 +96,7 @@ export const useSessionStore = create<SessionState & SessionActions>((set, get) 
   snapshot: null,
   bootstrapped: false,
   expired: false,
+  replaced: false,
 
   bind: () => {
     if (bound) return;
@@ -94,6 +108,7 @@ export const useSessionStore = create<SessionState & SessionActions>((set, get) 
       if (get().session) void get().rejoin();
     });
     socket.on('disconnect', () => set({ connection: 'disconnected' }));
+    socket.on('session:replaced', () => set({ replaced: true }));
     socket.on('connect_error', () => set({ connection: 'disconnected' }));
     socket.on('error', (payload) => {
       toast.error(payload.code);
@@ -106,19 +121,36 @@ export const useSessionStore = create<SessionState & SessionActions>((set, get) 
   applyAck: (ack, fallbackName) => {
     const session = toStoredSession(ack, fallbackName);
     writeSession(session);
-    set({ session, snapshot: ack.state, expired: false });
+    set({ session, snapshot: ack.state, expired: false, replaced: false });
   },
 
   clearSession: ({ expired = false } = {}) => {
     writeSession(null);
-    set({ session: null, snapshot: null, expired });
+    set({ session: null, snapshot: null, expired, replaced: false });
+  },
+
+  leaveRoom: async () => {
+    // Forget first: nothing must render "home with a live session" while the
+    // ack travels, and the seat is given up whatever the server answers.
+    get().clearSession();
+    await emitLeave();
+  },
+
+  hasLiveSession: () => {
+    const { session, snapshot } = get();
+    return Boolean(session && snapshot && snapshot.lobby.status !== 'finished');
+  },
+
+  resumeHere: () => {
+    set({ replaced: false });
+    return get().rejoin();
   },
 
   dismissExpired: () => set({ expired: false }),
 
   markBootstrapped: () => set({ bootstrapped: true }),
 
-  rejoin: ({ initial = false } = {}) => {
+  rejoin: ({ initial = false, quiet = false } = {}) => {
     if (rejoinInFlight) return rejoinInFlight;
     const session = get().session;
     if (!session) return Promise.resolve(null);
@@ -129,7 +161,7 @@ export const useSessionStore = create<SessionState & SessionActions>((set, get) 
       if (result.ok) {
         // Coming back to a game that already ended is a dead session, not a seat.
         if (initial && result.value.state.lobby.status === 'finished') {
-          get().clearSession({ expired: true });
+          get().clearSession({ expired: !quiet });
           return null;
         }
         get().applyAck(result.value, session.name);
@@ -139,13 +171,13 @@ export const useSessionStore = create<SessionState & SessionActions>((set, get) 
       // A session that cannot be restored must never trap the user on a
       // guarded route: drop it and say so on the home page.
       if (EXPIRED_CODES.has(result.error.code) || timedOut) {
-        get().clearSession({ expired: true });
+        get().clearSession({ expired: !quiet });
         return null;
       }
       if (FATAL_CODES.has(result.error.code) || result.error.code === 'invalid_payload') {
         get().clearSession();
       }
-      toast.error(result.error.code);
+      if (!quiet) toast.error(result.error.code);
       return null;
     })().finally(() => {
       rejoinInFlight = null;

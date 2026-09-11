@@ -7,7 +7,7 @@ export interface PositionCharge {
   hinted: boolean;
 }
 
-export type FinishReason = 'solved' | 'attempts' | 'timeout';
+export type FinishReason = 'solved' | 'attempts' | 'timeout' | 'left';
 
 /**
  * What the hint picker resolved internally. The position stays on the server:

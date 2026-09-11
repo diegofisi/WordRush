@@ -5,6 +5,7 @@ import { RoomTickerService } from './application/services/room-ticker.service';
 import { RoundLifecycleService } from './application/services/round-lifecycle.service';
 import { RoundSchedulerService } from './application/services/round-scheduler.service';
 import { EndRoundUseCase } from './application/use-cases/end-round.use-case';
+import { SettleRoundUseCase } from './application/use-cases/settle-round.use-case';
 import { StartGameUseCase } from './application/use-cases/start-game.use-case';
 import { StartRoundUseCase } from './application/use-cases/start-round.use-case';
 import { SubmitGuessUseCase } from './application/use-cases/submit-guess.use-case';
@@ -23,7 +24,8 @@ import { UseHintUseCase } from './application/use-cases/use-hint.use-case';
     TickRoomsUseCase,
     SubmitGuessUseCase,
     UseHintUseCase,
+    SettleRoundUseCase,
   ],
-  exports: [StartGameUseCase, SubmitGuessUseCase, UseHintUseCase],
+  exports: [StartGameUseCase, SubmitGuessUseCase, UseHintUseCase, SettleRoundUseCase],
 })
 export class GameModule {}

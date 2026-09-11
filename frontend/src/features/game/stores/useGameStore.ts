@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import { socket } from '@/core/session/lib/socket';
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
+import { getT } from '@/shared/i18n';
 import {
   MAX_ATTEMPTS,
   ROOM_LIMITS,
@@ -16,6 +17,8 @@ import {
   type RoundState,
   type SelfState,
 } from '@/shared/contract';
+
+import { toast } from '@/shared/stores/useToastStore';
 
 import type { FeedEvent, GainChip, ReactionBubble, RosterEntry } from '../models/game.model';
 
@@ -43,6 +46,8 @@ interface GameState {
   me: SelfState | null;
   /** Everyone's colours-only progress, keyed by player id (includes me). */
   players: Record<string, PlayerProgress>;
+  /** Players who gave up their seat this round: id -> name, kept for the panel. */
+  left: Record<string, string>;
   solvedCount: number;
   feed: FeedEvent[];
   reactions: Record<string, ReactionBubble>;
@@ -85,6 +90,12 @@ const roundInfoOf = (round: RoundState): RoundInfo => ({
   hintAvailable: round.hintAvailable,
 });
 
+/** Roster entries rebuilt from the players who left, so their names survive. */
+const leftRoster = (left: Record<string, string>): Record<string, RosterEntry> =>
+  Object.fromEntries(
+    Object.entries(left).map(([id, name]) => [id, { name, connected: false }]),
+  );
+
 const rosterOf = (lobby: LobbyState): Record<string, RosterEntry> =>
   Object.fromEntries(
     lobby.players.map((player) => [player.id, { name: player.name, connected: player.connected }]),
@@ -98,6 +109,7 @@ const initialState: GameState = {
   myId: null,
   me: null,
   players: {},
+  left: {},
   solvedCount: 0,
   feed: [],
   reactions: {},
@@ -134,6 +146,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       round: roundInfoOf(round),
       me: round.me,
       players: Object.fromEntries(round.players.map((player) => [player.playerId, player])),
+      left: {},
       solvedCount: round.players.filter((player) => player.solved).length,
       feed: [],
       reactions: {},
@@ -153,12 +166,12 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
     if (snapshot.round) {
       applyRound(snapshot.round, snapshot.lobby.status === 'playing' ? 'playing' : 'ended');
     } else {
-      set({ status: 'idle', round: null, me: null, players: {} });
+      set({ status: 'idle', round: null, me: null, players: {}, left: {} });
     }
   };
 
   const onProgress = (progress: PlayerProgress) => {
-    const { myId, announced } = get();
+    const { myId, announced, left } = get();
     set((state) => ({ players: { ...state.players, [progress.playerId]: progress } }));
 
     if (progress.playerId === myId) {
@@ -190,7 +203,13 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       }));
       pushFeed({ kind: 'greens', playerId: progress.playerId, greens: progress.greens });
     }
-    if (progress.finished && !progress.solved && !announced.finished.includes(progress.playerId)) {
+    // Whoever left already has their own feed line; do not also call it a timeout.
+    if (
+      progress.finished &&
+      !progress.solved &&
+      !(progress.playerId in left) &&
+      !announced.finished.includes(progress.playerId)
+    ) {
       set((state) => ({
         announced: {
           ...state.announced,
@@ -269,8 +288,30 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       socket.on('round:end', () => set({ status: 'ended', draft: '' }));
       socket.on('game:end', () => set({ status: 'ended', draft: '' }));
       socket.on('lobby:update', (lobby) =>
-        set({ roster: rosterOf(lobby), settings: lobby.settings }),
+        set((state) => ({
+          // Whoever left is no longer in the room; keep their name so the panel
+          // and the feed can still show who they were.
+          roster: { ...leftRoster(state.left), ...rosterOf(lobby) },
+          settings: lobby.settings,
+        })),
       );
+      socket.on('player:left', (payload) => {
+        const t = getT();
+        set((state) => ({
+          left: { ...state.left, [payload.playerId]: payload.name },
+          roster: {
+            ...state.roster,
+            [payload.playerId]: { name: payload.name, connected: false },
+          },
+        }));
+        pushFeed({ kind: 'left', playerId: payload.playerId });
+        if (payload.playerId !== get().myId) toast.info(t.game.leftToast(payload.name));
+        if (payload.newHostId) {
+          const hostName = get().roster[payload.newHostId]?.name;
+          pushFeed({ kind: 'new-host', playerId: payload.newHostId });
+          if (hostName) toast.info(t.game.newHostToast(hostName));
+        }
+      });
 
       const current = useSessionStore.getState().snapshot;
       if (current) hydrate(current);

@@ -39,6 +39,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const myId = useGameStore((state) => state.myId);
   const me = useGameStore((state) => state.me);
   const players = useGameStore((state) => state.players);
+  const left = useGameStore((state) => state.left);
   const solvedCount = useGameStore((state) => state.solvedCount);
   const feed = useGameStore((state) => state.feed);
   const reactions = useGameStore((state) => state.reactions);
@@ -70,7 +71,12 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
       Object.values(players)
         .filter((player) => player.playerId !== myId)
         .map((player) =>
-          toRivalViewModel(player, roster[player.playerId], round?.initialSeconds ?? 0),
+          toRivalViewModel(
+            player,
+            roster[player.playerId],
+            round?.initialSeconds ?? 0,
+            player.playerId in left,
+          ),
         )
         .sort((first, second) => {
           if (first.status === 'solved' && second.status === 'solved') {
@@ -78,9 +84,12 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
           }
           if (first.status === 'solved') return -1;
           if (second.status === 'solved') return 1;
+          // Whoever left drops to the bottom of the panel.
+          if (first.status === 'left') return 1;
+          if (second.status === 'left') return -1;
           return 0;
         }),
-    [players, myId, roster, round?.initialSeconds],
+    [players, myId, roster, left, round?.initialSeconds],
   );
 
   const rivalClocks = useMemo(() => {

@@ -26,6 +26,8 @@
 | Session in localStorage and automatic re-entry while the game is still running (2026-09-11) | Closing the tab or losing internet must not take you out of the game. |
 | Room lifetime: 10 min empty in the lobby, 5 min after finishing; no new round if nobody is connected (2026-09-11) | Memory hygiene; the real cost is negligible. |
 | Interface language selector (ES/EN) and theme selector (light/dark) visible in the top bar of every screen | They were missing from the design; the user asked for them on 2026-09-11. The interface language is independent of the language of the room's words. |
+| Leaving a room is explicit and final (2026-09-11): "Salir de la partida" in the top bar of the game and the results, with confirmation; the seat is freed, the token stops working, the round no longer waits for the leaver and the host passes to the oldest remaining connected player | A player who walks away must not freeze the round for everybody else, and a seat nobody will come back to must not hold up the room. |
+| One game at a time per browser (2026-09-11): the home page with a live session shows a "partida en curso" card (Resume / Leave it) instead of the create and join forms; creating or joining with a live session is refused by the client and by the server (`already_in_room`); a second tab takes the seat and the older one shows "abierta en otra pestaña" with "Usar esta pestaña" | The session is a single slot. Letting somebody start a second game left the first membership dangling and made "which game do I go back to" an accident. |
 
 ## Discarded ideas
 

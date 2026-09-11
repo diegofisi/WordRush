@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import { RequireSession } from '@/core/session/components/RequireSession';
+import { SessionReplacedOverlay } from '@/core/session/components/SessionReplacedOverlay';
 import { useSessionBootstrap } from '@/core/session/hooks/useSessionBootstrap';
 import { useGameStore } from '@/features/game/stores/useGameStore';
 import { GamePage } from '@/features/game/pages/GamePage';
@@ -64,5 +65,6 @@ export const App = () => (
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
+    <SessionReplacedOverlay />
   </BrowserRouter>
 );

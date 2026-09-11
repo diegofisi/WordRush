@@ -25,6 +25,8 @@ const statusLine = (t: Dictionary, rival: RivalViewModel) => {
       return t.game.outOfAttempts;
     case 'out-of-time':
       return t.game.outOfTime;
+    case 'left':
+      return t.game.left;
     default: {
       const parts = [t.game.attempt(rival.currentAttempt)];
       if (rival.hintUsed) parts.push(t.game.usedHint);

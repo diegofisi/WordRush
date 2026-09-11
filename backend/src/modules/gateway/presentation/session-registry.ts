@@ -4,8 +4,10 @@ import { roomChannel } from './socket.types';
 
 /**
  * playerId -> live socket. A player has at most one socket: binding a new one
- * (rejoin after reload) detaches the previous one so its later disconnect
- * cannot mark the player offline.
+ * (rejoin after reload, or a second tab) detaches the previous one so its
+ * later disconnect cannot mark the player offline. The displaced socket stays
+ * connected but seatless and is told with `session:replaced`, so that tab can
+ * show "open in another tab" and take the seat back by rejoining.
  */
 @Injectable()
 export class SessionRegistry {
@@ -15,7 +17,7 @@ export class SessionRegistry {
     const previous = this.byPlayer.get(playerId);
     if (previous && previous.id !== socket.id) {
       this.detach(previous);
-      previous.disconnect(true);
+      previous.emit('session:replaced', { roomCode });
     }
     socket.data.roomCode = roomCode;
     socket.data.playerId = playerId;

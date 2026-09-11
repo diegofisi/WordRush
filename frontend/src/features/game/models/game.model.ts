@@ -12,7 +12,7 @@ export interface RosterEntry {
   connected: boolean;
 }
 
-export type RivalStatus = 'playing' | 'solved' | 'out-of-attempts' | 'out-of-time';
+export type RivalStatus = 'playing' | 'solved' | 'out-of-attempts' | 'out-of-time' | 'left';
 
 /** A rival as the panel shows it: colours only, never letters. */
 export interface RivalViewModel {
@@ -46,6 +46,8 @@ export type FeedEvent = {
   | { kind: 'low-time' }
   | { kind: 'out-of-attempts' }
   | { kind: 'out-of-time' }
+  | { kind: 'left' }
+  | { kind: 'new-host' }
 );
 
 export interface GainChip {
@@ -68,18 +70,22 @@ export const toRivalViewModel = (
   progress: PlayerProgress,
   roster: RosterEntry | undefined,
   initialSeconds: number,
+  /** They gave up their seat (`room:leave`); the panel keeps them, greyed out. */
+  hasLeft = false,
 ): RivalViewModel => {
-  const status: RivalStatus = progress.solved
-    ? 'solved'
-    : progress.finished
-      ? progress.rows.length >= MAX_ATTEMPTS
-        ? 'out-of-attempts'
-        : 'out-of-time'
-      : 'playing';
+  const status: RivalStatus = hasLeft
+    ? 'left'
+    : progress.solved
+      ? 'solved'
+      : progress.finished
+        ? progress.rows.length >= MAX_ATTEMPTS
+          ? 'out-of-attempts'
+          : 'out-of-time'
+        : 'playing';
   return {
     id: progress.playerId,
     name: roster?.name ?? '?',
-    connected: roster?.connected ?? true,
+    connected: hasLeft ? false : (roster?.connected ?? true),
     // Defensive: the contract has no letters for rivals, and we never keep any.
     rows: progress.rows.map((row) => [...row]),
     currentAttempt: Math.min(MAX_ATTEMPTS, progress.rows.length + 1),

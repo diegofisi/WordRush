@@ -58,7 +58,9 @@ Client → server (all payloads validated by class-validator DTOs):
 | Event | Payload | Result |
 |---|---|---|
 | `room:create` | `{ name, language, initialSeconds, rounds, capacity, hintEnabled }` | `{ roomCode, playerId }` |
-| `room:join` | `{ roomCode, name }` | `{ playerId, lobby }` or error `room_full` / `room_not_found` / `game_in_progress` |
+| `room:join` | `{ roomCode, name }` | `{ playerId, lobby }` or error `room_full` / `room_not_found` / `game_in_progress` / `already_in_room` |
+| `room:rejoin` | `{ roomCode, playerId, token }` | full state, or `room_not_found` / `session_expired` |
+| `room:leave` | — | frees the seat for good; broadcasts `player:left` + `lobby:update` |
 | `room:ready` | `{ ready: boolean }` | broadcast `lobby:update` |
 | `room:start` | — (host only) | broadcast `round:start` |
 | `game:guess` | `{ word }` | ack `{ colors[5], secondsGained, solved }` + broadcasts below |
@@ -77,6 +79,8 @@ Server → client:
 | `round:end` | `{ word, breakdown[], accumulated[] }` | breakdown fields = table in `03-*` |
 | `game:end` | `{ final[] }` | with tie-breaks applied |
 | `reaction:show` | `{ playerId, emote }` | |
+| `player:left` | `{ playerId, name, newHostId }` | somebody used `room:leave`; `newHostId` when the host changed |
+| `session:replaced` | `{ roomCode }` | the same player rejoined from another socket; this one is seatless |
 | `error` | `{ code, message }` | codes from `ErrorMessages` |
 
 Timers are server-side. The client receives absolute timestamps and

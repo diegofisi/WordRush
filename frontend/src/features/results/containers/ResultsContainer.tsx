@@ -49,9 +49,9 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
 
   if (!results) return <PageLoading title={t.results.waitingForRound} />;
 
-  const newGame = async () => {
-    await leaveRoom();
+  const newGame = () => {
     navigate(PATHS.home, { replace: true });
+    void leaveRoom();
   };
 
   const winner = results.standings[0] ?? null;
@@ -67,7 +67,7 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
                 {winner.isMe ? t.results.youWin : t.results.winner(winner.name)}
               </span>
             </div>
-            <Button size="lg" onClick={() => void newGame()}>
+            <Button size="lg" onClick={newGame}>
               {t.common.newGame}
             </Button>
           </div>

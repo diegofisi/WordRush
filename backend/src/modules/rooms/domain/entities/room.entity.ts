@@ -63,14 +63,18 @@ export class Room {
     this.players.push(player);
   }
 
-  /** Removes a player; if they were host, the oldest remaining player takes over. */
+  /**
+   * Removes a player; if they were host, the oldest remaining **connected**
+   * player takes over (the oldest of all, when nobody is connected).
+   */
   removePlayer(id: string): Player | undefined {
     const index = this.players.findIndex((p) => p.id === id);
     if (index === -1) return undefined;
     const [removed] = this.players.splice(index, 1);
     if (removed.isHost && this.players.length > 0) {
-      const oldest = [...this.players].sort((a, b) => a.joinedAt - b.joinedAt)[0];
-      oldest.isHost = true;
+      const byAge = [...this.players].sort((a, b) => a.joinedAt - b.joinedAt);
+      const heir = byAge.find((p) => p.connected) ?? byAge[0];
+      heir.isHost = true;
     }
     return removed;
   }

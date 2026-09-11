@@ -55,9 +55,9 @@ export const LobbyContainer = () => {
     if (!result.ok) toast.error(result.error.code);
   };
 
-  const leave = async () => {
-    await leaveRoom();
+  const leave = () => {
     navigate(PATHS.home, { replace: true });
+    void leaveRoom();
   };
 
   return (
@@ -82,7 +82,7 @@ export const LobbyContainer = () => {
           starting={starting}
           onToggleReady={() => void toggleReady()}
           onStart={() => void start()}
-          onLeave={() => void leave()}
+          onLeave={leave}
         />
       </div>
       <ScoringCard t={t} />

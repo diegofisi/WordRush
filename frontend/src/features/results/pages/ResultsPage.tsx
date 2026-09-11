@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 
+import { LeaveGameAction } from '@/core/session/components/LeaveGameAction';
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { RoomContext } from '@/shared/components/layout/RoomContext';
 import { TopBar } from '@/shared/components/layout/TopBar';
@@ -50,6 +51,7 @@ export const ResultsPage = () => {
           ) : null
         }
         actions={<NextRoundCountdown />}
+        leaveAction={<LeaveGameAction />}
         playerName={session?.name}
         connectionLabel={connection === 'disconnected' ? t.common.reconnecting : undefined}
       />

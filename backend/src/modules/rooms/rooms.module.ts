@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { RoomJanitorService } from './application/services/room-janitor.service';
 import { CreateRoomUseCase } from './application/use-cases/create-room.use-case';
+import { EnsureNotInRoomUseCase } from './application/use-cases/ensure-not-in-room.use-case';
 import { JoinRoomUseCase } from './application/use-cases/join-room.use-case';
 import { LeaveRoomUseCase } from './application/use-cases/leave-room.use-case';
 import { MarkDisconnectedUseCase } from './application/use-cases/mark-disconnected.use-case';
@@ -19,6 +20,7 @@ import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-
     SetReadyUseCase,
     LeaveRoomUseCase,
     MarkDisconnectedUseCase,
+    EnsureNotInRoomUseCase,
   ],
   exports: [
     ROOM_REPOSITORY,
@@ -28,6 +30,7 @@ import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-
     SetReadyUseCase,
     LeaveRoomUseCase,
     MarkDisconnectedUseCase,
+    EnsureNotInRoomUseCase,
   ],
 })
 export class RoomsModule {}

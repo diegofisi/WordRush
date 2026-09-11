@@ -60,6 +60,18 @@ const Body = ({ t, event }: { t: Dictionary; event: FeedEvent }) => {
           {name} {t.game.feedOutOfTime}
         </span>
       );
+    case 'left':
+      return (
+        <span>
+          {name} {t.game.feedLeft}
+        </span>
+      );
+    case 'new-host':
+      return (
+        <span>
+          {name} {t.game.feedNewHost}
+        </span>
+      );
   }
 };
 

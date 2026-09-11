@@ -20,6 +20,7 @@ import { CLOCK, type Clock } from '@shared/domain/clock';
 import { DomainException } from '@shared/domain/domain.exception';
 import { OutboundEvent, RoomEventsBus } from '@shared/events/room-events.bus';
 import { GuessDto } from '@modules/game/application/dtos/guess.dto';
+import { SettleRoundUseCase } from '@modules/game/application/use-cases/settle-round.use-case';
 import { StartGameUseCase } from '@modules/game/application/use-cases/start-game.use-case';
 import { SubmitGuessUseCase } from '@modules/game/application/use-cases/submit-guess.use-case';
 import { UseHintUseCase } from '@modules/game/application/use-cases/use-hint.use-case';
@@ -33,6 +34,7 @@ import {
   CreateRoomUseCase,
   RoomSession,
 } from '@modules/rooms/application/use-cases/create-room.use-case';
+import { EnsureNotInRoomUseCase } from '@modules/rooms/application/use-cases/ensure-not-in-room.use-case';
 import { JoinRoomUseCase } from '@modules/rooms/application/use-cases/join-room.use-case';
 import { LeaveRoomUseCase } from '@modules/rooms/application/use-cases/leave-room.use-case';
 import { MarkDisconnectedUseCase } from '@modules/rooms/application/use-cases/mark-disconnected.use-case';
@@ -69,12 +71,14 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     private readonly sessions: SessionRegistry,
     private readonly limiter: SocketRateLimiter,
     @Inject(CLOCK) private readonly clock: Clock,
+    private readonly ensureNotInRoom: EnsureNotInRoomUseCase,
     private readonly createRoom: CreateRoomUseCase,
     private readonly joinRoom: JoinRoomUseCase,
     private readonly rejoinRoom: RejoinRoomUseCase,
     private readonly setReady: SetReadyUseCase,
     private readonly leaveRoom: LeaveRoomUseCase,
     private readonly markDisconnected: MarkDisconnectedUseCase,
+    private readonly settleRound: SettleRoundUseCase,
     private readonly startGame: StartGameUseCase,
     private readonly submitGuess: SubmitGuessUseCase,
     private readonly useHint: UseHintUseCase,
@@ -106,6 +110,8 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     @ConnectedSocket() client: GameSocket,
     @MessageBody() dto: CreateRoomDto,
   ): Ack<SessionAck> {
+    // One game at a time: a socket still seated in a live room cannot open another.
+    this.ensureNotInRoom.execute(client.data);
     // The use case runs first so a failure leaves the caller's current room untouched.
     const session = this.createRoom.execute(dto);
     this.leaveCurrentRoom(client);
@@ -114,6 +120,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   @SubscribeMessage('room:join')
   onJoin(@ConnectedSocket() client: GameSocket, @MessageBody() dto: JoinRoomDto): Ack<SessionAck> {
+    this.ensureNotInRoom.execute(client.data);
     const session = this.joinRoom.execute(dto);
     this.leaveCurrentRoom(client);
     return this.bindSession(client, session);
@@ -200,7 +207,10 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   private leaveCurrentRoom(client: GameSocket): void {
     const session = this.sessions.detach(client);
-    if (session) this.leaveRoom.execute(session.roomCode, session.playerId);
+    if (!session) return;
+    this.leaveRoom.execute(session.roomCode, session.playerId);
+    // Nobody is left to play the round for: close it now instead of on the next tick.
+    this.settleRound.execute(session.roomCode);
   }
 
   private dispatch(event: OutboundEvent): void {

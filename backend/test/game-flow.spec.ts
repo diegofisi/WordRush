@@ -93,9 +93,14 @@ describe('WordRush game flow (socket.io integration)', () => {
       c.emitWithAck('room:join', { roomCode: created.roomCode, name: 'bruno' }),
     );
     expect(dup).toEqual({ ok: false, code: 'name_taken', message: expect.any(String) });
-    const missing = await ana.emitWithAck('room:join', { roomCode: 'ZZZZ', name: 'X' });
+    const missing = await connect().then((c) =>
+      c.emitWithAck('room:join', { roomCode: 'ZZZZ', name: 'X' }),
+    );
     expect(missing).toMatchObject({ ok: false, code: 'room_not_found' });
-    // Ana's failed join must not have kicked her out of her room.
+    // One game at a time: Ana already holds a seat, so she cannot join or create another.
+    const second = await ana.emitWithAck('room:join', { roomCode: 'ZZZZ', name: 'X' });
+    expect(second).toMatchObject({ ok: false, code: 'already_in_room' });
+    // The refused join must not have kicked her out of her room.
     const early = await ana.emitWithAck('game:guess', { word: ANSWER });
     expect(early).toMatchObject({ ok: false, code: 'not_in_round' });
 
