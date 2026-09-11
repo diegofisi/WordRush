@@ -17,8 +17,6 @@ interface TopBarProps {
   leaveAction?: ReactNode;
   playerName?: string;
   playerBadge?: string;
-  /** Overlay drawn on top of the player's avatar (the emote burst in game). */
-  playerOverlay?: ReactNode;
   connectionLabel?: string;
   /** Transparent variant for the home screen (no bottom border / surface). */
   bare?: boolean;
@@ -30,7 +28,6 @@ export const TopBar = ({
   leaveAction,
   playerName,
   playerBadge,
-  playerOverlay,
   connectionLabel,
   bare = false,
 }: TopBarProps) => {
@@ -70,10 +67,7 @@ export const TopBar = ({
         {leaveAction}
         {playerName ? (
           <div className="flex items-center gap-2.5 pl-1">
-            <span className="relative flex shrink-0">
-              <Avatar name={playerName} tone="accent" size={34} />
-              {playerOverlay}
-            </span>
+            <Avatar name={playerName} tone="accent" size={34} />
             <span className="hidden text-sm font-semibold sm:inline">{playerName}</span>
             {playerBadge ? (
               <span className="hidden rounded-md bg-surface-2 px-2 py-1 text-xs text-ink-3 md:inline">

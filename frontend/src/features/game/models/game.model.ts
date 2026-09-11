@@ -50,6 +50,12 @@ export type FeedEvent = {
   | { kind: 'new-host' }
 );
 
+/** Everything the feed still renders as one line; stickers are their own block. */
+export type TextFeedEvent = Exclude<FeedEvent, { kind: 'reaction' }>;
+
+export const isTextFeedEvent = (event: FeedEvent): event is TextFeedEvent =>
+  event.kind !== 'reaction';
+
 export interface GainChip {
   id: number;
   letter: string;
@@ -57,9 +63,14 @@ export interface GainChip {
   kind: GainKind;
 }
 
-export interface ReactionBubble {
+/**
+ * The newest sticker, for the phone overlay: `id` changes on every arrival so
+ * the overlay restarts its 2.5 s window even for the same emote twice in a row.
+ */
+export interface StickerFlash {
+  id: number;
   emote: Emote;
-  stamp: number;
+  name: string;
 }
 
 export type KeyState = 'green' | 'yellow' | 'gray' | 'hint';

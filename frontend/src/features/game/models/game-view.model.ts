@@ -7,8 +7,8 @@ import type {
   GainChip,
   HintButtonState,
   KeyState,
-  ReactionBubble,
   RivalViewModel,
+  StickerFlash,
 } from './game.model';
 
 export interface ClockViewModel {
@@ -43,7 +43,8 @@ export interface GameViewProps {
   rivalClocks: Record<string, number>;
   solvedCount: number;
   feed: FeedEvent[];
-  reactions: Record<string, ReactionBubble>;
+  /** Newest sticker from anyone; only the phone layout shows it (overlay). */
+  sticker: StickerFlash | null;
   preview: ScorePreview;
   hintState: HintButtonState;
   hintPending: boolean;

@@ -182,9 +182,10 @@ export const EmotePicker = ({
           className={cn(
             // Phones: a sheet pinned to the bottom edge, always inside the viewport.
             'animate-emote-pop fixed inset-x-0 bottom-0 z-50 flex flex-col gap-1.5 rounded-t-2xl border border-line bg-surface px-3 pt-8 pb-4 shadow-pop',
-            // From 640 px up it is anchored above the trigger.
-            'sm:absolute sm:inset-x-auto sm:bottom-full sm:mb-2 sm:w-max sm:max-w-[min(92vw,24rem)] sm:rounded-2xl sm:pb-3',
-            variant === 'card' ? 'sm:left-1/2 sm:-translate-x-1/2' : 'sm:right-0',
+            // From 640 px up it is anchored above the trigger. Right-aligned in
+            // both variants: at 64 px the grid is wider than the column it hangs
+            // off, and centring it on the trigger pushed it off the screen edge.
+            'sm:absolute sm:inset-x-auto sm:right-0 sm:bottom-full sm:mb-2 sm:w-max sm:max-w-[min(92vw,26rem)] sm:rounded-2xl sm:pb-3',
           )}
         >
           <span id={titleId} className="sr-only">
@@ -205,7 +206,7 @@ export const EmotePicker = ({
                     key={emote}
                     emote={emote}
                     label={t.emotes[emote]}
-                    size={isPhone ? 36 : 40}
+                    size={isPhone ? 40 : 48}
                     onPick={pick}
                   />
                 ))}
@@ -227,7 +228,7 @@ export const EmotePicker = ({
                 key={emote}
                 emote={emote}
                 label={t.emotes[emote]}
-                size={isPhone ? 48 : 56}
+                size={isPhone ? 52 : 64}
                 onPick={pick}
               />
             ))}

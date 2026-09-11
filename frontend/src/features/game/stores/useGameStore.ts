@@ -20,7 +20,7 @@ import {
 
 import { toast } from '@/shared/stores/useToastStore';
 
-import type { FeedEvent, GainChip, ReactionBubble, RosterEntry } from '../models/game.model';
+import type { FeedEvent, GainChip, RosterEntry, StickerFlash } from '../models/game.model';
 
 export type GameStatus = 'idle' | 'playing' | 'ended';
 
@@ -28,7 +28,8 @@ const LOW_TIME_SECONDS = 15;
 const EMOTE_WINDOW_MS = ROOM_LIMITS.emoteBurstWindowSeconds * 1000;
 const EMOTE_PAUSE_MS = ROOM_LIMITS.emotePauseSeconds * 1000;
 const GREENS_ANNOUNCE_AT = 4;
-const REACTION_MS = 2_500;
+/** How long the phone overlay keeps the newest sticker on screen. */
+const STICKER_MS = 2_500;
 /** Flip (560 ms) + stagger of the last tile; after this the reveal is static. */
 const REVEAL_MS = 560 + 4 * 110 + 100;
 const MAX_FEED = 40;
@@ -52,7 +53,8 @@ interface GameState {
   left: Record<string, string>;
   solvedCount: number;
   feed: FeedEvent[];
-  reactions: Record<string, ReactionBubble>;
+  /** Newest sticker from anyone (me included); the phone overlay reads it. */
+  sticker: StickerFlash | null;
   /** Time chips from my latest guess. */
   gains: GainChip[];
   draft: string;
@@ -120,7 +122,7 @@ const initialState: GameState = {
   left: {},
   solvedCount: 0,
   feed: [],
-  reactions: {},
+  sticker: null,
   gains: [],
   draft: '',
   revealRow: null,
@@ -158,7 +160,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       left: {},
       solvedCount: round.players.filter((player) => player.solved).length,
       feed: [],
-      reactions: {},
+      sticker: null,
       gains: [],
       draft: '',
       revealRow: null,
@@ -280,19 +282,21 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
           return { players, me };
         });
       });
+      // Every sticker, mine included, is a message in the feed. The phone has no
+      // feed panel, so the newest one also feeds the 2.5 s overlay there.
       socket.on('reaction:show', (payload) => {
-        const stamp = Date.now();
-        set((state) => ({
-          reactions: { ...state.reactions, [payload.playerId]: { emote: payload.emote, stamp } },
-        }));
         pushFeed({ kind: 'reaction', playerId: payload.playerId, emote: payload.emote });
+        const id = nextId++;
+        set((state) => ({
+          sticker: {
+            id,
+            emote: payload.emote,
+            name: state.roster[payload.playerId]?.name ?? '?',
+          },
+        }));
         window.setTimeout(() => {
-          set((state) => {
-            if (state.reactions[payload.playerId]?.stamp !== stamp) return {};
-            const { [payload.playerId]: _gone, ...rest } = state.reactions;
-            return { reactions: rest };
-          });
-        }, REACTION_MS);
+          set((state) => (state.sticker?.id === id ? { sticker: null } : {}));
+        }, STICKER_MS);
       });
       socket.on('round:end', () => set({ status: 'ended', draft: '' }));
       socket.on('game:end', () => set({ status: 'ended', draft: '' }));

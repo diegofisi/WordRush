@@ -47,8 +47,8 @@ without its two labels does not compile.
 ## Format
 
 - **WebP or PNG, 256 × 256 px**, transparent background. The stickers are shown at
-  56 px in the picker (48 px on phones), 40 px in the bubble over a rival's avatar
-  (32 px on phones) and 18 px in the feed, so 256 px stays crisp on high-density screens.
+  112 px in a live-feed sticker message, 96 px in the phone overlay and 64 px in the
+  picker (52 px on phones), so 256 px stays crisp on high-density screens.
 - SVG also works, with a square `viewBox` and shapes that carry their own fills.
 - The artwork is **raster and never recoloured**: nothing in the game applies
   `currentColor` to it, so each sticker must read on both the light and the dark surface.
@@ -59,9 +59,11 @@ without its two labels does not compile.
 - The **picker** (`src/features/game/components/EmotePicker.tsx`): a round trigger under
   the score card on desktop and under the keyboard on phones, opening a popover with a
   5 × 4 grid plus the player's five most recent emotes.
-- The **bubble** over a rival's avatar when they react (`ReactionBubble.tsx`) and the
-  **burst** over your own avatar in the top bar (`ReactionBurst.tsx`).
-- The **live feed** line.
+- The **live feed** (`LiveFeed.tsx`): a reaction is its own message — a "time + name"
+  header with the sticker at 112 px under it, consecutive ones from the same player
+  stacked under a single header.
+- The **phone overlay** (`StickerOverlay.tsx`): phones have no feed, so the newest
+  sticker floats over the keyboard at 96 px for 2.5 s with the sender's name.
 
 All of them go through `EmoteIcon` in `src/shared/components/icons/EmoteIcon.tsx`, which
 reads this folder through `src/shared/components/icons/customEmotes.ts`.

@@ -4,15 +4,13 @@ import type { Dictionary } from '@/shared/i18n';
 import { cn } from '@/shared/lib/cn';
 import { formatClock } from '@/shared/lib/format';
 
-import type { ReactionBubble as ReactionBubbleModel, RivalViewModel } from '../models/game.model';
+import type { RivalViewModel } from '../models/game.model';
 import { MiniBoard } from './MiniBoard';
-import { ReactionBubble } from './ReactionBubble';
 
 interface RivalsPanelProps {
   t: Dictionary;
   rivals: RivalViewModel[];
   rivalClocks: Record<string, number>;
-  reactions: Record<string, ReactionBubbleModel>;
   solvedCount: number;
   lowTimeThreshold: number;
 }
@@ -41,7 +39,6 @@ export const RivalsPanel = ({
   t,
   rivals,
   rivalClocks,
-  reactions,
   solvedCount,
   lowTimeThreshold,
 }: RivalsPanelProps) => (
@@ -58,7 +55,6 @@ export const RivalsPanel = ({
       {rivals.map((rival) => {
         const seconds = rivalClocks[rival.id] ?? rival.secondsLeft;
         const low = rival.status === 'playing' && seconds < lowTimeThreshold;
-        const reaction = reactions[rival.id];
         return (
           <li
             key={rival.id}
@@ -68,16 +64,7 @@ export const RivalsPanel = ({
               !rival.connected && 'opacity-60',
             )}
           >
-            <div className="relative">
-              <Avatar name={rival.name} tone={rival.status === 'solved' ? 'green' : 'neutral'} />
-              {reaction ? (
-                <ReactionBubble
-                  key={reaction.stamp}
-                  emote={reaction.emote}
-                  label={t.emotes[reaction.emote]}
-                />
-              ) : null}
-            </div>
+            <Avatar name={rival.name} tone={rival.status === 'solved' ? 'green' : 'neutral'} />
             <div className="flex min-w-0 flex-1 flex-col gap-0.75">
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-sm font-semibold">{rival.name}</span>

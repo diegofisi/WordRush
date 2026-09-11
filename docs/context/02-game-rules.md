@@ -114,9 +114,11 @@ room at a time. There is never a doubt about "which game do I go back to".
   a full-width sheet at the bottom of the screen on phones. On hover or focus a sticker
   grows and shows its label. Above the grid, the last 5 emotes the player used, when there
   are any. Clicking one sends it and closes the picker.
-- They are sent to the whole room: rivals see the sticker in a bubble above the sender's
-  avatar for a couple of seconds and a line in the feed; the sender sees the same sticker
-  burst out of their own avatar in the top bar.
+- They are sent to the whole room and appear in one place only: **stickers appear as
+  messages in the live feed** (112 px under a "time + name" header, consecutive ones from
+  the same player within 10 s stacked under a single header, the sender included); on
+  phones, which have no feed, as a 2.5 s overlay of 96 px above the keyboard with the
+  sender's name in a pill.
 - **Burst limit instead of a cooldown.** A player reacts as often as they like. If they
   send **more than 8 emotes within 3 seconds**, the server refuses the rest for
   **5 seconds** (`cooldown`, "Espera 5 segundos" / "Wait 5 seconds"). The pause is always

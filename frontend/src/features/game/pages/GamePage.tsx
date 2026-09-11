@@ -11,7 +11,6 @@ import { useUseHint } from '../api/use-hint/useUseHint';
 import { HintButton } from '../components/HintButton';
 import { HintLetterChip } from '../components/HintLetterChip';
 import { PenaltyChip } from '../components/PenaltyChip';
-import { ReactionBurst } from '../components/ReactionBurst';
 import { GameContainer } from '../containers/GameContainer';
 import { useGameStore } from '../stores/useGameStore';
 import { toast } from '@/shared/stores/useToastStore';
@@ -47,20 +46,6 @@ const GameTopBarActions = () => {
   );
 };
 
-/** My own reaction bursting out of my avatar; rivals see the same sticker fly. */
-const MyReactionBurst = () => {
-  const t = useT();
-  const reaction = useGameStore((state) => (state.myId ? state.reactions[state.myId] : undefined));
-  if (!reaction) return null;
-  return (
-    <ReactionBurst
-      key={reaction.stamp}
-      emote={reaction.emote}
-      label={t.emotes[reaction.emote]}
-    />
-  );
-};
-
 export const GamePage = () => {
   const t = useT();
   const { code = '' } = useParams<{ code: string }>();
@@ -70,8 +55,15 @@ export const GamePage = () => {
   const round = useGameStore((state) => state.round);
   const settings = useGameStore((state) => state.settings);
 
+  // From the three-column breakpoint up (the same 1100 px as `useIsDesktopGame`)
+  // the game owns exactly one viewport. `flex-none` + `h-dvh` is what makes that
+  // height definite (a `flex-1` basis of 0% against an auto-height parent falls
+  // back to the content size), so the columns shrink and scroll inside
+  // themselves instead of a tall live feed stretching the whole page. `auto`
+  // rather than `hidden`: a window too short for the board must still scroll.
+  // Phones keep the normal page scroll.
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col min-[1100px]:h-dvh min-[1100px]:flex-none min-[1100px]:overflow-auto">
       <TopBar
         context={
           session ? (
@@ -87,7 +79,6 @@ export const GamePage = () => {
         actions={isDesktop ? <GameTopBarActions /> : undefined}
         leaveAction={<LeaveGameAction />}
         playerName={session?.name}
-        playerOverlay={<MyReactionBurst />}
         connectionLabel={connection === 'disconnected' ? t.common.reconnecting : undefined}
       />
       <GameContainer roomCode={session?.roomCode ?? code} />

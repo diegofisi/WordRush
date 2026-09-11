@@ -42,7 +42,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const left = useGameStore((state) => state.left);
   const solvedCount = useGameStore((state) => state.solvedCount);
   const feed = useGameStore((state) => state.feed);
-  const reactions = useGameStore((state) => state.reactions);
+  const sticker = useGameStore((state) => state.sticker);
   const gains = useGameStore((state) => state.gains);
   const draft = useGameStore((state) => state.draft);
   const revealRow = useGameStore((state) => state.revealRow);
@@ -221,7 +221,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     rivalClocks,
     solvedCount,
     feed,
-    reactions,
+    sticker,
     preview,
     hintState: !round.hintAvailable ? 'off' : me.hintUsed ? 'used' : 'available',
     hintPending,

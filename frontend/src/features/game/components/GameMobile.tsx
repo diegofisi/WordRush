@@ -1,4 +1,5 @@
 import { LOW_TIME_THRESHOLD } from '../stores/useGameStore';
+import { isTextFeedEvent } from '../models/game.model';
 import type { GameViewProps } from '../models/game-view.model';
 import { Board } from './Board';
 import { Clock } from './Clock';
@@ -10,12 +11,14 @@ import { FeedRow } from './LiveFeed';
 import { PenaltyChip } from './PenaltyChip';
 import { RivalStrip } from './RivalStrip';
 import { ScorePreviewCard } from './ScorePreviewCard';
+import { StickerOverlay } from './StickerOverlay';
 import { WaitingCard } from './WaitingCard';
 
 /** Phone game (GameMobile.dc.html): clock + actions, rival strip, last event, board, keyboard, emotes. */
 export const GameMobile = (props: GameViewProps) => {
   const { t } = props;
-  const lastEvent = props.feed[props.feed.length - 1];
+  // Stickers are not a line here: they fly over the keyboard (StickerOverlay).
+  const lastEvent = [...props.feed].reverse().find(isTextFeedEvent);
   return (
     <div className="flex flex-1 flex-col gap-3.5 px-4 pt-3 pb-5">
       <div className="flex items-center justify-between gap-3">
@@ -62,7 +65,6 @@ export const GameMobile = (props: GameViewProps) => {
           t={t}
           rivals={props.rivals}
           rivalClocks={props.rivalClocks}
-          reactions={props.reactions}
           lowTimeThreshold={LOW_TIME_THRESHOLD}
         />
       ) : null}
@@ -84,7 +86,8 @@ export const GameMobile = (props: GameViewProps) => {
         />
       </div>
 
-      <div className="mt-auto flex flex-col gap-2.5">
+      <div className="relative mt-auto flex flex-col gap-2.5">
+        <StickerOverlay t={t} sticker={props.sticker} />
         {props.outcome === 'playing' ? (
           <Keyboard
             language={props.wordLanguage}
