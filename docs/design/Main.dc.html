@@ -1,0 +1,336 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif; color: #1C1A17; background: #FAF8F4; -webkit-font-smoothing: antialiased; }
+    a { color: #6C4CF1; } a:hover { color: #4F33C9; }
+    .t { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; font-weight: 700; font-size: 28px; border-radius: 10px; text-transform: uppercase; box-sizing: border-box; }
+    .t-g { background: #3FA66B; color: #FFFFFF; }
+    .t-y { background: #E5B537; color: #1C1A17; }
+    .t-x { background: #A39D94; color: #FFFFFF; }
+    .t-e { border: 2px solid #E0DAD0; color: #1C1A17; background: #FFFFFF; }
+    .t-f { border: 2px solid #8F8980; color: #1C1A17; background: #FFFFFF; }
+    .t-h { border: 2px dashed #E5B537; color: #B98A12; background: #FBF3DC; }
+    .m { width: 12px; height: 12px; border-radius: 3px; }
+    .m-g { background: #3FA66B; } .m-y { background: #E5B537; } .m-x { background: #C9C3B9; } .m-e { background: #EDE9E2; }
+    .k { height: 44px; min-width: 40px; padding: 0 10px; border-radius: 8px; background: #EDE9E2; font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center; color: #1C1A17; box-sizing: border-box; }
+    .k-g { background: #3FA66B; color: #FFFFFF; } .k-y { background: #E5B537; color: #1C1A17; } .k-x { background: #B7B1A8; color: #FFFFFF; }
+    .mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+    .disp { font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; }
+    .card { background: #FFFFFF; border: 1px solid #E6E1D8; border-radius: 16px; }
+    .label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #8F8980; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; height: 900px; box-sizing: border-box; display: flex; flex-direction: column; background: #FAF8F4; overflow: hidden;">
+
+  <!-- Barra superior -->
+  <div style="height: 64px; box-sizing: border-box; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #E6E1D8; background: #FFFFFF;">
+    <div style="display: flex; align-items: center; gap: 20px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="display: flex; gap: 3px;">
+          <div style="width: 10px; height: 18px; border-radius: 3px; background: #3FA66B;"></div>
+          <div style="width: 10px; height: 18px; border-radius: 3px; background: #E5B537;"></div>
+          <div style="width: 10px; height: 18px; border-radius: 3px; background: #1C1A17;"></div>
+        </div>
+        <div class="disp" style="font-weight: 800; font-size: 20px; letter-spacing: -0.02em;">WordRush</div>
+      </div>
+      <div style="width: 1px; height: 24px; background: #E6E1D8;"></div>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #5C5750;">
+        <span class="mono" style="font-weight: 600; color: #1C1A17;">KX7P</span>
+        <span>·</span>
+        <span>Ronda 2 de 3</span>
+        <span>·</span>
+        <span>Español</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: 999px; background: #FDECEA; color: #B33A2B; font-size: 13px; font-weight: 600;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg>
+        <span>−5 s recibidos</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px; background: #FBF3DC; border: 1px solid #F0DDA0; color: #7A5A05; font-size: 14px; font-weight: 600;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"></path></svg>
+        <span>Pista</span>
+        <span style="font-weight: 500; color: #A07A10;">1 disponible</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; padding-left: 8px;">
+        <div style="width: 34px; height: 34px; border-radius: 999px; background: #6C4CF1; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">A</div>
+        <span style="font-size: 14px; font-weight: 600;">Ana</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cuerpo -->
+  <div style="flex: 1; display: grid; grid-template-columns: 300px minmax(0, 1fr) 320px; gap: 24px; padding: 20px 28px 20px 28px; box-sizing: border-box; min-height: 0;">
+
+    <!-- Rivales -->
+    <div class="card" style="display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px 16px;">
+        <div class="label">Rivales · 7</div>
+        <div style="font-size: 12px; color: #8F8980;">1 ya resolvió</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px; padding: 0 8px 8px 8px; overflow: hidden;">
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px; background: #EEF8F1;">
+          <div style="width: 30px; height: 30px; border-radius: 999px; background: #3FA66B; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">B</div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 14px; font-weight: 600;">Bruno</span>
+              <span class="mono" style="font-size: 12px; color: #2E7A4E; font-weight: 600;">1.º · 111%</span>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; width: 68px;">
+                <div class="m m-g"></div><div class="m m-x"></div><div class="m m-x"></div><div class="m m-y"></div><div class="m m-g"></div>
+                <div class="m m-g"></div><div class="m m-g"></div><div class="m m-g"></div><div class="m m-g"></div><div class="m m-g"></div>
+              </div>
+              <span style="font-size: 12px; color: #2E7A4E; font-weight: 600;">Resolvió</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px;">
+          <div style="width: 30px; height: 30px; border-radius: 999px; background: #EDE9E2; color: #1C1A17; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">D</div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 14px; font-weight: 600;">Diego</span>
+              <span class="mono" style="font-size: 12px; color: #5C5750;">00:41</span>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; width: 68px;">
+                <div class="m m-x"></div><div class="m m-y"></div><div class="m m-x"></div><div class="m m-x"></div><div class="m m-g"></div>
+                <div class="m m-g"></div><div class="m m-x"></div><div class="m m-y"></div><div class="m m-x"></div><div class="m m-g"></div>
+                <div class="m m-g"></div><div class="m m-g"></div><div class="m m-x"></div><div class="m m-x"></div><div class="m m-g"></div>
+              </div>
+              <span style="font-size: 12px; color: #8F8980;">Intento 4 · usó pista</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px; position: relative;">
+          <div style="position: relative;">
+            <div style="width: 30px; height: 30px; border-radius: 999px; background: #EDE9E2; color: #1C1A17; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">C</div>
+            <div style="position: absolute; top: -18px; left: 22px; width: 32px; height: 32px; border-radius: 12px 12px 12px 2px; background: #FFFFFF; border: 1px solid #E6E1D8; box-shadow: 0 4px 12px rgba(28,26,23,0.10); display: flex; align-items: center; justify-content: center; color: #1C1A17;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 13a4 4 0 0 0 8 0z" fill="currentColor"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></svg>
+            </div>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 14px; font-weight: 600;">Carla</span>
+              <span class="mono" style="font-size: 12px; color: #5C5750;">00:55</span>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; width: 68px;">
+                <div class="m m-x"></div><div class="m m-x"></div><div class="m m-y"></div><div class="m m-x"></div><div class="m m-x"></div>
+                <div class="m m-g"></div><div class="m m-x"></div><div class="m m-x"></div><div class="m m-y"></div><div class="m m-x"></div>
+              </div>
+              <span style="font-size: 12px; color: #8F8980;">Intento 3</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px;">
+          <div style="width: 30px; height: 30px; border-radius: 999px; background: #EDE9E2; color: #1C1A17; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">E</div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 14px; font-weight: 600;">Elena</span>
+              <span class="mono" style="font-size: 12px; color: #5C5750;">01:02</span>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; width: 68px;">
+                <div class="m m-x"></div><div class="m m-x"></div><div class="m m-x"></div><div class="m m-x"></div><div class="m m-g"></div>
+              </div>
+              <span style="font-size: 12px; color: #8F8980;">Intento 2</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px;">
+          <div style="width: 30px; height: 30px; border-radius: 999px; background: #EDE9E2; color: #1C1A17; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">F</div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 14px; font-weight: 600;">Fito</span>
+              <span class="mono" style="font-size: 12px; color: #B33A2B; font-weight: 600;">00:19</span>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; width: 68px;">
+                <div class="m m-x"></div><div class="m m-x"></div><div class="m m-y"></div><div class="m m-x"></div><div class="m m-x"></div>
+                <div class="m m-y"></div><div class="m m-x"></div><div class="m m-x"></div><div class="m m-x"></div><div class="m m-g"></div>
+                <div class="m m-g"></div><div class="m m-x"></div><div class="m m-y"></div><div class="m m-x"></div><div class="m m-g"></div>
+                <div class="m m-g"></div><div class="m m-g"></div><div class="m m-g"></div><div class="m m-x"></div><div class="m m-g"></div>
+                <div class="m m-g"></div><div class="m m-g"></div><div class="m m-g"></div><div class="m m-x"></div><div class="m m-g"></div>
+              </div>
+              <span style="font-size: 12px; color: #8F8980;">Intento 6 · 4 verdes</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px;">
+          <div style="width: 30px; height: 30px; border-radius: 999px; background: #EDE9E2; color: #1C1A17; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">G</div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 14px; font-weight: 600;">Gaby</span>
+              <span class="mono" style="font-size: 12px; color: #5C5750;">00:48</span>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; width: 68px;">
+                <div class="m m-x"></div><div class="m m-x"></div><div class="m m-x"></div><div class="m m-x"></div><div class="m m-x"></div>
+                <div class="m m-x"></div><div class="m m-y"></div><div class="m m-x"></div><div class="m m-x"></div><div class="m m-x"></div>
+              </div>
+              <span style="font-size: 12px; color: #8F8980;">Intento 3</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px;">
+          <div style="width: 30px; height: 30px; border-radius: 999px; background: #EDE9E2; color: #1C1A17; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">H</div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 14px; font-weight: 600;">Hugo</span>
+              <span class="mono" style="font-size: 12px; color: #B33A2B; font-weight: 600;">00:12</span>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; width: 68px;">
+                <div class="m m-x"></div><div class="m m-x"></div><div class="m m-x"></div><div class="m m-x"></div><div class="m m-x"></div>
+              </div>
+              <span style="font-size: 12px; color: #8F8980;">Intento 2</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Centro: reloj, tablero, teclado -->
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 0;">
+
+      <div style="display: flex; align-items: flex-end; gap: 28px;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+          <div class="mono" style="font-size: 64px; font-weight: 700; line-height: 1; letter-spacing: -0.03em;">01:34</div>
+          <div style="width: 220px; height: 6px; border-radius: 999px; background: #EDE9E2; overflow: hidden; margin-top: 8px;">
+            <div style="width: 100%; height: 100%; border-radius: 999px; background: #3FA66B;"></div>
+          </div>
+          <div style="font-size: 13px; color: #5C5750; margin-top: 4px;">Te sobra el 104% del tiempo inicial</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 22px;">
+          <div style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 999px; background: #EEF8F1; color: #2E7A4E; font-size: 13px; font-weight: 700;">
+            <span class="mono">+10 s</span><span style="font-weight: 500;">U en verde</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 999px; background: #EEF8F1; color: #2E7A4E; font-size: 13px; font-weight: 700;">
+            <span class="mono">+10 s</span><span style="font-weight: 500;">E en verde</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; gap: 8px;"><div class="t t-g">S</div><div class="t t-x">A</div><div class="t t-x">L</div><div class="t t-x">T</div><div class="t t-g">O</div></div>
+        <div style="display: flex; gap: 8px;"><div class="t t-g">S</div><div class="t t-g">U</div><div class="t t-g">E</div><div class="t t-x">R</div><div class="t t-g">O</div></div>
+        <div style="display: flex; gap: 8px;"><div class="t t-f">S</div><div class="t t-f">U</div><div class="t t-f">E</div><div class="t t-f">Ñ</div><div class="t t-e"></div></div>
+        <div style="display: flex; gap: 8px;"><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div></div>
+        <div style="display: flex; gap: 8px;"><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div></div>
+        <div style="display: flex; gap: 8px;"><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div></div>
+        <div style="display: flex; gap: 8px;"><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div></div>
+        <div style="display: flex; gap: 8px;"><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div><div class="t t-e"></div></div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px; align-items: center;">
+        <div style="display: flex; gap: 6px;">
+          <div class="k">Q</div><div class="k">W</div><div class="k k-g">E</div><div class="k k-x">R</div><div class="k k-x">T</div><div class="k">Y</div><div class="k k-g">U</div><div class="k">I</div><div class="k k-g">O</div><div class="k">P</div>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <div class="k k-x">A</div><div class="k k-g">S</div><div class="k">D</div><div class="k">F</div><div class="k">G</div><div class="k">H</div><div class="k">J</div><div class="k">K</div><div class="k k-x">L</div><div class="k">Ñ</div>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <div class="k" style="min-width: 76px; background: #1C1A17; color: #FFFFFF; font-size: 13px; letter-spacing: 0.04em;">ENVIAR</div>
+          <div class="k">Z</div><div class="k">X</div><div class="k">C</div><div class="k">V</div><div class="k">B</div><div class="k">N</div><div class="k">M</div>
+          <div class="k" style="min-width: 60px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><path d="m18 9-6 6"></path><path d="m12 9 6 6"></path></svg>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Derecha: feed, puntos, emoticones -->
+    <div style="display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+
+      <div class="card" style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
+        <div style="padding: 14px 16px 8px 16px;" class="label">Sala en vivo</div>
+        <div style="display: flex; flex-direction: column; gap: 2px; padding: 0 8px 8px 8px; overflow: hidden;">
+          <div style="display: flex; gap: 10px; padding: 8px; border-radius: 10px; background: #FDECEA;">
+            <span class="mono" style="font-size: 12px; color: #B33A2B; padding-top: 2px;">0:30</span>
+            <span style="font-size: 13px; line-height: 1.4;"><strong>Bruno</strong> respondió correctamente · <strong style="color: #B33A2B;">−5 s al resto</strong></span>
+          </div>
+          <div style="display: flex; gap: 10px; padding: 8px; border-radius: 10px;">
+            <span class="mono" style="font-size: 12px; color: #8F8980; padding-top: 2px;">0:38</span>
+            <span style="font-size: 13px; line-height: 1.4; color: #5C5750;"><strong style="color: #1C1A17;">Diego</strong> usó su pista</span>
+          </div>
+          <div style="display: flex; gap: 10px; padding: 8px; border-radius: 10px; align-items: center;">
+            <span class="mono" style="font-size: 12px; color: #8F8980;">0:44</span>
+            <span style="font-size: 13px; line-height: 1.4; color: #5C5750; display: flex; align-items: center; gap: 6px;"><strong style="color: #1C1A17;">Carla</strong>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 13a4 4 0 0 0 8 0z" fill="currentColor"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></svg>
+            </span>
+          </div>
+          <div style="display: flex; gap: 10px; padding: 8px; border-radius: 10px;">
+            <span class="mono" style="font-size: 12px; color: #8F8980; padding-top: 2px;">0:52</span>
+            <span style="font-size: 13px; line-height: 1.4; color: #5C5750;"><strong style="color: #1C1A17;">Fito</strong> ya tiene 4 verdes</span>
+          </div>
+          <div style="display: flex; gap: 10px; padding: 8px; border-radius: 10px;">
+            <span class="mono" style="font-size: 12px; color: #8F8980; padding-top: 2px;">0:56</span>
+            <span style="font-size: 13px; line-height: 1.4; color: #5C5750;"><strong style="color: #1C1A17;">Hugo</strong> tiene menos de 15 s</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 14px 16px 12px 16px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div class="label">Si resuelves ahora</div>
+          <div style="font-size: 12px; color: #8F8980;">2.º en llegar</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px; font-size: 13px;">
+          <div style="display: flex; justify-content: space-between;"><span style="color: #5C5750;">Tiempo sobrante · 104%</span><span class="mono" style="font-weight: 600;">+104</span></div>
+          <div style="display: flex; justify-content: space-between;"><span style="color: #5C5750;">2 intentos después del 1.º</span><span class="mono" style="font-weight: 600; color: #B33A2B;">−6</span></div>
+          <div style="display: flex; justify-content: space-between;"><span style="color: #5C5750;">Segunda en resolver</span><span class="mono" style="font-weight: 600; color: #2E7A4E;">+15</span></div>
+          <div style="display: flex; justify-content: space-between;"><span style="color: #5C5750;">Pista conservada</span><span class="mono" style="font-weight: 600; color: #2E7A4E;">+10</span></div>
+        </div>
+        <div style="height: 1px; background: #E6E1D8;"></div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <span style="font-size: 13px; font-weight: 600;">Ronda</span>
+          <span class="disp" style="font-size: 28px; font-weight: 800; letter-spacing: -0.02em;">123</span>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #1C1A17; background: #F4F1EB;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 14c1 1.5 2.4 2 4 2s3-.5 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></svg>
+        </div>
+        <div style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #1C1A17; background: #F4F1EB;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 13a4 4 0 0 0 8 0z" fill="currentColor"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></svg>
+        </div>
+        <div style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #1C1A17; background: #F4F1EB;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 16c1-1.5 2.4-2 4-2s3 .5 4 2"></path><path d="m8 8 2.5 1.5"></path><path d="M16 8l-2.5 1.5"></path></svg>
+        </div>
+        <div style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #1C1A17; background: #F4F1EB;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9 16c1-1 2-1.5 3-1.5s2 .5 3 1.5"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path><path d="M16 11c0 1.2-.8 2-1 2.6-.3.6.4 1.4 1 1.4s1.3-.8 1-1.4c-.2-.6-1-1.4-1-2.6z" fill="currentColor"></path></svg>
+        </div>
+        <div style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #1C1A17; background: #F4F1EB;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="15" r="2"></circle><path d="M9 9h.01"></path><path d="M15 9h.01"></path></svg>
+        </div>
+        <div style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #1C1A17; background: #F4F1EB;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v9H3v-9z"></path><path d="M7 11l4-8a2 2 0 0 1 2 2v4h5a2 2 0 0 1 2 2.3l-1.2 6A2 2 0 0 1 16.8 20H7"></path></svg>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

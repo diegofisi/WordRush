@@ -1,0 +1,16 @@
+{
+  "artboards": [
+    { "file": "CrearSala.dc.html",   "title": "1 · Crear sala",       "x": 0,    "y": 0,    "w": 1440, "h": 900 },
+    { "file": "SalaEspera.dc.html",  "title": "2 · Sala de espera",   "x": 1540, "y": 0,    "w": 1440, "h": 900 },
+    { "file": "Main.dc.html",        "title": "3 · Juego",            "x": 3080, "y": 0,    "w": 1440, "h": 900 },
+    { "file": "Resultados.dc.html",  "title": "4 · Resultados",       "x": 0,    "y": 1060, "w": 1440, "h": 900 },
+    { "file": "JuegoMovil.dc.html",  "title": "Juego · móvil",        "x": 1540, "y": 1060, "w": 390,  "h": 844 },
+    { "file": "JuegoOscuro.dc.html", "title": "Juego · modo oscuro",  "x": 3080, "y": 1060, "w": 1440, "h": 900 }
+  ],
+  "annotations": [
+    { "id": "flujo", "x": 0, "y": -210, "w": 520, "text": "Flujo de una partida, de izquierda a derecha: crear sala, esperar a los demás, jugar la ronda, ver resultados. Nombre de trabajo: WordRush (placeholder).\nLa fuente de verdad de reglas y puntos está en context/ del proyecto." },
+    { "id": "puntos", "x": 3080, "y": -210, "w": 460, "text": "Puntos por ronda = 1 por cada 1% del tiempo inicial que sobra al acertar, −3 por intento extra, +25/+15/+10 a los tres primeros, +10 por conservar la pista, mínimo 20 al acertar. Sin acertar: 5 por verde, máximo 20.\nCuando alguien acierta: −5 s a todos los que siguen jugando." },
+    { "id": "alternativas", "x": 1540, "y": 940, "w": 420, "text": "Abajo: la misma pantalla de juego en móvil y en modo oscuro. El modo oscuro es una alternativa para decidir cuál va como principal." }
+  ],
+  "launch": { "view": "canvas" }
+}

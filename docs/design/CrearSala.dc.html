@@ -1,0 +1,186 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif; color: #1C1A17; background: #FAF8F4; -webkit-font-smoothing: antialiased; }
+    a { color: #6C4CF1; } a:hover { color: #4F33C9; }
+    .t { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; font-weight: 700; font-size: 22px; border-radius: 8px; text-transform: uppercase; box-sizing: border-box; }
+    .t-g { background: #3FA66B; color: #FFFFFF; }
+    .t-y { background: #E5B537; color: #1C1A17; }
+    .t-x { background: #A39D94; color: #FFFFFF; }
+    .t-e { border: 2px solid #E0DAD0; color: #1C1A17; background: #FFFFFF; }
+    .mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+    .disp { font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; }
+    .label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #8F8980; }
+    .seg { height: 44px; padding: 0 16px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #5C5750; background: #F4F1EB; box-sizing: border-box; }
+    .seg-on { background: #1C1A17; color: #FFFFFF; }
+    /* Hero: cada tile gira y cambia de letra; 5 palabras en bucle de 15 s (3 s por palabra) */
+    .hero { display: flex; gap: 8px; perspective: 700px; }
+    .flip { position: relative; width: 44px; height: 44px; animation: flip 15s linear infinite both; }
+    .flip > span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; box-sizing: border-box; font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; font-weight: 700; font-size: 22px; text-transform: uppercase; animation: 15s linear infinite both; }
+    .flip > span:nth-child(1) { animation-name: w0; } .flip > span:nth-child(2) { animation-name: w1; } .flip > span:nth-child(3) { animation-name: w2; } .flip > span:nth-child(4) { animation-name: w3; } .flip > span:nth-child(5) { animation-name: w4; }
+    .hero > .flip:nth-child(2), .hero > .flip:nth-child(2) > span { animation-delay: 0.16s; }
+    .hero > .flip:nth-child(3), .hero > .flip:nth-child(3) > span { animation-delay: 0.32s; }
+    .hero > .flip:nth-child(4), .hero > .flip:nth-child(4) > span { animation-delay: 0.48s; }
+    .hero > .flip:nth-child(5), .hero > .flip:nth-child(5) > span { animation-delay: 0.64s; }
+    .f-g { background: #3FA66B; color: #FFFFFF; }
+    .f-y { background: #E5B537; color: #1C1A17; }
+    .f-x { background: #A39D94; color: #FFFFFF; }
+    .f-e { border: 2px solid #E0DAD0; color: #1C1A17; background: #FFFFFF; }
+    @keyframes flip {
+      0% { transform: rotateX(90deg); } 2% { transform: rotateX(0deg); } 18% { transform: rotateX(0deg); }
+      20% { transform: rotateX(90deg); } 22% { transform: rotateX(0deg); } 38% { transform: rotateX(0deg); }
+      40% { transform: rotateX(90deg); } 42% { transform: rotateX(0deg); } 58% { transform: rotateX(0deg); }
+      60% { transform: rotateX(90deg); } 62% { transform: rotateX(0deg); } 78% { transform: rotateX(0deg); }
+      80% { transform: rotateX(90deg); } 82% { transform: rotateX(0deg); } 98% { transform: rotateX(0deg); }
+      100% { transform: rotateX(90deg); }
+    }
+    @keyframes w0 { 0%, 19.99% { opacity: 1; } 20%, 100% { opacity: 0; } }
+    @keyframes w1 { 0%, 19.99% { opacity: 0; } 20%, 39.99% { opacity: 1; } 40%, 100% { opacity: 0; } }
+    @keyframes w2 { 0%, 39.99% { opacity: 0; } 40%, 59.99% { opacity: 1; } 60%, 100% { opacity: 0; } }
+    @keyframes w3 { 0%, 59.99% { opacity: 0; } 60%, 79.99% { opacity: 1; } 80%, 100% { opacity: 0; } }
+    @keyframes w4 { 0%, 79.99% { opacity: 0; } 80%, 100% { opacity: 1; } }
+  </style>
+</helmet>
+
+<div style="width: 1440px; height: 900px; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) 520px; background: #FAF8F4; overflow: hidden;">
+
+  <!-- Izquierda: propuesta -->
+  <div style="padding: 48px 64px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="display: flex; gap: 3px;">
+        <div style="width: 10px; height: 18px; border-radius: 3px; background: #3FA66B;"></div>
+        <div style="width: 10px; height: 18px; border-radius: 3px; background: #E5B537;"></div>
+        <div style="width: 10px; height: 18px; border-radius: 3px; background: #1C1A17;"></div>
+      </div>
+      <div class="disp" style="font-weight: 800; font-size: 20px; letter-spacing: -0.02em;">WordRush</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 28px; max-width: 720px;">
+      <div class="hero">
+        <div class="flip"><span class="f-g">A</span><span class="f-y">V</span><span class="f-g">R</span><span class="f-x">C</span><span class="f-g">J</span></div>
+        <div class="flip"><span class="f-x">H</span><span class="f-g">A</span><span class="f-g">E</span><span class="f-g">I</span><span class="f-g">U</span></div>
+        <div class="flip"><span class="f-y">O</span><span class="f-g">M</span><span class="f-x">L</span><span class="f-g">N</span><span class="f-g">E</span></div>
+        <div class="flip"><span class="f-g">R</span><span class="f-x">O</span><span class="f-y">O</span><span class="f-g">C</span><span class="f-g">G</span></div>
+        <div class="flip"><span class="f-e">A</span><span class="f-g">S</span><span class="f-g">J</span><span class="f-y">O</span><span class="f-g">A</span></div>
+      </div>
+      <h1 class="disp" style="margin: 0; font-size: 72px; line-height: 0.98; font-weight: 800; letter-spacing: -0.03em; text-wrap: balance;">Adivina primero.<br>Cada segundo cuenta.</h1>
+      <p style="margin: 0; font-size: 19px; line-height: 1.5; color: #5C5750; max-width: 560px; text-wrap: pretty;">Wordle para hasta 8 personas, en español o inglés. Cada letra nueva te suma segundos. Cada acierto ajeno te los quita. Gana quien termina con más reloj.</p>
+
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; max-width: 720px;">
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: 14px; background: #FFFFFF; border: 1px solid #E6E1D8;">
+          <div style="display: flex; gap: 4px;">
+            <div style="width: 18px; height: 18px; border-radius: 4px; background: #E5B537;"></div>
+            <div style="width: 18px; height: 18px; border-radius: 4px; background: #3FA66B;"></div>
+          </div>
+          <div style="font-weight: 700; font-size: 15px;">Letras que dan tiempo</div>
+          <div style="font-size: 13px; line-height: 1.45; color: #5C5750;">Amarilla +5 s, verde +10 s. Cada letra cobra una vez por color.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: 14px; background: #FFFFFF; border: 1px solid #E6E1D8;">
+          <div style="color: #B33A2B;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg>
+          </div>
+          <div style="font-weight: 700; font-size: 15px;">−5 s al resto</div>
+          <div style="font-size: 13px; line-height: 1.45; color: #5C5750;">Cuando alguien acierta, todos los que siguen jugando pierden 5 s.</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 18px; border-radius: 14px; background: #FFFFFF; border: 1px solid #E6E1D8;">
+          <div class="mono" style="font-weight: 700; font-size: 18px; color: #2E7A4E;">104%</div>
+          <div style="font-weight: 700; font-size: 15px;">El reloj puntúa</div>
+          <div style="font-size: 13px; line-height: 1.45; color: #5C5750;">Un punto por cada 1% de tiempo que te sobre. Los intentos casi no pesan.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size: 13px; color: #8F8980;">Sin cuenta. Sin descargas. Un enlace y a jugar.</div>
+  </div>
+
+  <!-- Derecha: formulario -->
+  <div style="background: #FFFFFF; border-left: 1px solid #E6E1D8; padding: 48px 48px 40px 48px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+    <div style="display: flex; flex-direction: column; gap: 26px;">
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <h2 class="disp" style="margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.02em;">Crear sala</h2>
+        <div style="font-size: 14px; color: #5C5750;">Tú fijas las reglas. Los demás entran con el código.</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="label">Tu nombre</div>
+        <div style="height: 48px; padding: 0 16px; border-radius: 10px; border: 1.5px solid #1C1A17; display: flex; align-items: center; font-size: 15px; font-weight: 500; box-sizing: border-box;">Ana</div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="label">Idioma de las palabras</div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+          <div class="seg seg-on">Español</div>
+          <div class="seg">English</div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <div class="label">Tiempo inicial por ronda</div>
+          <div style="font-size: 12px; color: #8F8980;">mínimo 60 s</div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;">
+          <div class="seg mono">60 s</div>
+          <div class="seg seg-on mono">90 s</div>
+          <div class="seg mono">120 s</div>
+          <div class="seg mono">180 s</div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div class="label">Rondas</div>
+          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;">
+            <div class="seg mono" style="padding: 0;">1</div>
+            <div class="seg seg-on mono" style="padding: 0;">3</div>
+            <div class="seg mono" style="padding: 0;">5</div>
+            <div class="seg mono" style="padding: 0;">10</div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div class="label">Jugadores</div>
+          <div style="height: 44px; border-radius: 10px; background: #F4F1EB; display: flex; align-items: center; justify-content: space-between; padding: 0 6px; box-sizing: border-box;">
+            <div style="width: 34px; height: 34px; border-radius: 8px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; color: #1C1A17;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"></path></svg>
+            </div>
+            <div class="mono" style="font-size: 16px; font-weight: 700;">8</div>
+            <div style="width: 34px; height: 34px; border-radius: 8px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; color: #C9C3B9;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 12px; background: #FBF3DC; border: 1px solid #F0DDA0;">
+        <div style="display: flex; align-items: center; gap: 10px; color: #7A5A05;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"></path></svg>
+          <span style="font-size: 14px; font-weight: 600;">Una pista por jugador y ronda</span>
+        </div>
+        <div style="width: 40px; height: 24px; border-radius: 999px; background: #1C1A17; position: relative;">
+          <div style="position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 999px; background: #FFFFFF;"></div>
+        </div>
+      </div>
+
+      <div style="height: 52px; border-radius: 12px; background: #6C4CF1; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; letter-spacing: 0.01em;">Crear sala</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 24px; border-top: 1px solid #E6E1D8;">
+      <div class="label">¿Tienes un código?</div>
+      <div style="display: flex; gap: 8px;">
+        <div class="mono" style="flex: 1; height: 48px; padding: 0 16px; border-radius: 10px; border: 1.5px solid #E6E1D8; display: flex; align-items: center; font-size: 16px; letter-spacing: 0.2em; color: #C9C3B9; box-sizing: border-box;">KX7P</div>
+        <div style="height: 48px; padding: 0 20px; border-radius: 10px; border: 1.5px solid #1C1A17; display: flex; align-items: center; font-size: 15px; font-weight: 600; box-sizing: border-box;">Unirse</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

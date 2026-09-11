@@ -1,0 +1,14 @@
+{
+  "name": "wordrush",
+  "private": true,
+  "description": "WordRush · Wordle multijugador. Dos servicios independientes: backend/ (NestJS + Socket.IO) y frontend/ (React + Vite).",
+  "scripts": {
+    "sync-contract": "node scripts/sync-contract.mjs",
+    "check-contract": "node scripts/sync-contract.mjs --check",
+    "dev:backend": "pnpm --dir backend start:dev",
+    "dev:frontend": "pnpm --dir frontend dev",
+    "build:backend": "pnpm --dir backend build",
+    "build:frontend": "pnpm --dir frontend build",
+    "test:backend": "pnpm --dir backend test"
+  }
+}
