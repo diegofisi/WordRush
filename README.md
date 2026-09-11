@@ -46,7 +46,30 @@ Server tests: `cd backend && pnpm test`.
 
 ## Deploy on Railway
 
-One Railway project with **two services**, both created from this same repository.
+The project is live:
+
+| Service | URL |
+|---|---|
+| backend | https://backend-production-9a1a.up.railway.app (health check at `/health`) |
+| frontend | https://frontend-production-a644.up.railway.app |
+
+One Railway project (`WordRush`) with **two services**. They were created and are deployed
+with the Railway CLI from a clean export of the last commit, so shipping a change is:
+
+```bash
+git commit -am "..."                              # deploys upload what is committed
+pnpm deploy                                       # both; or pnpm deploy:backend / pnpm deploy:frontend
+railway service status --service backend --json   # SUCCESS when done
+```
+
+Requirements: `npm i -g @railway/cli`, `railway login`, and `railway link` once from the
+repo root (project `WordRush`, environment `production`). The script
+`scripts/railway-deploy.mjs` exports each folder with `git archive` to a temp dir before
+`railway up`; that is the workaround for the CLI failing with `prefix not found` on
+subfolders of a git repo.
+
+If you prefer automatic deploys on push, connect GitHub to each service in the Railway UI
+and set its Root Directory (`backend` / `frontend`). The manual setup from scratch follows.
 
 ### 1. `backend` service
 - Settings → Source → **Root Directory**: `backend`.
