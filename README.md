@@ -50,8 +50,8 @@ The project is live:
 
 | Service | URL |
 |---|---|
-| backend | https://backend-production-9a1a.up.railway.app (health check at `/health`) |
-| frontend | https://frontend-production-a644.up.railway.app |
+| backend | https://wordrush-api.up.railway.app (health check at `/health`) |
+| frontend | https://wordrush.up.railway.app |
 
 One Railway project (`WordRush`) with **two services**. They were created and are deployed
 with the Railway CLI from a clean export of the last commit, so shipping a change is:
@@ -76,7 +76,7 @@ and set its Root Directory (`backend` / `frontend`). The manual setup from scrat
 - Railway picks up `railway.json`: Nixpacks build, start `node dist/main.js`, health
   check on `/health`.
 - Settings → Networking → **Generate Domain**. Note the URL, e.g.
-  `https://wordrush-backend.up.railway.app`.
+  `https://wordrush-api.up.railway.app`.
 - Variables:
   - `FRONTEND_URL` = the public URL of the frontend (step 2). Several origins can be
     separated by commas.
@@ -117,8 +117,8 @@ letter of its own.
 
 | Language | Words the game picks | Valid guesses |
 |---|---|---|
-| Spanish | 870 | 10818 |
-| English | 898 | 10197 |
+| Spanish | 870 | 10835 |
+| English | 898 | 10202 |
 
 Answers are **base forms only** (infinitives, singular nouns, masculine singular
 adjectives; in English no plurals or past tenses), in neutral Spanish, the most used words

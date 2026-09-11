@@ -10,7 +10,11 @@ import {
 import { pickHint } from '../../domain/services/hint-picker';
 import { RoundLifecycleService } from '../services/round-lifecycle.service';
 
-/** One hint per player per round: reveals a letter of the word, never its position. */
+/**
+ * One hint per player per round: reveals a letter of the word, never its
+ * position, and never a letter the player already knows about (the picker
+ * prefers answer slots that are neither green nor charged yellow).
+ */
 @Injectable()
 export class UseHintUseCase {
   constructor(

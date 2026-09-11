@@ -6,6 +6,7 @@ import { PageLoading } from '@/shared/components/ui/PageState';
 import { MAX_ATTEMPTS, WORD_LENGTH, type Emote } from '@/shared/contract';
 import { useIsDesktopGame } from '@/shared/hooks/useMediaQuery';
 import { useNow } from '@/shared/hooks/useNow';
+import { useToastSafeBottom } from '@/shared/hooks/useToastSafeBottom';
 import { useT } from '@/shared/i18n';
 import { percentOf, secondsLeftAt } from '@/shared/lib/format';
 import { resultsPath } from '@/shared/routes/paths';
@@ -23,6 +24,9 @@ import { toRivalViewModel } from '../models/game.model';
 import type { GameViewProps, MyOutcome } from '../models/game-view.model';
 import { LOW_TIME_THRESHOLD, useGameStore } from '../stores/useGameStore';
 
+/** Clears the phone keyboard block (3 rows + the emote row) for the toasts. */
+const PHONE_TOAST_BOTTOM = '15rem';
+
 interface GameContainerProps {
   roomCode: string;
 }
@@ -31,6 +35,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const t = useT();
   const navigate = useNavigate();
   const isDesktop = useIsDesktopGame();
+  useToastSafeBottom(isDesktop ? null : PHONE_TOAST_BOTTOM);
 
   const status = useGameStore((state) => state.status);
   const round = useGameStore((state) => state.round);
@@ -47,10 +52,11 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const draft = useGameStore((state) => state.draft);
   const revealRow = useGameStore((state) => state.revealRow);
   const shakeKey = useGameStore((state) => state.shakeKey);
+  const guessNotice = useGameStore((state) => state.guessNotice);
   const emotePausedUntil = useGameStore((state) => state.emotePausedUntil);
   const typeLetter = useGameStore((state) => state.typeLetter);
   const backspace = useGameStore((state) => state.backspace);
-  const shake = useGameStore((state) => state.shake);
+  const noticeGuess = useGameStore((state) => state.noticeGuess);
   const announceLowTime = useGameStore((state) => state.announceLowTime);
   const connection = useSessionStore((state) => state.connection);
 
@@ -117,20 +123,20 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const submit = useCallback(async () => {
     const current = useGameStore.getState();
     if (current.status !== 'playing' || !current.me || current.me.finished) return;
+    // Guess errors are printed under the row being typed, where the player is
+    // looking; a toast there would cover the clock.
     if (current.draft.length < WORD_LENGTH) {
-      shake();
-      toast.errorText(t.game.tooShort);
+      noticeGuess(t.game.tooShort);
       return;
     }
     const result = await sendGuess(current.draft);
     if (!result || result.ok) return;
     if (result.error.code === 'word_not_in_list' || result.error.code === 'word_length') {
-      shake();
-      toast.error(result.error.code);
+      noticeGuess(t.errors[result.error.code]);
       return;
     }
     toast.error(result.error.message === 'timeout' ? 'timeout' : result.error.code);
-  }, [sendGuess, shake, t]);
+  }, [sendGuess, noticeGuess, t]);
 
   const handleEnter = useCallback(() => void submit(), [submit]);
 
@@ -214,6 +220,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     hint: me.hint,
     revealRow,
     shakeKey,
+    guessNotice,
     keyStates,
     outcome,
     solvedPosition,

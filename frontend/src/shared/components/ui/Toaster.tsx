@@ -10,7 +10,12 @@ const toneClass: Record<ToastItem['tone'], string> = {
   success: 'bg-green-soft text-green-ink border-green/20',
 };
 
-/** Mount once in the app shell; renders the toast store as a bottom-centre stack. */
+/**
+ * Mount once in the app shell. Toasts never sit over the middle of the screen,
+ * which on the game board is the clock: from 640 px up they stack in a narrow
+ * top-right column under the top bar, and on phones at the bottom, above
+ * whatever the screen puts there (`--toast-bottom`, see `useToastSafeBottom`).
+ */
 export const Toaster = () => {
   const items = useToastStore((state) => state.items);
   const dismiss = useToastStore((state) => state.dismiss);
@@ -21,7 +26,7 @@ export const Toaster = () => {
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-4 top-20 z-50 flex flex-col items-center gap-2"
+      className="pointer-events-none fixed inset-x-4 bottom-(--toast-bottom) z-50 flex flex-col items-center gap-2 sm:inset-x-auto sm:top-20 sm:right-5 sm:bottom-auto sm:w-90 sm:max-w-[calc(100vw-2.5rem)] sm:items-end"
     >
       {items.map((item) => (
         <div

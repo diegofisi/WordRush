@@ -27,80 +27,77 @@ const freq = (f) => {
 
 // Words nobody should be asked to guess or allowed to throw at others.
 const BLOCK = new Set([
-  'nigga', 'nigger', 'spick', 'kikes', 'gooks', 'dykes', 'fagot', 'faggy', 'chink', 'wetback',
-  'negro', 'negra', 'putas', 'putos', 'maric', 'sudac', 'polla', 'pollas', 'verga', 'coños', 'mierd',
-  'pinga', 'puton', 'himen', 'chota', 'culos', 'tetas', 'cabro', 'bolas', 'zorra', 'boner', 'kinky', 'panty',
+  'nigga', 'nigger', 'spick', 'kikes', 'gooks', 'dykes', 'fagot', 'faggy', 'chink', 'wetback', 'maric', 'sudac',
 ]);
 
 // Valid words that must never be the answer: explicit terms and proper nouns
 // (still accepted as guesses, except the BLOCK list above).
 const ANSWER_EXCLUDE = new Set([
-  'honda', 'mecca', 'yahoo', 'weber', 'thong', 'bimbo', 'harem', 'girly', 'flack', 'bossy', 'fussy', 'deuce', 'pious', 'teeny', 'sassy', 'drool', 'leech', 'jerky',
-  'joder', 'porno', 'nazis', 'penes', 'pedos', 'semen', 'satan', 'utero', 'vulva', 'tanga', 'culon', 'meado', 'judas', 'andes',
-  'gales', 'vegas', 'tesla', 'nobel', 'morse', 'coran', 'alamo', 'danes', 'belga', 'turco', 'irani', 'mayas', 'chino', 'checo',
-  'sordo', 'polis', 'liras', 'hitler', 'jesus', 'cristo', 'ringo', 'porro', 'bledo', 'persa', 'vasco', 'perra', 'golfa', 'cagar',
-  'cague', 'mamon', 'orina', 'pezon', 'orgia', 'chupa', 'chupo', 'chupe', 'maton', 'patan', 'necio', 'torpe', 'gorda', 'gordo',
-  'flaco', 'calvo', 'enano', 'zombi', 'arpia', 'vello', 'muslo', 'tripa', 'ingle', 'ebrio', 'abuso', 'acoso', 'rehen', 'judio',
-  'judia', 'arabe', 'rusia', 'corea', 'marte', 'neron', 'alpes', 'mingo', 'sueco', 'turca', 'checa', 'indio', 'celda', 'misil',
-  'fusil', 'muera', 'ataud', 'horca', 'hedor', 'mugre', 'vison', 'pulga', 'horda', 'purga', 'bruta', 'bruto', 'parto', 'parir',
-  'cerda', 'bicho', 'gnomo', 'salio', 'vendi', 'salga', 'queda', 'busca', 'grita', 'quita', 'corra', 'probo', 'moran', 'sufra',
-  'falte', 'duela', 'flote', 'borro', 'doblo', 'calmo', 'fundo', 'ladra', 'silba', 'acuse', 'clava', 'tardo', 'monto', 'falto',
-  'canso', 'pateo', 'goteo', 'bateo', 'pegue', 'saque', 'acabe', 'podre', 'verme', 'lleve', 'entro', 'haras', 'leido', 'usado',
-  'caido', 'hecha', 'trata', 'lleva', 'canta', 'salve', 'cruza', 'choca', 'porta', 'rodea', 'monta', 'cante', 'sobra', 'cuida',
-  'venia', 'tenia', 'acabo', 'quedo', 'ahogo', 'apuro', 'movil', 'vater', 'tarta', 'lejia', 'grifo', 'esqui', 'pillo', 'pilla',
-  'cursi', 'bollo', 'profe', 'caray', 'hurra', 'voila', 'nomas', 'coñac', 'jerez', 'sidra', 'pudin', 'budin', 'atico', 'anden',
-  'jaleo', 'follo', 'curro', 'sueno', 'banjo', 'mutua', 'epica', 'etica', 'vasto', 'sabre', 'apenas', 'busco', 'pongo', 'quemo',
-  'niego', 'andas', 'traga', 'rinde', 'aloja', 'suiza', 'apolo', 'roque', 'pelis', 'morro', 'alijo', 'mitin', 'lloro', 'vendo',
-  'luche', 'ruego', 'jodio', 'siria', 'suizo', 'sirio', 'ruso', 'rusos', 'rusas', 'chile', 'china', 'cuba', 'peru', 'japon',
-  'roma', 'paris', 'bitch', 'whore', 'pussy', 'raped', 'penis', 'boobs', 'fucks', 'dicks', 'shits', 'moron', 'farts', 'crotch',
-  'swiss', 'dutch', 'irish', 'texas', 'roman', 'allah', 'bacon', 'euros', 'pesos', 'hindi', 'tamil', 'malay', 'aloha', 'chico',
-  'amigo', 'shiva', 'turks', 'lynch', 'vicar', 'thine', 'goons', 'takin', 'bates', 'trump', 'golly', 'ducky', 'piggy', 'psych',
-  'steed', 'logan', 'colin', 'daisy', 'monte', 'condo', 'prick', 'horny', 'sperm', 'booty', 'fatty', 'fatso', 'urine', 'vomit',
-  'swine', 'slave', 'queer', 'paddy', 'abuse', 'tramp', 'opium', 'booze', 'bleep', 'screw', 'idiot', 'filth', 'crook', 'arson',
-  'manic', 'bloke', 'howdy', 'gimme', 'kiddo', 'ahold', 'legit', 'scram', 'fella', 'sarge', 'shush', 'whoop', 'gabby', 'hubby',
-  'momma', 'mamma', 'mummy', 'cutie', 'shalt', 'yummy', 'comfy', 'cocky', 'whack', 'snuck', 'doggy', 'dandy', 'bogus', 'phony',
-  'funky', 'fishy', 'stink', 'lousy', 'nasty', 'freak', 'dummy', 'pinky', 'tummy', 'macho', 'senor', 'padre', 'bible', 'costa',
-  'stein', 'hogan', 'chang', 'rabbi', 'titan', 'omega', 'gamma', 'derby', 'ninja', 'vodka', 'sushi', 'pizza', 'salsa', 'pasta',
-  'tango', 'rodeo', 'bingo', 'bravo', 'mafia', 'disco', 'opera', 'curry', 'chili', 'cocoa', 'cigar', 'medic', 'known', 'given',
-  'taken', 'meant', 'spent', 'wrote', 'drove', 'chose', 'stood', 'threw', 'slept', 'spoke', 'broke', 'stole', 'built', 'began',
-  'begun', 'drank', 'blown', 'grown', 'drawn', 'sworn', 'swore', 'swept', 'shook', 'froze', 'flown', 'woken', 'risen', 'shown',
-  'eaten', 'dealt', 'cried', 'fried', 'burnt', 'stuck', 'found', 'heard', 'worse', 'worst', 'spelt', 'shone', 'slain', 'stung',
-  'swung', 'flung', 'clung', 'strung', 'wound', 'bound', 'going', 'doing', 'being', 'lying', 'using', 'dying', 'tying', 'suing',
-  'women', 'teeth', 'boxes', 'taxes', 'ashes', 'buses', 'those', 'these', 'older', 'lower', 'safer', 'nicer', 'wider', 'wiser',
-  'fewer', 'newly', 'madly', 'sadly', 'badly', 'fully', 'truly', 'gotta', 'gonna', 'wanna', 'kinda', 'lotta', 'yanks', 'brits',
-  'greek', 'japan', 'spain', 'cuban', 'asian', 'welsh', 'dobla', 'corro', 'quejo', 'quito', 'quite', 'salva', 'torna', 'apure',
-  'ligue', 'meneo', 'frote', 'rallo', 'rento', 'agote', 'anulo', 'jadeo', 'asomo', 'tumbo', 'trepa', 'cateo', 'zumba', 'lazar',
-  'peina', 'coito', 'ovulo', 'meada', 'cagon', 'picha', 'ojete', 'mojon', 'nalga', 'fecal', 'bosta', 'chavo', 'cholo', 'macon',
-  'merca', 'muñon', 'zurra', 'labia', 'mamar', 'haren', 'vichy', 'curie', 'greco', 'celta', 'sajon', 'babel', 'tulio', 'argon',
-  'boson', 'lumen', 'virgo', 'lupus', 'edema', 'enema', 'lepra', 'polio', 'sarna', 'apnea', 'miope', 'bizco', 'manco', 'obeso',
-  'paria', 'plebe', 'impio', 'iluso', 'esnob', 'dandi', 'bocon', 'fiero', 'viril', 'pudor', 'pecar', 'credo', 'clero', 'salmo',
-  'sacro', 'papal', 'tarot', 'ninfa', 'visir', 'mirza', 'pater', 'bonzo', 'lamia', 'abate', 'meson', 'facha', 'argot', 'fogon',
-  'rocha', 'pacha', 'morra', 'peque', 'tacho', 'bolin', 'chapo', 'chale', 'cuate', 'hucha', 'gacha', 'petar', 'guita', 'ruedo',
-  'lando', 'fardo', 'fusta', 'bozal', 'veraz', 'chita', 'omiso', 'ardid', 'betun', 'nafta', 'cinto', 'carpe', 'reten', 'perno',
-  'sedal', 'redil', 'ajuar', 'amaro', 'añada', 'vivaz', 'voraz', 'sarta', 'posta', 'apice', 'pompa', 'rimel', 'cacho', 'caqui',
-  'creta', 'zafar', 'apaño', 'aviar', 'hache', 'gamba', 'ojiva', 'conga', 'bardo', 'bidon', 'magno', 'zebra', 'yacer', 'dogma',
-  'bagre', 'alado', 'facto', 'minar', 'futon', 'arcon', 'basar', 'añejo', 'recio', 'feudo', 'timar', 'flama', 'gaita', 'tapia',
-  'avido', 'crepe', 'aster', 'regio', 'patin', 'tonel', 'filon', 'cuajo', 'chute', 'rotar', 'nadir', 'reuma', 'tacha', 'ebano',
-  'lauda', 'craso', 'rotor', 'cauto', 'tunda', 'taiga', 'burdo', 'rayon', 'legua', 'atrio', 'hidra', 'yelmo', 'rimar', 'futil',
-  'mirra', 'cabal', 'acebo', 'trufa', 'bongo', 'dueto', 'calza', 'bemol', 'liceo', 'virar', 'chato', 'mondo', 'corso', 'hampa',
-  'tosco', 'nitro', 'saten', 'logia', 'banal', 'boxer', 'totem', 'batea', 'braga', 'bajon', 'drago', 'pujar', 'yarda', 'fetal',
-  'arduo', 'vigia', 'pardo', 'idear', 'garbo', 'tenor', 'llano', 'valet', 'morsa', 'tempo', 'tifon', 'snoop', 'oddly', 'chump',
-  'posse', 'jumbo', 'recon', 'gavel', 'homey', 'serge', 'cupid', 'abbot', 'spank', 'geese', 'hallo', 'sahib', 'gases', 'wench',
-  'youse', 'tacky', 'hydra', 'scoot', 'loony', 'caste', 'kappa', 'pagan', 'pager', 'gator', 'triad', 'booby', 'buggy', 'finer',
-  'chevy', 'bowel', 'felon', 'pushy', 'dodgy', 'wacky', 'fetus', 'eater', 'rowdy', 'snuff', 'lefty', 'potty', 'spook', 'griff',
-  'goofy', 'goody', 'noose', 'slime', 'aging', 'fudge', 'stomp', 'whiff', 'giddy', 'biker', 'juror', 'brawl', 'swipe', 'roach',
-  'stoop', 'crave', 'whine', 'lowly', 'cramp', 'stump', 'purge', 'fiend', 'peril', 'elope', 'sling', 'bumpy', 'bleak', 'expel',
-  'mound', 'unfit', 'timid', 'stalk', 'swarm', 'boast', 'snore', 'farce', 'folly', 'smear', 'hutch', 'knack', 'chord', 'furry',
-  'chimp', 'combo', 'pouch', 'chime', 'loner', 'broth', 'plank', 'latch', 'rinse', 'cello', 'civic', 'vista', 'ultra', 'sedan',
-  'torso',
+  'mecca', 'yahoo', 'weber', 'thong', 'bimbo', 'harem', 'girly', 'flack', 'bossy', 'fussy', 'deuce', 'pious', 'teeny', 'sassy',
+  'drool', 'leech', 'jerky', 'joder', 'porno', 'nazis', 'penes', 'pedos', 'semen', 'satan', 'utero', 'vulva', 'tanga', 'culon',
+  'meado', 'judas', 'andes', 'gales', 'vegas', 'tesla', 'nobel', 'morse', 'coran', 'alamo', 'irani', 'mayas', 'polis', 'liras',
+  'hitler', 'jesus', 'cristo', 'ringo', 'porro', 'bledo', 'perra', 'golfa', 'cagar', 'cague', 'mamon', 'orina', 'pezon', 'orgia',
+  'chupa', 'chupo', 'chupe', 'maton', 'patan', 'arpia', 'abuso', 'acoso', 'rehen', 'judio', 'judia', 'rusia', 'corea', 'marte',
+  'neron', 'alpes', 'mingo', 'indio', 'muera', 'horda', 'salio', 'vendi', 'salga', 'queda', 'busca', 'grita', 'quita', 'corra',
+  'probo', 'moran', 'sufra', 'falte', 'duela', 'flote', 'borro', 'doblo', 'calmo', 'fundo', 'ladra', 'silba', 'acuse', 'clava',
+  'tardo', 'monto', 'falto', 'canso', 'pateo', 'goteo', 'bateo', 'pegue', 'saque', 'acabe', 'podre', 'verme', 'lleve', 'entro',
+  'haras', 'leido', 'usado', 'caido', 'hecha', 'trata', 'lleva', 'canta', 'salve', 'cruza', 'choca', 'porta', 'rodea', 'monta',
+  'cante', 'sobra', 'cuida', 'venia', 'tenia', 'acabo', 'quedo', 'ahogo', 'apuro', 'vater', 'tarta', 'lejia', 'grifo', 'pillo',
+  'pilla', 'cursi', 'bollo', 'profe', 'caray', 'hurra', 'voila', 'nomas', 'jerez', 'jaleo', 'follo', 'curro', 'sueno', 'sabre',
+  'apenas', 'busco', 'pongo', 'quemo', 'niego', 'andas', 'traga', 'rinde', 'aloja', 'apolo', 'roque', 'pelis', 'morro', 'alijo',
+  'mitin', 'lloro', 'vendo', 'luche', 'ruego', 'jodio', 'siria', 'ruso', 'rusos', 'rusas', 'chile', 'china', 'cuba', 'peru',
+  'japon', 'roma', 'paris', 'bitch', 'whore', 'pussy', 'raped', 'penis', 'boobs', 'fucks', 'dicks', 'shits', 'moron', 'farts',
+  'crotch', 'swiss', 'dutch', 'irish', 'texas', 'roman', 'allah', 'bacon', 'euros', 'pesos', 'hindi', 'tamil', 'malay', 'aloha',
+  'chico', 'amigo', 'shiva', 'turks', 'lynch', 'vicar', 'thine', 'goons', 'takin', 'bates', 'trump', 'golly', 'ducky', 'piggy',
+  'psych', 'steed', 'logan', 'colin', 'daisy', 'monte', 'condo', 'prick', 'horny', 'sperm', 'booty', 'fatty', 'fatso', 'urine',
+  'vomit', 'swine', 'slave', 'queer', 'paddy', 'abuse', 'tramp', 'opium', 'booze', 'bleep', 'screw', 'idiot', 'filth', 'crook',
+  'arson', 'manic', 'bloke', 'howdy', 'gimme', 'kiddo', 'ahold', 'legit', 'scram', 'fella', 'sarge', 'shush', 'whoop', 'gabby',
+  'hubby', 'momma', 'mamma', 'mummy', 'cutie', 'shalt', 'yummy', 'comfy', 'cocky', 'whack', 'snuck', 'doggy', 'dandy', 'bogus',
+  'phony', 'funky', 'fishy', 'stink', 'lousy', 'nasty', 'freak', 'dummy', 'pinky', 'tummy', 'macho', 'senor', 'padre', 'bible',
+  'costa', 'stein', 'hogan', 'chang', 'rabbi', 'titan', 'omega', 'gamma', 'derby', 'ninja', 'vodka', 'sushi', 'pizza', 'salsa',
+  'pasta', 'tango', 'rodeo', 'bingo', 'bravo', 'mafia', 'disco', 'opera', 'curry', 'chili', 'cocoa', 'cigar', 'medic', 'known',
+  'given', 'taken', 'meant', 'spent', 'wrote', 'drove', 'chose', 'stood', 'threw', 'slept', 'spoke', 'broke', 'stole', 'built',
+  'began', 'begun', 'drank', 'blown', 'grown', 'drawn', 'sworn', 'swore', 'swept', 'shook', 'froze', 'flown', 'woken', 'risen',
+  'shown', 'eaten', 'dealt', 'cried', 'fried', 'burnt', 'stuck', 'found', 'heard', 'worse', 'worst', 'spelt', 'shone', 'slain',
+  'stung', 'swung', 'flung', 'clung', 'strung', 'wound', 'bound', 'going', 'doing', 'being', 'lying', 'using', 'dying', 'tying',
+  'suing', 'women', 'teeth', 'boxes', 'taxes', 'ashes', 'buses', 'those', 'these', 'older', 'lower', 'safer', 'nicer', 'wider',
+  'wiser', 'fewer', 'newly', 'madly', 'sadly', 'badly', 'fully', 'truly', 'gotta', 'gonna', 'wanna', 'kinda', 'lotta', 'yanks',
+  'brits', 'greek', 'japan', 'spain', 'cuban', 'asian', 'welsh', 'dobla', 'corro', 'quejo', 'quito', 'quite', 'salva', 'torna',
+  'apure', 'ligue', 'meneo', 'frote', 'rallo', 'rento', 'agote', 'anulo', 'jadeo', 'asomo', 'tumbo', 'trepa', 'cateo', 'zumba',
+  'lazar', 'peina', 'coito', 'ovulo', 'meada', 'cagon', 'picha', 'ojete', 'mojon', 'nalga', 'fecal', 'bosta', 'chavo', 'cholo',
+  'macon', 'merca', 'muñon', 'zurra', 'labia', 'mamar', 'haren', 'vichy', 'curie', 'greco', 'celta', 'sajon', 'babel', 'tulio',
+  'argon', 'boson', 'lumen', 'virgo', 'lupus', 'edema', 'enema', 'lepra', 'polio', 'sarna', 'apnea', 'miope', 'bizco', 'manco',
+  'obeso', 'paria', 'plebe', 'impio', 'iluso', 'esnob', 'dandi', 'bocon', 'fiero', 'viril', 'pudor', 'pecar', 'credo', 'clero',
+  'salmo', 'sacro', 'papal', 'tarot', 'ninfa', 'visir', 'mirza', 'pater', 'bonzo', 'lamia', 'abate', 'meson', 'facha', 'argot',
+  'fogon', 'rocha', 'pacha', 'morra', 'peque', 'tacho', 'bolin', 'chapo', 'chale', 'cuate', 'hucha', 'gacha', 'petar', 'guita',
+  'ruedo', 'lando', 'fardo', 'fusta', 'bozal', 'veraz', 'chita', 'omiso', 'ardid', 'betun', 'nafta', 'cinto', 'carpe', 'reten',
+  'perno', 'sedal', 'redil', 'ajuar', 'amaro', 'añada', 'vivaz', 'voraz', 'sarta', 'posta', 'apice', 'pompa', 'rimel', 'cacho',
+  'caqui', 'creta', 'zafar', 'apaño', 'aviar', 'hache', 'gamba', 'ojiva', 'conga', 'bardo', 'bidon', 'magno', 'zebra', 'yacer',
+  'dogma', 'bagre', 'alado', 'facto', 'minar', 'futon', 'arcon', 'basar', 'añejo', 'recio', 'feudo', 'timar', 'flama', 'gaita',
+  'tapia', 'avido', 'crepe', 'aster', 'regio', 'patin', 'tonel', 'filon', 'cuajo', 'chute', 'rotar', 'nadir', 'reuma', 'tacha',
+  'ebano', 'lauda', 'craso', 'rotor', 'cauto', 'tunda', 'taiga', 'burdo', 'rayon', 'legua', 'atrio', 'hidra', 'yelmo', 'rimar',
+  'futil', 'mirra', 'cabal', 'acebo', 'trufa', 'bongo', 'dueto', 'calza', 'bemol', 'liceo', 'virar', 'chato', 'mondo', 'corso',
+  'hampa', 'tosco', 'nitro', 'saten', 'logia', 'banal', 'boxer', 'totem', 'batea', 'braga', 'bajon', 'drago', 'pujar', 'yarda',
+  'fetal', 'arduo', 'vigia', 'idear', 'garbo', 'morsa', 'tifon', 'snoop', 'oddly', 'chump', 'posse', 'jumbo', 'recon', 'gavel',
+  'homey', 'serge', 'cupid', 'abbot', 'spank', 'geese', 'hallo', 'sahib', 'gases', 'wench', 'youse', 'tacky', 'hydra', 'scoot',
+  'loony', 'caste', 'kappa', 'pagan', 'pager', 'gator', 'triad', 'booby', 'buggy', 'finer', 'chevy', 'bowel', 'felon', 'pushy',
+  'dodgy', 'wacky', 'fetus', 'eater', 'rowdy', 'snuff', 'lefty', 'potty', 'spook', 'griff', 'goofy', 'goody', 'noose', 'slime',
+  'aging', 'fudge', 'stomp', 'whiff', 'giddy', 'biker', 'juror', 'brawl', 'swipe', 'roach', 'stoop', 'crave', 'whine', 'lowly',
+  'cramp', 'stump', 'purge', 'fiend', 'peril', 'elope', 'sling', 'bumpy', 'bleak', 'expel', 'mound', 'unfit', 'timid', 'stalk',
+  'swarm', 'boast', 'snore', 'farce', 'folly', 'smear', 'hutch', 'knack', 'chord', 'furry', 'chimp', 'combo', 'pouch', 'chime',
+  'loner', 'broth', 'plank', 'latch', 'rinse', 'cello', 'civic', 'putas', 'putos', 'polla', 'pollas', 'verga', 'coños', 'mierd',
+  'pinga', 'puton', 'himen', 'chota', 'culos', 'tetas', 'cabro', 'bolas', 'zorra', 'boner', 'kinky', 'panty',
 ]);
 
 // Spain-only slang or regionally loaded words: never an answer (neutral Spanish).
 const SPAIN_ONLY = new Set([
-  'bledo', 'porro', 'curro', 'chulo', 'chula', 'cutre', 'pijos', 'pijas', 'birra', 'jolin', 'ostia', 'flipa',
-  'molar', 'guays', 'majos', 'majas', 'chorra', 'chorbo', 'coger', 'cojas', 'cojan', 'cojon', 'gilis', 'pasma',
-  'canis', 'yonki', 'guiri', 'gañan', 'chachi', 'follar', 'folla', 'pavos', 'tronco', 'mazos', 'pringa',
+  'bledo', 'porro', 'curro', 'chulo', 'chula', 'cutre', 'pijos', 'pijas', 'birra', 'jolin', 'ostia', 'flipa', 'guays', 'majos',
+  'majas', 'chorra', 'chorbo', 'coger', 'cojas', 'cojan', 'cojon', 'gilis', 'pasma', 'canis', 'yonki', 'guiri', 'gañan', 'chachi',
+  'follar', 'folla', 'pringa',
 ]);
+
+// Blocked in English only: ordinary words in Spanish (the colour 'negro'), slurs in English.
+const EN_BLOCK = new Set(['negro', 'negra']);
 
 // First names show up lowercased in subtitle corpora; never use them as answers.
 const NAMES = new Set(read('first-names.txt').map((w) => w.trim().toLowerCase()).filter(Boolean));
@@ -125,7 +122,7 @@ const normEs = (w) =>
   const isPast = (w) => w.endsWith('ed') && (dict4.has(w.slice(0, -2)) || dict4.has(w.slice(0, -1)));
   const EN_ANSWERS = Number(process.env.EN_ANSWERS ?? 898);
   const answers = [...popular]
-    .filter((w) => dict.has(w) && (enFull.get(w) ?? 0) >= 40 && !BLOCK.has(w) && !NAMES.has(w) && !ANSWER_EXCLUDE.has(w))
+    .filter((w) => dict.has(w) && (enFull.get(w) ?? 0) >= 40 && !BLOCK.has(w) && !EN_BLOCK.has(w) && !NAMES.has(w) && !ANSWER_EXCLUDE.has(w))
     .filter((w) => !isPlural(w) && !isPast(w))
     .sort((a, b) => (enFull.get(b) ?? 0) - (enFull.get(a) ?? 0))
     .slice(0, EN_ANSWERS);
@@ -134,7 +131,7 @@ const normEs = (w) =>
   // Allowed: English dictionary words seen in real English text (drops fossils and
   // the few foreign words the dictionary carries), plus every answer.
   const allowedSet = new Set(answers);
-  for (const w of dict) if ((enFull.get(w) ?? 0) >= 3 && !BLOCK.has(w)) allowedSet.add(w);
+  for (const w of dict) if ((enFull.get(w) ?? 0) >= 3 && !BLOCK.has(w) && !EN_BLOCK.has(w)) allowedSet.add(w);
   const allowed = [...allowedSet].sort();
 
   writeFileSync(path.join(out, 'en.json'), JSON.stringify({ language: 'en', answers, allowed }));

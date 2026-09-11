@@ -35,6 +35,8 @@ export interface GameViewProps {
   hint: HintReveal | null;
   revealRow: number | null;
   shakeKey: number;
+  /** Guess error caption under the current row; the id restarts its 1.6 s fade. */
+  guessNotice: { id: number; text: string } | null;
   keyStates: Record<string, KeyState>;
   outcome: MyOutcome;
   solvedPosition: number | null;

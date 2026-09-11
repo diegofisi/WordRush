@@ -49,7 +49,9 @@ Maximum possible per round: 50 seconds (5 letters × 10). With repeated letters 
 ## Hint
 - Every player gets **one hint per round**. If they do not use it, it is lost when the round ends; it does not carry over.
 - Using it reveals **one letter that is in the word, without saying in which position**. It is marked on the keyboard with the hint style (dotted yellow). Nothing is marked on the board.
-- The hint letter does **not** add the 5 s for a yellow. If you later place it in green, it adds only 5 s.
+- The hint never repeats something you already know: it reveals a letter from an **answer position that is neither green nor already charged yellow**. It works per position, so repeated letters still count: on `LLAMA`, a player who has one `L` in yellow can still be hinted the other `L` (nothing told them the word has two); once both `L` positions are known, `L` can no longer come out.
+- If every non-green position is already known, the hint does not fail: it reveals one of those letters anyway. Unknown positions always come first.
+- The hint letter does **not** add the 5 s for a yellow. If you later place it in green, it adds only 5 s. A hint that lands on a position already charged yellow changes nothing in the time ledger.
 - Keeping the hint scores points: see `03-scoring-system.md`.
 
 ## Leaving on purpose

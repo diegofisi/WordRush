@@ -33,6 +33,8 @@ const STICKER_MS = 2_500;
 /** Flip (560 ms) + stagger of the last tile; after this the reveal is static. */
 const REVEAL_MS = 560 + 4 * 110 + 100;
 const MAX_FEED = 40;
+/** How long the inline guess-error caption stays under the current row. */
+const NOTICE_MS = 1_600;
 
 interface Announced {
   greens: string[];
@@ -61,6 +63,8 @@ interface GameState {
   /** Row index whose tiles should flip-reveal; null when nothing is pending. */
   revealRow: number | null;
   shakeKey: number;
+  /** Guess error printed under the current row (never a toast); already translated. */
+  guessNotice: { id: number; text: string } | null;
   /** Epoch ms of my recent emote sends; the local half of the burst rule. */
   emoteSends: number[];
   /** Epoch ms until which emotes are refused after a burst; 0 when free. */
@@ -73,7 +77,8 @@ interface GameActions {
   reset: () => void;
   typeLetter: (letter: string) => void;
   backspace: () => void;
-  shake: () => void;
+  /** Shows the inline guess error under the current row and shakes it. */
+  noticeGuess: (text: string) => void;
   applyGuessAck: (ack: GuessAck, word: string) => void;
   applyHintAck: (ack: HintAck) => void;
   /** Applies the burst rule locally; false means "do not send this one". */
@@ -102,9 +107,7 @@ const roundInfoOf = (round: RoundState): RoundInfo => ({
 
 /** Roster entries rebuilt from the players who left, so their names survive. */
 const leftRoster = (left: Record<string, string>): Record<string, RosterEntry> =>
-  Object.fromEntries(
-    Object.entries(left).map(([id, name]) => [id, { name, connected: false }]),
-  );
+  Object.fromEntries(Object.entries(left).map(([id, name]) => [id, { name, connected: false }]));
 
 const rosterOf = (lobby: LobbyState): Record<string, RosterEntry> =>
   Object.fromEntries(
@@ -127,6 +130,7 @@ const initialState: GameState = {
   draft: '',
   revealRow: null,
   shakeKey: 0,
+  guessNotice: null,
   emoteSends: [],
   emotePausedUntil: 0,
   announced: emptyAnnounced(),
@@ -165,6 +169,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       draft: '',
       revealRow: null,
       shakeKey: 0,
+      guessNotice: null,
       announced: emptyAnnounced(),
     });
 
@@ -345,7 +350,13 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
 
     backspace: () => set((state) => ({ draft: state.draft.slice(0, -1) })),
 
-    shake: () => set((state) => ({ shakeKey: state.shakeKey + 1 })),
+    noticeGuess: (text) => {
+      const id = nextId++;
+      set((state) => ({ shakeKey: state.shakeKey + 1, guessNotice: { id, text } }));
+      window.setTimeout(() => {
+        set((state) => (state.guessNotice?.id === id ? { guessNotice: null } : {}));
+      }, NOTICE_MS);
+    },
 
     applyGuessAck: (ack, word) => {
       const revealRow = get().me?.rows.length ?? 0;
@@ -373,6 +384,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
           })),
           draft: '',
           shakeKey: 0,
+          guessNotice: null,
           revealRow: rows.length - 1,
           solvedCount: ack.solved
             ? Math.max(state.solvedCount, ack.solvedPosition ?? state.solvedCount + 1)

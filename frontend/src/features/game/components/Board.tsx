@@ -10,6 +10,8 @@ interface BoardProps {
   shakeKey: number;
   /** No current row is editable once finished. */
   finished: boolean;
+  /** Guess error printed under the row being typed; the id restarts the fade. */
+  notice?: { id: number; text: string } | null;
   size: 'lg' | 'sm';
 }
 
@@ -22,12 +24,18 @@ const FLIP_STAGGER_MS = 110;
 
 /** 8×5 own board: revealed rows, the row being typed and empty rows. The hint
  * never shows here: it only lights its letter on the keyboard. */
-export const Board = ({ rows, draft, revealRow, shakeKey, finished, size }: BoardProps) => {
+export const Board = ({
+  rows,
+  draft,
+  revealRow,
+  shakeKey,
+  finished,
+  notice = null,
+  size,
+}: BoardProps) => {
   const currentRow = finished ? -1 : rows.length;
-  const style = {
-    '--tile-size': TILE_SIZE[size],
-    gap: 'calc(var(--tile-size) * 0.14)',
-  } as CSSProperties;
+  const style = { '--tile-size': TILE_SIZE[size] } as CSSProperties;
+  const rowGap = { gap: 'calc(var(--tile-size) * 0.14)' } as CSSProperties;
   const tileStyle = {
     width: 'var(--tile-size)',
     height: 'var(--tile-size)',
@@ -35,57 +43,75 @@ export const Board = ({ rows, draft, revealRow, shakeKey, finished, size }: Boar
     borderRadius: 'calc(var(--tile-size) * 0.18)',
   } as CSSProperties;
 
+  // The caption hangs off a wrapper instead of the grid so `role="grid"` keeps
+  // owning nothing but rows. Its offset is the rows above it plus the gap plus
+  // a bit of a tile, so it lands centred in the band of the next empty row
+  // rather than on its top edge.
+  const noticeTop = `calc(${currentRow + 1} * var(--tile-size) + ${currentRow} * var(--tile-size) * 0.14 + var(--tile-size) * 0.42)`;
+
   return (
-    <div className="flex flex-col" style={style} role="grid" aria-rowcount={MAX_ATTEMPTS}>
-      {Array.from({ length: MAX_ATTEMPTS }, (_, rowIndex) => {
-        const revealed = rows[rowIndex];
-        const isCurrent = rowIndex === currentRow;
-        const isReveal = revealed && rowIndex === revealRow;
-        return (
-          <div
-            key={isCurrent ? `row-${rowIndex}-${shakeKey}` : `row-${rowIndex}`}
-            role="row"
-            className={cn('flex', isCurrent && shakeKey > 0 && 'animate-shake')}
-            style={{ gap: 'calc(var(--tile-size) * 0.14)' }}
-          >
-            {Array.from({ length: WORD_LENGTH }, (_, col) => {
-              if (revealed) {
-                const letter = revealed.word[col]?.toUpperCase() ?? '';
-                const color = revealed.colors[col] ?? 'gray';
-                return (
-                  <div
-                    key={col}
-                    role="gridcell"
-                    className={cn('tile', `tile-${color}`, isReveal && 'animate-tile-flip')}
-                    style={{
-                      ...tileStyle,
-                      animationDelay: isReveal ? `${col * FLIP_STAGGER_MS}ms` : undefined,
-                    }}
-                  >
-                    {letter}
-                  </div>
-                );
-              }
-              if (isCurrent) {
-                const typed = draft[col];
-                if (typed) {
+    <div className="relative" style={style}>
+      <div className="flex flex-col" style={rowGap} role="grid" aria-rowcount={MAX_ATTEMPTS}>
+        {Array.from({ length: MAX_ATTEMPTS }, (_, rowIndex) => {
+          const revealed = rows[rowIndex];
+          const isCurrent = rowIndex === currentRow;
+          const isReveal = revealed && rowIndex === revealRow;
+          return (
+            <div
+              key={isCurrent ? `row-${rowIndex}-${shakeKey}` : `row-${rowIndex}`}
+              role="row"
+              className={cn('flex', isCurrent && shakeKey > 0 && 'animate-shake')}
+              style={rowGap}
+            >
+              {Array.from({ length: WORD_LENGTH }, (_, col) => {
+                if (revealed) {
+                  const letter = revealed.word[col]?.toUpperCase() ?? '';
+                  const color = revealed.colors[col] ?? 'gray';
                   return (
                     <div
-                      key={`${col}-${typed}`}
+                      key={col}
                       role="gridcell"
-                      className="tile tile-filled animate-tile-pop"
-                      style={tileStyle}
+                      className={cn('tile', `tile-${color}`, isReveal && 'animate-tile-flip')}
+                      style={{
+                        ...tileStyle,
+                        animationDelay: isReveal ? `${col * FLIP_STAGGER_MS}ms` : undefined,
+                      }}
                     >
-                      {typed}
+                      {letter}
                     </div>
                   );
                 }
-              }
-              return <div key={col} role="gridcell" className="tile" style={tileStyle} />;
-            })}
-          </div>
-        );
-      })}
+                if (isCurrent) {
+                  const typed = draft[col];
+                  if (typed) {
+                    return (
+                      <div
+                        key={`${col}-${typed}`}
+                        role="gridcell"
+                        className="tile tile-filled animate-tile-pop"
+                        style={tileStyle}
+                      >
+                        {typed}
+                      </div>
+                    );
+                  }
+                }
+                return <div key={col} role="gridcell" className="tile" style={tileStyle} />;
+              })}
+            </div>
+          );
+        })}
+      </div>
+      {notice && currentRow >= 0 ? (
+        <div
+          key={notice.id}
+          role="alert"
+          style={{ top: noticeTop }}
+          className="pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 rounded-lg bg-red-soft px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-red shadow-card animate-caption-flash"
+        >
+          {notice.text}
+        </div>
+      ) : null}
     </div>
   );
 };

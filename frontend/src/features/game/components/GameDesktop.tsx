@@ -39,6 +39,7 @@ export const GameDesktop = (props: GameViewProps) => {
           draft={props.draft}
           revealRow={props.revealRow}
           shakeKey={props.shakeKey}
+          notice={props.guessNotice}
           finished={props.outcome !== 'playing'}
           size="lg"
         />
