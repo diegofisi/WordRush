@@ -1,5 +1,7 @@
 import type { Emote } from '@/shared/contract';
 
+import { customEmoteUrl } from './customEmotes';
+
 interface EmoteIconProps {
   emote: Emote;
   size?: number;
@@ -14,8 +16,26 @@ const base = {
   strokeLinejoin: 'round',
 } as const;
 
-/** The six game emotes, traced from docs/design/Main.dc.html (stroke SVGs, 24 px grid). */
+/**
+ * The six game emotes, traced from docs/design/Main.dc.html (stroke SVGs, 24 px grid).
+ * Custom artwork dropped into `src/assets/emotes/` takes precedence (see its README).
+ */
 export const EmoteIcon = ({ emote, size = 24, className }: EmoteIconProps) => {
+  const custom = customEmoteUrl(emote);
+  if (custom) {
+    return (
+      <img
+        src={custom}
+        width={size}
+        height={size}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        className={className}
+        style={{ display: 'block', objectFit: 'contain' }}
+      />
+    );
+  }
   const props = { width: size, height: size, viewBox: '0 0 24 24', className, ...base };
   switch (emote) {
     case 'smile':
