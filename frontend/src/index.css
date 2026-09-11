@@ -425,7 +425,10 @@
   font-size: 22px;
   text-transform: uppercase;
   opacity: 0;
-  animation: 30s linear infinite both;
+  animation-duration: 30s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
 }
 .hero-face-front > span:nth-child(1) {
   animation-name: hero-f0;
