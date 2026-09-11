@@ -13,7 +13,7 @@ interface HintButtonProps {
   compact?: boolean;
 }
 
-/** Yellow "Pista · 1 disponible" pill from the top bar of Main.dc.html. */
+/** Yellow "hint available" pill from the top bar of Main.dc.html. */
 export const HintButton = ({
   t,
   state,

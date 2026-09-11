@@ -12,7 +12,7 @@ import { RivalStrip } from './RivalStrip';
 import { ScorePreviewCard } from './ScorePreviewCard';
 import { WaitingCard } from './WaitingCard';
 
-/** Phone game (JuegoMovil.dc.html): clock + actions, rival strip, last event, board, keyboard, emotes. */
+/** Phone game (GameMobile.dc.html): clock + actions, rival strip, last event, board, keyboard, emotes. */
 export const GameMobile = (props: GameViewProps) => {
   const { t } = props;
   const lastEvent = props.feed[props.feed.length - 1];

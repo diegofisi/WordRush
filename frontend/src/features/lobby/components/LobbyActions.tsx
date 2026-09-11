@@ -17,7 +17,7 @@ interface LobbyActionsProps {
 }
 
 /**
- * Footer of SalaEspera.dc.html: one row, everything on the same baseline.
+ * Footer of Lobby.dc.html: one row, everything on the same baseline.
  * The status sentence (or the reason the host cannot start yet) lives on the
  * left, so no caption under the buttons can push them out of line.
  */

@@ -1,7 +1,7 @@
 /**
  * How long a room and its players survive without anybody connected.
- * Single source of truth for `docs/context/02-reglas-de-juego.md` ->
- * "Desconexiones y vida de la sala". Rooms live in memory and weigh a few KB;
+ * Single source of truth for `docs/context/02-game-rules.md` ->
+ * "Disconnections and room lifetime". Rooms live in memory and weigh a few KB;
  * these delays are hygiene, not cost. The frontend does not need them, so they
  * stay out of the socket contract.
  */

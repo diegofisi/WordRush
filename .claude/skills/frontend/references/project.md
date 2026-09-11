@@ -1,4 +1,4 @@
-# This project: WordRush web client (Wordle multijugador)
+# This project: WordRush web client (multiplayer Wordle)
 
 > This file is the **project binding** for the portable frontend doctrine in
 > this skill. The doctrine files speak MUI; this file says which primitives
@@ -16,8 +16,8 @@ table. Desktop and phone.
 
 Game rules, scoring and design decisions are **not** restated here:
 
-- `docs/context/02-reglas-de-juego.md`, `docs/context/03-sistema-de-puntuacion.md` — what the UI must show.
-- `docs/context/05-diseno.md` — visual direction and the link to the Claude Design canvas.
+- `docs/context/02-game-rules.md`, `docs/context/03-scoring-system.md` — what the UI must show.
+- `docs/context/05-design.md` — visual direction and the link to the Claude Design canvas.
 - `docs/design/*.dc.html` — the six screens (create room, lobby, game, results, mobile game, dark game) with exact colours, spacing and copy. Build from these, not from memory.
 
 ## Stack (confirmed 2026-09-11)

@@ -29,7 +29,7 @@ function unsolved(greens: number): RoundResult {
   };
 }
 
-describe('scoreRound (03-sistema-de-puntuacion.md)', () => {
+describe('scoreRound (03-scoring-system.md)', () => {
   it('Ana: 94 s of 90, attempt 3, second, hint kept -> 123', () => {
     const b = scoreRound(
       solved({ name: 'Ana', secondsLeftAtSolve: 94, attempt: 3, position: 2 }),

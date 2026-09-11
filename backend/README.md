@@ -89,7 +89,7 @@ ticker, between-rounds scheduler) and `rooms` (janitor), never in the gateway.
 ## Room lifecycle
 
 `src/modules/rooms/domain/room-lifecycle.ts` holds every delay of
-`docs/context/02-reglas-de-juego.md` -> "Desconexiones y vida de la sala": a lobby player
+`docs/context/02-game-rules.md` -> "Disconnections and room lifetime": a lobby player
 disconnected for 60 s loses their slot, a room nobody is connected to is deleted 10 minutes
 after the last disconnection, and a finished room 5 minutes after its `game:end`. A round that
 ends with nobody connected ends the game as well: no round is ever started into an empty room.

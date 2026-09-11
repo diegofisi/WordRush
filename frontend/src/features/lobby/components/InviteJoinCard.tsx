@@ -17,7 +17,7 @@ interface InviteJoinCardProps {
 /**
  * What `/?code=XXXX` shows: the room code and one name field. No hero and no
  * create form — whoever follows an invitation is here to join
- * (docs/context/02-reglas-de-juego.md -> "Sala").
+ * (docs/context/02-game-rules.md -> "Room").
  */
 export const InviteJoinCard = ({
   t,

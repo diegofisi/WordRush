@@ -35,7 +35,7 @@ export const ROOM_LIMITS = {
   emoteCooldownSeconds: 3,
 } as const;
 
-/** docs/context/02-reglas-de-juego.md and 03-sistema-de-puntuacion.md */
+/** docs/context/02-game-rules.md and 03-scoring-system.md */
 export const SCORING = {
   yellowSeconds: 5,
   greenSeconds: 10,
@@ -312,5 +312,5 @@ export interface ServerToClientEvents {
   'round:end': (payload: RoundEndPayload) => void;
   'game:end': (payload: GameEndPayload) => void;
   'reaction:show': (payload: { playerId: string; emote: Emote }) => void;
-  'error': (payload: ErrorPayload) => void;
+  error: (payload: ErrorPayload) => void;
 }

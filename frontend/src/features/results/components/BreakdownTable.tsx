@@ -39,7 +39,7 @@ const Dot = () => <Num tone="mute">·</Num>;
 
 const gridCols = 'grid-cols-[36px_160px_90px_90px_90px_80px_80px_90px]';
 
-/** Per-round points table with the exact columns of Resultados.dc.html. */
+/** Per-round points table with the exact columns of Results.dc.html. */
 export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
   const firstUnsolved = rows.findIndex((row) => !row.solved);
   return (

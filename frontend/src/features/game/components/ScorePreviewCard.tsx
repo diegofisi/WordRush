@@ -26,7 +26,7 @@ const Row = ({ label, value }: { label: string; value: number }) => (
   </div>
 );
 
-/** "Si resuelves ahora" (Main.dc.html), computed from SCORING. */
+/** The "if you solve now" score preview (Main.dc.html), computed from SCORING. */
 export const ScorePreviewCard = ({ t, preview, outcome }: ScorePreviewCardProps) => {
   const title = outcome === 'playing' ? t.game.ifYouSolveNow : t.game.yourRound;
   return (

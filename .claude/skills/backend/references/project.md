@@ -1,4 +1,4 @@
-# Project binding — WordRush API (Wordle multijugador)
+# Project binding — WordRush API (multiplayer Wordle)
 
 Everything here is specific to this repo. The doctrine files in this folder are
 inherited from a previous project (a cloud-drive API) and are project-agnostic;
@@ -17,9 +17,9 @@ round, emote reactions, and a per-round / accumulated leaderboard.
 Game rules and the scoring formula are **not** restated here. They live in
 `docs/context/` at the repo root and are the source of truth:
 
-- `docs/context/02-reglas-de-juego.md` — room, round, timer, hint, attack, emotes.
-- `docs/context/03-sistema-de-puntuacion.md` — points formula with a worked simulation.
-- `docs/context/04-decisiones-y-pendientes.md` — decisions taken and still open.
+- `docs/context/02-game-rules.md` — room, round, timer, hint, attack, emotes.
+- `docs/context/03-scoring-system.md` — points formula with a worked simulation.
+- `docs/context/04-decisions-and-pending.md` — decisions taken and still open.
 
 ## Stack (confirmed 2026-09-11)
 

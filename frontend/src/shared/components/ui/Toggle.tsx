@@ -7,7 +7,7 @@ interface ToggleProps {
   disabled?: boolean;
 }
 
-/** Switch from CrearSala.dc.html: 40×24 pill, ink when on. */
+/** Switch from CreateRoom.dc.html: 40×24 pill, ink when on. */
 export const Toggle = ({ checked, onChange, label, disabled }: ToggleProps) => (
   <button
     type="button"

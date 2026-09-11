@@ -17,7 +17,7 @@ interface SegmentedProps<T extends string | number> {
   className?: string;
 }
 
-/** Segmented control from CrearSala.dc.html (`.seg` / `.seg-on`). */
+/** Segmented control from CreateRoom.dc.html (`.seg` / `.seg-on`). */
 export const Segmented = <T extends string | number>({
   options,
   value,

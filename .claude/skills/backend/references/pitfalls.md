@@ -214,7 +214,7 @@ sibling did not".
     in the 1h expiry; `isLocked && lockedById !== x` blocks forever.
 70. `GET /admin/plans` (all plans) exists for the admin UI; `GET /plans`
     stays active-only. `UserProfileResponseDto.deletionRequestedAt` is
-    what the profile page uses to offer "cancelar eliminación".
+    what the profile page uses to offer a "cancel deletion" action.
 71. `/photos/months?tz=` accepts IANA names validated with
     `Intl.supportedValuesOf('timeZone')` (a bad zone is a 400, not a
     Postgres 500).

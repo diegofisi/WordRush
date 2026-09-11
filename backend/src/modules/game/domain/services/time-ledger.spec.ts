@@ -16,7 +16,7 @@ describe('chargeGuess (time ledger)', () => {
     round = new PlayerRound(0, 90);
   });
 
-  it('reproduces the simulation in 03-sistema-de-puntuacion.md (Ana)', () => {
+  it('reproduces the simulation in 03-scoring-system.md (Ana)', () => {
     expect(play(round, 'sandy').seconds).toBe(15); // S green +10, D yellow +5
     expect(play(round, 'slide').seconds).toBe(10); // L +5, I +5, D again 0, S again 0
     const last = play(round, 'solid');

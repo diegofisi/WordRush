@@ -11,7 +11,7 @@ interface StepperProps {
   incrementLabel: string;
 }
 
-/** Players stepper from CrearSala.dc.html. */
+/** Players stepper from CreateRoom.dc.html. */
 export const Stepper = ({
   value,
   min,

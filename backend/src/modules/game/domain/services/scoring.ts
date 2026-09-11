@@ -16,7 +16,7 @@ export interface RoundResult {
   greens: number;
 }
 
-/** docs/context/03-sistema-de-puntuacion.md, one player. */
+/** docs/context/03-scoring-system.md, one player. */
 export function scoreRound(
   result: RoundResult,
   initialSeconds: number,

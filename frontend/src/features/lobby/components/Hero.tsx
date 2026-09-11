@@ -1,7 +1,7 @@
 import { LightningIcon } from '@/shared/components/icons/GameIcons';
 import type { Dictionary } from '@/shared/i18n';
 
-/** Colour plan for the five looping words, taken from CrearSala.dc.html. */
+/** Colour plan for the five looping words, taken from CreateRoom.dc.html. */
 const HERO_COLORS: readonly (readonly ('g' | 'y' | 'x' | 'e')[])[] = [
   ['g', 'x', 'y', 'g', 'e'],
   ['y', 'g', 'g', 'x', 'g'],

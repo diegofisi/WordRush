@@ -1,16 +1,16 @@
 {
   "artboards": [
-    { "file": "CrearSala.dc.html",   "title": "1 · Crear sala",       "x": 0,    "y": 0,    "w": 1440, "h": 900 },
-    { "file": "SalaEspera.dc.html",  "title": "2 · Sala de espera",   "x": 1540, "y": 0,    "w": 1440, "h": 900 },
-    { "file": "Main.dc.html",        "title": "3 · Juego",            "x": 3080, "y": 0,    "w": 1440, "h": 900 },
-    { "file": "Resultados.dc.html",  "title": "4 · Resultados",       "x": 0,    "y": 1060, "w": 1440, "h": 900 },
-    { "file": "JuegoMovil.dc.html",  "title": "Juego · móvil",        "x": 1540, "y": 1060, "w": 390,  "h": 844 },
-    { "file": "JuegoOscuro.dc.html", "title": "Juego · modo oscuro",  "x": 3080, "y": 1060, "w": 1440, "h": 900 }
+    { "file": "CreateRoom.dc.html", "title": "1 · Create room",     "x": 0,    "y": 0,    "w": 1440, "h": 900 },
+    { "file": "Lobby.dc.html",      "title": "2 · Lobby",           "x": 1540, "y": 0,    "w": 1440, "h": 900 },
+    { "file": "Main.dc.html",       "title": "3 · Game",            "x": 3080, "y": 0,    "w": 1440, "h": 900 },
+    { "file": "Results.dc.html",    "title": "4 · Results",         "x": 0,    "y": 1060, "w": 1440, "h": 900 },
+    { "file": "GameMobile.dc.html", "title": "Game · mobile",       "x": 1540, "y": 1060, "w": 390,  "h": 844 },
+    { "file": "GameDark.dc.html",   "title": "Game · dark mode",    "x": 3080, "y": 1060, "w": 1440, "h": 900 }
   ],
   "annotations": [
-    { "id": "flujo", "x": 0, "y": -210, "w": 520, "text": "Flujo de una partida, de izquierda a derecha: crear sala, esperar a los demás, jugar la ronda, ver resultados. Nombre de trabajo: WordRush (placeholder).\nLa fuente de verdad de reglas y puntos está en context/ del proyecto." },
-    { "id": "puntos", "x": 3080, "y": -210, "w": 460, "text": "Puntos por ronda = 1 por cada 1% del tiempo inicial que sobra al acertar, −3 por intento extra, +25/+15/+10 a los tres primeros, +10 por conservar la pista, mínimo 20 al acertar. Sin acertar: 5 por verde, máximo 20.\nCuando alguien acierta: −5 s a todos los que siguen jugando." },
-    { "id": "alternativas", "x": 1540, "y": 940, "w": 420, "text": "Abajo: la misma pantalla de juego en móvil y en modo oscuro. El modo oscuro es una alternativa para decidir cuál va como principal." }
+    { "id": "flujo", "x": 0, "y": -210, "w": 520, "text": "Flow of a game, from left to right: create the room, wait for the others, play the round, see the results. Working name: WordRush (placeholder).\nThe source of truth for rules and points is in the project's context/ folder." },
+    { "id": "puntos", "x": 3080, "y": -210, "w": 460, "text": "Points per round = 1 for every 1% of the initial time left when you solve, −3 per extra attempt, +25/+15/+10 for the first three, +10 for keeping the hint, minimum 20 for solving. Without solving: 5 per green, maximum 20.\nWhen someone solves: −5 s to everyone still playing." },
+    { "id": "alternativas", "x": 1540, "y": 940, "w": 420, "text": "Below: the same game screen on mobile and in dark mode. Dark mode is an alternative, so one can be picked as the main one." }
   ],
   "launch": { "view": "canvas" }
 }

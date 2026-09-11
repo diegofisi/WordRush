@@ -20,7 +20,7 @@ const Row = ({ label, value, tone }: { label: string; value: string; tone?: 'pos
   </div>
 );
 
-/** "Cómo se puntúa" side card from SalaEspera.dc.html; numbers come from SCORING. */
+/** The "how scoring works" side card from Lobby.dc.html; numbers come from SCORING. */
 export const ScoringCard = ({ t }: ScoringCardProps) => (
   <Card className="flex flex-col gap-5 p-6 self-start">
     <div className="flex flex-col gap-1">

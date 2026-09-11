@@ -8,7 +8,7 @@ paths:
 
 v1 of this game has **no database** (rooms live in memory). These rules apply
 the day persistence is added; do not add TypeORM before that decision is
-recorded in `docs/context/04-decisiones-y-pendientes.md`.
+recorded in `docs/context/04-decisions-and-pending.md`.
 
 - `synchronize` is never enabled; every schema change is a migration run at
   boot (`migrationsRun: true`).

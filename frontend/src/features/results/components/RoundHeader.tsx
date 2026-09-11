@@ -8,7 +8,7 @@ interface RoundHeaderProps {
   results: RoundResultsViewModel;
 }
 
-/** Word tiles + "5 de 8 la resolvieron" + my round / accumulated cards (Resultados.dc.html). */
+/** Word tiles + the "N of M solved it" line + my round / accumulated cards (Results.dc.html). */
 export const RoundHeader = ({ t, results }: RoundHeaderProps) => {
   const missed = results.playerCount - results.solvedCount;
   return (

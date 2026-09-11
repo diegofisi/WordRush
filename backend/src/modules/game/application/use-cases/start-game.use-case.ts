@@ -10,7 +10,7 @@ import { StartRoundUseCase } from './start-round.use-case';
 
 /**
  * Host starts the game from the lobby. Readiness is informational only:
- * players who are not ready enter anyway ("quien no esté listo entra igual").
+ * players who are not ready enter anyway.
  */
 @Injectable()
 export class StartGameUseCase {

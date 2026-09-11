@@ -3,7 +3,7 @@ interface RoomContextProps {
   parts?: (string | null | undefined)[];
 }
 
-/** "KX7P · Ronda 2 de 3 · Español" for the top bar. */
+/** Top-bar room context: room code, then round and room language, separated by dots. */
 export const RoomContext = ({ code, parts = [] }: RoomContextProps) => (
   <>
     <span className="font-mono font-semibold text-ink">{code}</span>

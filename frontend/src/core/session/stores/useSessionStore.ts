@@ -13,7 +13,7 @@ import { toast } from '@/shared/stores/useToastStore';
 /**
  * `localStorage`, not `sessionStorage`: closing the tab or losing the network
  * must not cost the seat while the game is still going
- * (docs/context/02-reglas-de-juego.md -> "Desconexiones y vida de la sala").
+ * (docs/context/02-game-rules.md -> "Disconnections and room lifetime").
  */
 const SESSION_KEY = 'wordrush.session';
 

@@ -1,18 +1,18 @@
-# Carpeta de contexto
+# Context folder
 
-Esta carpeta existe para que nadie pierda el hilo del proyecto: ni una persona nueva,
-ni una sesión nueva de Claude. Contiene la idea, las reglas y las decisiones tal como
-se acordaron, en orden de lectura.
+This folder exists so that nobody loses the thread of the project: neither a new person
+nor a new Claude session. It holds the idea, the rules and the decisions exactly as they
+were agreed, in reading order.
 
-| Archivo | Qué contiene |
+| File | What it holds |
 |---|---|
-| `01-concepto.md` | La idea en una página. Qué es, qué lo hace distinto, para quién. |
-| `02-reglas-de-juego.md` | Reglas de sala, ronda, intentos, tiempo, pista, ataque y emoticones. |
-| `03-sistema-de-puntuacion.md` | Fórmula de puntos con tabla y una simulación completa. |
-| `04-decisiones-y-pendientes.md` | Registro de decisiones con su razón, ideas descartadas y lo que falta decidir. |
-| `05-diseno.md` | Dirección visual, lista de pantallas y enlace al canvas de Claude Design. |
+| `01-concept.md` | The idea in one page. What it is, what makes it different, who it is for. |
+| `02-game-rules.md` | Rules for the room, the round, attempts, time, the hint, the attack and the emotes. |
+| `03-scoring-system.md` | The points formula with a table and a full simulation. |
+| `04-decisions-and-pending.md` | Log of decisions with their reason, discarded ideas, and what is still to be decided. |
+| `05-design.md` | Visual direction, list of screens and the link to the Claude Design canvas. |
 
-## Cómo mantenerla
-- Si cambia una regla, edita el archivo correspondiente y añade una línea en `04-decisiones-y-pendientes.md` con la fecha y el porqué.
-- No dupliques reglas entre archivos. Cada dato vive en un solo lugar y los demás lo enlazan.
-- Las fechas van siempre completas (2026-09-11), nunca "ayer" o "la semana pasada".
+## How to maintain it
+- If a rule changes, edit the matching file and add a line in `04-decisions-and-pending.md` with the date and the reason.
+- Do not duplicate rules across files. Every fact lives in exactly one place and the others link to it.
+- Dates are always complete (2026-09-11), never "yesterday" or "last week".

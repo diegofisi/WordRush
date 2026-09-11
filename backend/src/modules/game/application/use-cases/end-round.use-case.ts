@@ -64,7 +64,7 @@ export class EndRoundUseCase {
     );
 
     // Nobody left to play for: the game ends here instead of starting a round
-    // into an empty room (docs/context/02-reglas-de-juego.md).
+    // into an empty room (docs/context/02-game-rules.md).
     const abandoned = room.connectedPlayers().length === 0;
     const isLast = room.currentRound >= rounds || abandoned;
     const payload: RoundEndPayload = {

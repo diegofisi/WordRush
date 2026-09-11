@@ -5,7 +5,7 @@ clock, every rival solve takes seconds away, and whoever finishes with the most 
 wins. Rooms of 2 to 8 players, words in Spanish or English, up to 8 attempts, one hint
 per round, emote reactions and an accumulated leaderboard across rounds.
 
-Game rules and the scoring formula live in [docs/context/](docs/context/) (in Spanish).
+Game rules and the scoring formula live in [docs/context/](docs/context/).
 The approved design is in [docs/design/](docs/design/).
 
 ## Structure
@@ -106,6 +106,6 @@ To widen them, change `EN_ANSWERS` / `ES_ANSWERS` in the script and regenerate.
 
 ## Changing rules
 
-First in `docs/context/` (with date and reason in `04-decisiones-y-pendientes.md`), then
+First in `docs/context/` (with date and reason in `04-decisions-and-pending.md`), then
 in the code. The scoring numbers live in one place: the `SCORING` constant of the
 contract.

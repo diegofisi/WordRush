@@ -1,46 +1,47 @@
-# WordRush · Wordle multijugador
+# WordRush · Multiplayer Wordle
 
-Juego de adivinar palabras de 5 letras, multijugador (hasta 8), en español e inglés,
-donde el reloj manda: se gana tiempo por letras nuevas y se pierde cuando otro acierta.
-"WordRush" es nombre de trabajo.
+A game of guessing 5-letter words, multiplayer (up to 8), in Spanish and English,
+where the clock rules: you gain time from new letters and lose it when somebody else
+solves. "WordRush" is a working name.
 
-## Fuente de verdad
-Toda la idea, las reglas y las decisiones viven en `docs/context/`. Léela antes de tocar
-cualquier cosa del juego o del diseño:
+## Source of truth
+The whole idea, the rules and the decisions live in `docs/context/`. Read it before
+touching anything in the game or the design:
 
-- `docs/context/README.md` — índice y cómo mantener la carpeta.
-- `docs/context/01-concepto.md` — qué es el juego y para quién.
-- `docs/context/02-reglas-de-juego.md` — sala, rondas, intentos, pista, ataque, emoticones.
-- `docs/context/03-sistema-de-puntuacion.md` — fórmula final con simulación paso a paso.
-- `docs/context/04-decisiones-y-pendientes.md` — qué se decidió, qué se descartó, qué falta.
-- `docs/context/05-diseno.md` — dirección visual, pantallas y enlace al canvas de Claude Design.
+- `docs/context/README.md` — index and how to maintain the folder.
+- `docs/context/01-concept.md` — what the game is and who it is for.
+- `docs/context/02-game-rules.md` — room, rounds, attempts, hint, attack, emotes.
+- `docs/context/03-scoring-system.md` — the final formula with a step-by-step simulation.
+- `docs/context/04-decisions-and-pending.md` — what was decided, what was discarded, what is missing.
+- `docs/context/05-design.md` — visual direction, screens and the link to the Claude Design canvas.
 
-## Estructura del repositorio
+## Repository structure
 ```
 CLAUDE.md
 .claude/
-  settings.json          hooks del proyecto
-  hooks/format.mjs       formatea con Prettier el archivo editado (backend/ y frontend/)
-  rules/                 reglas por ruta (se cargan solas al tocar esas rutas)
-  skills/backend/        doctrina NestJS + Clean Architecture (leer references/project.md primero)
-  skills/frontend/       doctrina React + vertical slices + adapter (leer references/project.md primero)
+  settings.json          project hooks
+  hooks/format.mjs       runs Prettier on the edited file (backend/ and frontend/)
+  rules/                 per-path rules (they load by themselves when those paths are touched)
+  skills/backend/        NestJS + Clean Architecture doctrine (read references/project.md first)
+  skills/frontend/       React + vertical slices + adapter doctrine (read references/project.md first)
 docs/
-  context/               reglas, puntuación, decisiones (fuente de verdad)
-  design/                artboards del canvas de Claude Design y el canvas armado
-backend/                 API + WebSockets (NestJS). Aún no creado.
-frontend/                cliente web (React + Vite). Aún no creado.
+  context/               rules, scoring, decisions (source of truth)
+  design/                Claude Design canvas artboards and the assembled canvas
+backend/                 API + WebSockets (NestJS).
+frontend/                web client (React + Vite).
 ```
 
-## Cómo trabajar aquí
-- Trabajo de servidor: usar el skill `backend`. Trabajo de interfaz: usar el skill `frontend`.
-  Cada uno tiene un `references/project.md` que ata la doctrina a este proyecto; ese archivo
-  se actualiza cuando cambia el stack o el mapa de módulos.
-- Cualquier cambio de reglas o puntuación se registra primero en `docs/context/` y después
-  en el código o el diseño.
-- El servidor es la única fuente de verdad de la palabra, del reloj y del puntaje. El cliente
-  nunca conoce la palabra antes de terminar la ronda.
+## How to work here
+- Server work: use the `backend` skill. Interface work: use the `frontend` skill.
+  Each one has a `references/project.md` that ties the doctrine to this project; that file
+  is updated whenever the stack or the module map changes.
+- Any change to the rules or the scoring is recorded first in `docs/context/` and only then
+  in the code or the design.
+- The server is the only source of truth for the word, the clock and the score. The client
+  never knows the word before the round ends.
 
-## Convenciones
-- Documentación e interfaz por defecto en español. La interfaz también existe en inglés.
-- Fechas completas en los documentos (2026-09-11), nunca relativas.
-- Sin commits ni push salvo que se pida.
+## Conventions
+- Documentation, file names and code comments in English. The player-facing interface
+  exists in Spanish and English (`frontend/src/shared/i18n/`).
+- Complete dates in the documents (2026-09-11), never relative ones.
+- No commits or pushes unless asked.

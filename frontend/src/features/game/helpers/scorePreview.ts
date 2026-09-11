@@ -35,7 +35,7 @@ export interface ScorePreview {
   total: number;
 }
 
-/** Mirrors docs/context/03-sistema-de-puntuacion.md using the SCORING constants only. */
+/** Mirrors docs/context/03-scoring-system.md using the SCORING constants only. */
 export const computeScorePreview = (input: ScorePreviewInput): ScorePreview => {
   const hintKept = input.hintEnabled && !input.hintUsed;
   const hintBonus = hintKept ? SCORING.hintKeptBonus : 0;
