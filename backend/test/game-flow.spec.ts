@@ -6,6 +6,7 @@ import { io, type Socket } from 'socket.io-client';
 import { AppModule } from '../src/app.module';
 import { WORD_PICKER } from '@modules/words/domain/interfaces/word-picker.interface';
 import esWords from '@modules/words/data/es.json';
+import { ROOM_LIMITS } from '@shared/contract';
 import type {
   ClientToServerEvents,
   GameEndPayload,
@@ -254,9 +255,13 @@ describe('WordRush game flow (socket.io integration)', () => {
     expect(late).toMatchObject({ ok: false, code: 'not_in_round' });
 
     const reactionSeen = waitFor(bruno2, 'reaction:show');
-    expect(await ana.emitWithAck('reaction:send', { emote: 'laugh' })).toEqual({ ok: true });
-    expect(await reactionSeen).toEqual({ playerId: created.playerId, emote: 'laugh' });
-    expect(await ana.emitWithAck('reaction:send', { emote: 'cry' })).toMatchObject({
+    expect(await ana.emitWithAck('reaction:send', { emote: 'lol' })).toEqual({ ok: true });
+    expect(await reactionSeen).toEqual({ playerId: created.playerId, emote: 'lol' });
+    // No per-emote cooldown any more: the burst limit is what stops a spammer.
+    for (let i = 1; i < ROOM_LIMITS.emoteBurstLimit; i++) {
+      expect(await ana.emitWithAck('reaction:send', { emote: 'gg' })).toEqual({ ok: true });
+    }
+    expect(await ana.emitWithAck('reaction:send', { emote: 'shh' })).toMatchObject({
       ok: false,
       code: 'cooldown',
     });

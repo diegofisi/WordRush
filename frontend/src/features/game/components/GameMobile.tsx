@@ -2,7 +2,7 @@ import { LOW_TIME_THRESHOLD } from '../stores/useGameStore';
 import type { GameViewProps } from '../models/game-view.model';
 import { Board } from './Board';
 import { Clock } from './Clock';
-import { EmoteBar } from './EmoteBar';
+import { EmotePicker } from './EmotePicker';
 import { HintButton } from './HintButton';
 import { HintLetterChip } from './HintLetterChip';
 import { Keyboard } from './Keyboard';
@@ -107,7 +107,14 @@ export const GameMobile = (props: GameViewProps) => {
             <ScorePreviewCard t={t} preview={props.preview} outcome={props.outcome} />
           </>
         )}
-        <EmoteBar t={t} variant="row" disabled={props.emoteCooldown} onEmote={props.onEmote} />
+        <div className="flex justify-end">
+          <EmotePicker
+            t={t}
+            variant="row"
+            cooldownSeconds={props.emoteCooldownSeconds}
+            onEmote={props.onEmote}
+          />
+        </div>
       </div>
     </div>
   );

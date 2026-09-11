@@ -1,9 +1,10 @@
 import type { Emote } from '@/shared/contract';
 
 /**
- * Custom emote artwork dropped into `src/assets/emotes/` (see the README there).
- * Vite resolves the files at build time; a missing file simply means "use the
- * built-in icon". Preference when several formats exist: svg, then webp, then png.
+ * Emote artwork dropped into `src/assets/emotes/` (see the README there).
+ * Vite resolves the files at build time; a missing file simply means "draw the
+ * neutral placeholder". Preference when several formats exist: svg, then webp,
+ * then png.
  */
 const files = import.meta.glob<string>('../../../assets/emotes/*.{svg,webp,png}', {
   eager: true,
@@ -24,5 +25,5 @@ for (const [path, url] of Object.entries(files)) {
   if (!current || rank < current.rank) byEmote.set(name, { url, rank });
 }
 
-/** URL of the custom artwork for an emote, or null to fall back to the built-in icon. */
+/** URL of the artwork for an emote, or null when no file was dropped in yet. */
 export const customEmoteUrl = (emote: Emote): string | null => byEmote.get(emote)?.url ?? null;

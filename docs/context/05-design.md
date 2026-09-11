@@ -10,7 +10,8 @@
 - **Typefaces:** Bricolage Grotesque (headings and tiles), DM Sans (interface), JetBrains Mono (clock and figures).
 - **Colour:** warm white background, warm almost-black ink. Green and yellow are semantic
   to the game. A single accent (violet) for primary actions, so as not to compete with green/yellow.
-- **Icons:** stroke SVG, 20 px. The game emotes are also custom SVGs.
+- **Icons:** stroke SVG, 20 px. The twenty game emotes are raster stickers
+  (`frontend/src/assets/emotes/`), never recoloured.
 - **No** decorative gradients, no cards with a coloured left border, no system emoji.
 
 ## "Create room" hero

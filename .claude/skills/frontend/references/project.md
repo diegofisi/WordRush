@@ -45,7 +45,7 @@ variables and never hardcode hex in components.
 | `CircularProgress` / `Alert` | `PageLoading`, `PageError`, `PageEmpty` in `@/shared/components/ui/` |
 | MUI controls | hand-made `Button`, `Segmented`, `Toggle`, `Card`, `Input`, `Stepper`, `Avatar` in `@/shared/components/ui/` |
 | Snackbar | `useToastStore` + `<Toaster>` in `@/shared/components/ui/`, called from containers only |
-| Icons | `lucide-react` for chrome; `features/game/components/emotes/*.tsx` for the six game emotes |
+| Icons | `lucide-react` for chrome; `shared/components/icons/EmoteIcon.tsx` for the twenty emote stickers (raster art in `src/assets/emotes/`) |
 
 Everything else in the doctrine (vertical slices, adapter pattern,
 Container/Presentational, stores, forms, routing, conventions) applies unchanged.
@@ -120,5 +120,6 @@ npx vite build
   rows; compute it with a selector in the store, not in the component.
 - The hint tile uses the dashed yellow style (`t-h` in the design); it must not
   be confused with a normal yellow.
-- Emote cooldown is enforced server-side too, but disable the button for 3 s
-  locally so the UI does not look broken.
+- The emote burst rule (more than 8 in 3 s pauses the player for 5 s) is
+  enforced server-side; run the same rule in the store before sending and show
+  the countdown on the picker trigger, so the UI never looks broken.

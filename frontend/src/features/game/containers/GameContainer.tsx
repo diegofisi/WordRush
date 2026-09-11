@@ -47,7 +47,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const draft = useGameStore((state) => state.draft);
   const revealRow = useGameStore((state) => state.revealRow);
   const shakeKey = useGameStore((state) => state.shakeKey);
-  const emoteCooldownUntil = useGameStore((state) => state.emoteCooldownUntil);
+  const emotePausedUntil = useGameStore((state) => state.emotePausedUntil);
   const typeLetter = useGameStore((state) => state.typeLetter);
   const backspace = useGameStore((state) => state.backspace);
   const shake = useGameStore((state) => state.shake);
@@ -153,9 +153,12 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
 
   const handleEmote = useCallback(
     async (emote: Emote) => {
-      if (Date.now() < useGameStore.getState().emoteCooldownUntil) return;
+      // The local half of the burst rule; it also raises the "wait 5 s" toast.
+      if (!useGameStore.getState().tryEmote()) return;
       const result = await sendReaction(emote);
-      if (!result.ok && result.error.code !== 'cooldown') toast.error(result.error.code);
+      if (result.ok) return;
+      if (result.error.code === 'cooldown') useGameStore.getState().pauseEmotes();
+      else toast.error(result.error.code);
     },
     [sendReaction],
   );
@@ -222,7 +225,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     preview,
     hintState: !round.hintAvailable ? 'off' : me.hintUsed ? 'used' : 'available',
     hintPending,
-    emoteCooldown: now < emoteCooldownUntil,
+    emoteCooldownSeconds: Math.max(0, Math.ceil((emotePausedUntil - now) / 1000)),
     onLetter: typeLetter,
     onEnter: handleEnter,
     onBackspace: backspace,

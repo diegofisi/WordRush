@@ -21,5 +21,6 @@ paths:
   through the shared filter; never `try/catch` and swallow inside a handler.
 - The validation pipe runs with `whitelist` + `forbidNonWhitelisted`: a new
   field in a payload must be declared in its DTO or the client gets rejected.
-- Rate limit the chatty events (`game:guess`, `reaction:send`) per socket; the
-  3 s emote cooldown is enforced here as well as in the use case.
+- Rate limit floodable events (`game:guess`) per socket. Game rules keyed by
+  player — the emote burst limit, for one — belong in their use case, not here:
+  a socket is not a player, and rejoining must not reset a limit.

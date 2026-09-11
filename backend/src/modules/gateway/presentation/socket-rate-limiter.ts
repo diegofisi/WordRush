@@ -8,8 +8,9 @@ export interface RateLimit {
 
 /**
  * Minimal per-socket, per-event sliding-window throttle for the chatty
- * events. The game rules (3 s emote cooldown per player) live in the use
- * case; this only stops a misbehaving client from flooding the process.
+ * events. Game rules (the emote burst limit, for one) live in their use case,
+ * keyed by player; this only stops a misbehaving client from flooding the
+ * process.
  */
 @Injectable()
 export class SocketRateLimiter {

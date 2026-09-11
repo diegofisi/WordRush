@@ -9,13 +9,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import {
-  ROOM_LIMITS,
-  type Ack,
-  type GuessAck,
-  type HintAck,
-  type SessionAck,
-} from '@shared/contract';
+import { type Ack, type GuessAck, type HintAck, type SessionAck } from '@shared/contract';
 import { CLOCK, type Clock } from '@shared/domain/clock';
 import { DomainException } from '@shared/domain/domain.exception';
 import { OutboundEvent, RoomEventsBus } from '@shared/events/room-events.bus';
@@ -49,7 +43,6 @@ import { createWsValidationPipe } from './ws-validation.pipe';
 
 /** Flood protection only; a human never approaches these. */
 const GUESS_LIMIT: RateLimit = { max: 10, windowMs: 1000 };
-const REACTION_LIMIT: RateLimit = { max: 1, windowMs: ROOM_LIMITS.emoteCooldownSeconds * 1000 };
 
 /**
  * The single Socket.IO entry point. Thin by design: validate, resolve the
@@ -178,9 +171,8 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('reaction:send')
   onReaction(@ConnectedSocket() client: GameSocket, @MessageBody() dto: ReactionDto): EmptyAck {
     const { roomCode, playerId } = this.requireSession(client);
-    if (!this.limiter.allow(client.id, 'reaction:send', REACTION_LIMIT, this.clock.now())) {
-      throw new DomainException('cooldown');
-    }
+    // No limiter here: the burst rule lives in the use case, which owns the
+    // per-player window (a socket is not a player; rejoining must not reset it).
     this.sendReaction.execute(roomCode, playerId, dto.emote);
     return OK_EMPTY;
   }

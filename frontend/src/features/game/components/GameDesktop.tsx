@@ -2,7 +2,7 @@ import { LOW_TIME_THRESHOLD } from '../stores/useGameStore';
 import type { GameViewProps } from '../models/game-view.model';
 import { Board } from './Board';
 import { Clock } from './Clock';
-import { EmoteBar } from './EmoteBar';
+import { EmotePicker } from './EmotePicker';
 import { Keyboard } from './Keyboard';
 import { LiveFeed } from './LiveFeed';
 import { RivalsPanel } from './RivalsPanel';
@@ -64,7 +64,13 @@ export const GameDesktop = (props: GameViewProps) => {
       <div className="flex min-h-0 flex-col gap-4">
         <LiveFeed t={t} feed={props.feed} />
         <ScorePreviewCard t={t} preview={props.preview} outcome={props.outcome} />
-        <EmoteBar t={t} disabled={props.emoteCooldown} onEmote={props.onEmote} />
+        <div className="flex justify-center">
+          <EmotePicker
+            t={t}
+            cooldownSeconds={props.emoteCooldownSeconds}
+            onEmote={props.onEmote}
+          />
+        </div>
       </div>
     </div>
   );

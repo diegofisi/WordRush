@@ -25,6 +25,8 @@ import type { FeedEvent, GainChip, ReactionBubble, RosterEntry } from '../models
 export type GameStatus = 'idle' | 'playing' | 'ended';
 
 const LOW_TIME_SECONDS = 15;
+const EMOTE_WINDOW_MS = ROOM_LIMITS.emoteBurstWindowSeconds * 1000;
+const EMOTE_PAUSE_MS = ROOM_LIMITS.emotePauseSeconds * 1000;
 const GREENS_ANNOUNCE_AT = 4;
 const REACTION_MS = 2_500;
 /** Flip (560 ms) + stagger of the last tile; after this the reveal is static. */
@@ -57,7 +59,10 @@ interface GameState {
   /** Row index whose tiles should flip-reveal; null when nothing is pending. */
   revealRow: number | null;
   shakeKey: number;
-  emoteCooldownUntil: number;
+  /** Epoch ms of my recent emote sends; the local half of the burst rule. */
+  emoteSends: number[];
+  /** Epoch ms until which emotes are refused after a burst; 0 when free. */
+  emotePausedUntil: number;
   announced: Announced;
 }
 
@@ -69,7 +74,10 @@ interface GameActions {
   shake: () => void;
   applyGuessAck: (ack: GuessAck, word: string) => void;
   applyHintAck: (ack: HintAck) => void;
-  startEmoteCooldown: () => void;
+  /** Applies the burst rule locally; false means "do not send this one". */
+  tryEmote: () => boolean;
+  /** Starts the 5 s pause and toasts once, never on every blocked click. */
+  pauseEmotes: () => void;
   announceLowTime: (playerId: string) => void;
 }
 
@@ -117,7 +125,8 @@ const initialState: GameState = {
   draft: '',
   revealRow: null,
   shakeKey: 0,
-  emoteCooldownUntil: 0,
+  emoteSends: [],
+  emotePausedUntil: 0,
   announced: emptyAnnounced(),
 };
 
@@ -383,8 +392,26 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
           : {},
       ),
 
-    startEmoteCooldown: () =>
-      set({ emoteCooldownUntil: Date.now() + ROOM_LIMITS.emoteCooldownSeconds * 1000 }),
+    // Same rule as the server (docs/context/02-game-rules.md -> Emotes), run
+    // locally so most of the spam never leaves the browser.
+    tryEmote: () => {
+      const now = Date.now();
+      if (now < get().emotePausedUntil) return false;
+      const recent = get().emoteSends.filter((at) => now - at < EMOTE_WINDOW_MS);
+      if (recent.length >= ROOM_LIMITS.emoteBurstLimit) {
+        get().pauseEmotes();
+        return false;
+      }
+      set({ emoteSends: [...recent, now] });
+      return true;
+    },
+
+    pauseEmotes: () => {
+      // Already paused: the player has seen the toast, stay quiet.
+      if (Date.now() < get().emotePausedUntil) return;
+      set({ emotePausedUntil: Date.now() + EMOTE_PAUSE_MS, emoteSends: [] });
+      toast.errorText(getT().game.reactionCooldown);
+    },
 
     announceLowTime: (playerId) => {
       if (get().announced.lowTime.includes(playerId)) return;

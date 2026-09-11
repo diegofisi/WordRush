@@ -47,7 +47,8 @@ export interface GameViewProps {
   preview: ScorePreview;
   hintState: HintButtonState;
   hintPending: boolean;
-  emoteCooldown: boolean;
+  /** Seconds left of the emote burst pause; 0 while the player may react. */
+  emoteCooldownSeconds: number;
   onLetter: (letter: string) => void;
   onEnter: () => void;
   onBackspace: () => void;

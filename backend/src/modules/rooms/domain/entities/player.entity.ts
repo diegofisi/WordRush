@@ -25,7 +25,10 @@ export class Player {
   hintsUsed = 0;
   /** Current (or last finished) round state; null in the lobby. */
   round: PlayerRound | null = null;
-  lastReactionAt: number | null = null;
+  /** Epoch ms of the emote sends inside the current burst window. */
+  reactionTimes: number[] = [];
+  /** Epoch ms until which emotes are refused after a burst; 0 when free. */
+  reactionPausedUntil = 0;
 
   private constructor(props: PlayerProps) {
     this.id = props.id;

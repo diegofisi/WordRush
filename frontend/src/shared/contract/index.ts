@@ -13,12 +13,54 @@ export const CONTRACT_VERSION = 3;
 
 export type Language = 'es' | 'en';
 export type TileColor = 'green' | 'yellow' | 'gray';
-export type Emote = 'smile' | 'laugh' | 'angry' | 'cry' | 'shock' | 'thumbs';
+export type Emote =
+  | 'love'
+  | 'wink'
+  | 'tease'
+  | 'mindblown'
+  | 'shock'
+  | 'explode'
+  | 'oops'
+  | 'whoa'
+  | 'ez'
+  | 'done'
+  | 'clutch'
+  | 'gg'
+  | 'lol'
+  | 'grumpy'
+  | 'thumbs'
+  | 'luck'
+  | 'point'
+  | 'shrug'
+  | 'ok'
+  | 'shh';
 export type RoomStatus = 'lobby' | 'playing' | 'between-rounds' | 'finished';
 
 export const WORD_LENGTH = 5;
 export const MAX_ATTEMPTS = 8;
-export const EMOTES: readonly Emote[] = ['smile', 'laugh', 'angry', 'cry', 'shock', 'thumbs'];
+/** Picker order: the 5x4 grid reads row by row in this order. */
+export const EMOTES: readonly Emote[] = [
+  'love',
+  'wink',
+  'tease',
+  'mindblown',
+  'shock',
+  'explode',
+  'oops',
+  'whoa',
+  'ez',
+  'done',
+  'clutch',
+  'gg',
+  'lol',
+  'grumpy',
+  'thumbs',
+  'luck',
+  'point',
+  'shrug',
+  'ok',
+  'shh',
+];
 
 export const ROOM_LIMITS = {
   minPlayers: 2,
@@ -32,7 +74,10 @@ export const ROOM_LIMITS = {
   nameMinLength: 1,
   nameMaxLength: 16,
   betweenRoundsSeconds: 12,
-  emoteCooldownSeconds: 3,
+  /** Emote burst limit: more than 8 sends inside 3 s pauses the player for 5 s. */
+  emoteBurstLimit: 8,
+  emoteBurstWindowSeconds: 3,
+  emotePauseSeconds: 5,
 } as const;
 
 /** docs/context/02-game-rules.md and 03-scoring-system.md */

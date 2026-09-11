@@ -44,7 +44,7 @@ Game rules and the scoring formula are **not** restated here. They live in
 | `rooms` | Create room (settings: language, initial time, rounds, capacity, hint on/off), join by code, lobby state, ready flags, host actions. Room + Player aggregates. |
 | `game` | Round lifecycle: pick word, accept guesses, colour feedback, per-letter time bonuses (once per letter position), the −5 s broadcast, hint reveal, end-of-round scoring, accumulated table, tie-breaks. This module implements `docs/context/03-*`. |
 | `words` | Word lists ES/EN, validation of a guess (must be a real word), normalisation of accents and Ñ (see pending decision in `04-*`). Pure domain service; no I/O after boot. |
-| `reactions` | Emote broadcast with a 3 s per-player cooldown. Tiny; may start inside `game`. |
+| `reactions` | Emote broadcast with the per-player burst limit (more than 8 in 3 s pauses the player for 5 s). Tiny; may start inside `game`. |
 | `gateway` | The Socket.IO gateway(s): auth-less join by room code + display name, event validation via DTOs, mapping domain exceptions to socket error payloads. Presentation layer only — no rules here. |
 
 Shared kernel (`backend/src/shared/`): keep the doctrine's `BaseEntity`,

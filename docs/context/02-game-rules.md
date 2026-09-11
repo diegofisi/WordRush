@@ -105,9 +105,24 @@ room at a time. There is never a doubt about "which game do I go back to".
 - Shared event feed: solves, penalties, hints used, emotes.
 
 ## Emotes
-- Quick-reaction panel (6 to 8 icons). No text chat.
-- They are sent to the whole room and appear for a few seconds above the avatar of whoever sent them.
-- A 3-second cooldown per player to prevent spam.
+- **Twenty stickers**, no text chat. In picker order: `love`, `wink`, `tease`,
+  `mindblown`, `shock`, `explode`, `oops`, `whoa`, `ez`, `done`, `clutch`, `gg`, `lol`,
+  `grumpy`, `thumbs`, `luck`, `point`, `shrug`, `ok`, `shh`. The artwork lives in
+  `frontend/src/assets/emotes/`, the label of each one in both i18n dictionaries.
+- **Picker**, not a permanent bar: a single round trigger (desktop, bottom of the right
+  column; phone, under the keyboard) opens a popover with the stickers in a 5 × 4 grid —
+  a full-width sheet at the bottom of the screen on phones. On hover or focus a sticker
+  grows and shows its label. Above the grid, the last 5 emotes the player used, when there
+  are any. Clicking one sends it and closes the picker.
+- They are sent to the whole room: rivals see the sticker in a bubble above the sender's
+  avatar for a couple of seconds and a line in the feed; the sender sees the same sticker
+  burst out of their own avatar in the top bar.
+- **Burst limit instead of a cooldown.** A player reacts as often as they like. If they
+  send **more than 8 emotes within 3 seconds**, the server refuses the rest for
+  **5 seconds** (`cooldown`, "Espera 5 segundos" / "Wait 5 seconds"). The pause is always
+  exactly 5 seconds — insisting during it does not make it longer — and when it ends the
+  3-second window starts empty again. The client applies the same rule before sending, so
+  most of the spam never reaches the server, and shows the countdown on the trigger.
 
 ## End of game
 - The configured rounds are played. The final table sums the points of every round.
