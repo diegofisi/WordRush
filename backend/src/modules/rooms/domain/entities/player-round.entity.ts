@@ -54,6 +54,15 @@ export class PlayerRound {
     return this.charges.filter((c) => c.green).length;
   }
 
+  /**
+   * Distinct answer positions the player knows hold a letter of the word --
+   * charged yellow or revealed by the hint -- and never turned green. A
+   * position that was yellow and later went green counts as a green, not here.
+   */
+  get yellows(): number {
+    return this.charges.filter((c) => !c.green && (c.yellow || c.hinted)).length;
+  }
+
   secondsLeft(now: number): number {
     if (this.frozenSecondsLeft !== null) return this.frozenSecondsLeft;
     return Math.max(0, Math.round(((this.deadlineAt - now) / 1000) * 100) / 100);

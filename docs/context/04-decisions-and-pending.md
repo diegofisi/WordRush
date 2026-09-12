@@ -4,13 +4,14 @@
 
 | Decision | Reason |
 |---|---|
-| Points come from the % of time left, not from attempts | Promote speed and chaos. Attempts only break ties (−3 each). |
+| Points come from the % of time left, not from attempts | Promote speed and chaos. Attempts only break ties (−2 each). |
 | Percentage of the initial time instead of seconds | So the balance does not depend on the clock the room was configured with. |
 | Position bonuses +25 / +15 / +10 | A touch of multiplayer race, independent of the clock. |
 | Keeping the hint gives +10 | So using it is a decision, not a reflex. |
 | One hint per player **per round**, not per game (corrected on 2026-09-11) | The +10 for keeping it is already the cost of using it; there is no need to accumulate it across rounds. |
-| Floor of 20 points for solving | Solving is never worth less than not solving. |
-| 5 points per green without solving, maximum 20 | So whoever came close stays in the game. |
+| Floor of 20 points for solving (superseded, see the rebalance below) | Solving is never worth less than not solving. |
+| 5 points per green without solving, maximum 20 (superseded, see the rebalance below) | So whoever came close stays in the game. |
+| Scoring rebalanced (2026-09-11): attempt penalty −3 → **−2**, solve floor 20 → **30**, consolation 5 → **8** per green plus **4** per yellow, capped at 20 → **28** | Better comebacks, and solving always beats not solving. The old numbers made the two ends touch: 4 greens without solving scored 20, exactly the floor, so a player one letter short had nothing to gain from the last guesses. Now a failed round can be worth up to 28 and a yellow finally counts for something, while the floor moves to 30 so the worst solve still beats the best failure. The softer −2 makes the extra attempt that wins the round cheap, which is the point of raising the consolation in the first place. |
 | Automatic "−5 s al resto" ("−5 s to everyone else") attack when someone solves | Simple, everybody understands it, produces a snowball. |
 | The clock resets every round | A bad round does not take you out of the rest of the game. |
 | Each letter pays time only once per position | Prevents farming time by repeating letters. |
@@ -42,7 +43,7 @@
 | Points per attempt with a lot of weight (220 − 20 × attempt) | Rewarded caution. Speed is what is wanted. |
 | Attack bar charged with greens (time theft, scrambled keyboard, sealed letters, fog, freeze) | Replaced by the automatic −5 s. Simpler for a first version. Can be brought back later. |
 | "Fake letter" (marking in yellow a letter that is not there) | Breaks trust in the board; people stop reasoning. If it comes back, as a room option off by default. |
-| A flat zero for not solving | The consolation of 5 per green was preferred, to keep people in the game. |
+| A flat zero for not solving | The consolation per green (and, since 2026-09-11, per yellow) was preferred, to keep people in the game. |
 
 ## Pending decisions
 - **Name of the game.** "WordRush" is a placeholder.

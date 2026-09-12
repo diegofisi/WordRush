@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 3;
+export const CONTRACT_VERSION = 4;
 
 export type Language = 'es' | 'en';
 export type TileColor = 'green' | 'yellow' | 'gray';
@@ -87,12 +87,13 @@ export const SCORING = {
   greenAfterYellowSeconds: 5,
   greenAfterHintSeconds: 5,
   penaltyOnRivalSolveSeconds: 5,
-  attemptPenalty: 3,
+  attemptPenalty: 2,
   positionBonus: [25, 15, 10] as const,
   hintKeptBonus: 10,
-  solveFloor: 20,
-  pointsPerGreenUnsolved: 5,
-  maxGreensUnsolved: 4,
+  solveFloor: 30,
+  pointsPerGreenUnsolved: 8,
+  pointsPerYellowUnsolved: 4,
+  maxUnsolvedPoints: 28,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -136,6 +137,8 @@ export interface PlayerProgress {
   finished: boolean;
   hintUsed: boolean;
   greens: number;
+  /** Answer slots known to be in the word (yellow or hinted) but never turned green. */
+  yellows: number;
   /** Seconds lost to rivals' solves this round. */
   penaltySeconds: number;
 }
@@ -198,6 +201,9 @@ export interface RoundBreakdown {
   hintBonus: number;
   greens: number;
   greenPoints: number;
+  /** Answer slots known but never turned green; only pays when not solved. */
+  yellows: number;
+  yellowPoints: number;
   floorApplied: boolean;
   roundPoints: number;
 }

@@ -200,6 +200,9 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     hintEnabled: round.hintAvailable,
     hintUsed: me.hintUsed,
     greens: myProgress?.greens ?? countGreenPositions(me.rows),
+    // Yellow slots only exist on the server ledger (the client never learns
+    // which answer slot a yellow tile pointed at, nor the hint's position).
+    yellows: myProgress?.yellows ?? 0,
   });
 
   const view: GameViewProps = {

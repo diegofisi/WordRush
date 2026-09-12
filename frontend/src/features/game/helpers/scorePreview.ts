@@ -14,6 +14,8 @@ export interface ScorePreviewInput {
   hintUsed: boolean;
   /** Distinct green positions in my own rows (unsolved consolation). */
   greens: number;
+  /** Answer slots I know are in the word but never turned green (unsolved consolation). */
+  yellows: number;
 }
 
 export interface ScorePreview {
@@ -32,6 +34,8 @@ export interface ScorePreview {
   floorApplied: boolean;
   greens: number;
   greenPoints: number;
+  yellows: number;
+  yellowPoints: number;
   total: number;
 }
 
@@ -41,8 +45,9 @@ export const computeScorePreview = (input: ScorePreviewInput): ScorePreview => {
   const hintBonus = hintKept ? SCORING.hintKeptBonus : 0;
 
   if (input.finished && !input.solved) {
-    const greens = Math.min(input.greens, SCORING.maxGreensUnsolved);
-    const greenPoints = greens * SCORING.pointsPerGreenUnsolved;
+    const greenPoints = input.greens * SCORING.pointsPerGreenUnsolved;
+    const yellowPoints = input.yellows * SCORING.pointsPerYellowUnsolved;
+    const total = Math.min(SCORING.maxUnsolvedPoints, greenPoints + yellowPoints);
     return {
       mode: 'unsolved',
       timePercent: 0,
@@ -54,11 +59,13 @@ export const computeScorePreview = (input: ScorePreviewInput): ScorePreview => {
       positionBonus: 0,
       hintKept,
       hintBonus: 0,
-      subtotal: greenPoints,
+      subtotal: greenPoints + yellowPoints,
       floorApplied: false,
-      greens,
+      greens: input.greens,
       greenPoints,
-      total: greenPoints,
+      yellows: input.yellows,
+      yellowPoints,
+      total,
     };
   }
 
@@ -90,6 +97,8 @@ export const computeScorePreview = (input: ScorePreviewInput): ScorePreview => {
     floorApplied: subtotal < SCORING.solveFloor,
     greens: input.greens,
     greenPoints: 0,
+    yellows: input.yellows,
+    yellowPoints: 0,
     total,
   };
 };

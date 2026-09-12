@@ -68,11 +68,7 @@ export const GameDesktop = (props: GameViewProps) => {
         <LiveFeed t={t} feed={props.feed} />
         <ScorePreviewCard t={t} preview={props.preview} outcome={props.outcome} />
         <div className="flex justify-center">
-          <EmotePicker
-            t={t}
-            cooldownSeconds={props.emoteCooldownSeconds}
-            onEmote={props.onEmote}
-          />
+          <EmotePicker t={t} cooldownSeconds={props.emoteCooldownSeconds} onEmote={props.onEmote} />
         </div>
       </div>
     </div>

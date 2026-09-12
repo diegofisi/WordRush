@@ -37,14 +37,14 @@ const Num = ({
 
 const Dot = () => <Num tone="mute">·</Num>;
 
-const gridCols = 'grid-cols-[36px_160px_90px_90px_90px_80px_80px_90px]';
+const gridCols = 'grid-cols-[36px_160px_90px_90px_90px_80px_80px_80px_90px]';
 
 /** Per-round points table with the exact columns of Results.dc.html. */
 export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
   const firstUnsolved = rows.findIndex((row) => !row.solved);
   return (
     <Card className="overflow-x-auto">
-      <div className="min-w-180" role="table">
+      <div className="min-w-224" role="table">
         <div
           role="row"
           className={cn(
@@ -59,6 +59,7 @@ export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
           <span className="text-right">{t.results.colPosition}</span>
           <span className="text-right">{t.results.colHint}</span>
           <span className="text-right">{t.results.colGreens}</span>
+          <span className="text-right">{t.results.colYellows}</span>
           <span className="text-right">{t.results.colRound}</span>
         </div>
         <div className="h-px bg-line" />
@@ -102,6 +103,7 @@ export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
                     <Num tone="mute">{t.results.hintUsed}</Num>
                   )}
                   <Dot />
+                  <Dot />
                 </>
               ) : (
                 <>
@@ -111,10 +113,14 @@ export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
                   <Dot />
                   {row.greens > 0 ? (
                     <Num tone="pos">
-                      {t.results.greensTimes(
-                        Math.min(row.greens, SCORING.maxGreensUnsolved),
-                        SCORING.pointsPerGreenUnsolved,
-                      )}
+                      {t.results.greensTimes(row.greens, SCORING.pointsPerGreenUnsolved)}
+                    </Num>
+                  ) : (
+                    <Num tone="mute">0</Num>
+                  )}
+                  {row.yellows > 0 ? (
+                    <Num tone="pos">
+                      {t.results.yellowsTimes(row.yellows, SCORING.pointsPerYellowUnsolved)}
                     </Num>
                   ) : (
                     <Num tone="mute">0</Num>
@@ -125,6 +131,9 @@ export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
                 {row.roundPoints}
                 {row.floorApplied ? (
                   <span className="ml-1 text-[11px] font-medium text-ink-3">{t.results.floor}</span>
+                ) : null}
+                {!row.solved && row.greenPoints + row.yellowPoints > row.roundPoints ? (
+                  <span className="ml-1 text-[11px] font-medium text-ink-3">{t.results.cap}</span>
                 ) : null}
               </Num>
             </div>

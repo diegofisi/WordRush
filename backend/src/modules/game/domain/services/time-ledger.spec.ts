@@ -30,6 +30,28 @@ describe('chargeGuess (time ledger)', () => {
       ]),
     );
     expect(round.greens).toBe(5);
+    expect(round.yellows).toBe(0);
+  });
+
+  it('counts a yellow-then-green position once, as a green', () => {
+    play(round, 'sandy'); // S green, D yellow
+    expect(round.greens).toBe(1);
+    expect(round.yellows).toBe(1); // the D slot
+    play(round, 'slide'); // L and I yellow too
+    expect(round.greens).toBe(1);
+    expect(round.yellows).toBe(3);
+    play(round, 'solid');
+    expect(round.greens).toBe(5);
+    expect(round.yellows).toBe(0); // every yellow became a green
+  });
+
+  it('counts a hinted position that was never placed as a yellow', () => {
+    round.revealHint({ letter: 'o', position: 1 });
+    expect(round.greens).toBe(0);
+    expect(round.yellows).toBe(1);
+    play(round, 'solid'); // the hinted position finally goes green
+    expect(round.greens).toBe(5);
+    expect(round.yellows).toBe(0);
   });
 
   it('pays 10 in total for yellow then green on the same position', () => {

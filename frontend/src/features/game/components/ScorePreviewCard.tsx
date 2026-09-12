@@ -69,7 +69,13 @@ export const ScorePreviewCard = ({ t, preview, outcome }: ScorePreviewCardProps)
             ) : null}
           </>
         ) : (
-          <Row label={t.game.greens(preview.greens)} value={preview.greenPoints} />
+          <>
+            <Row label={t.game.greens(preview.greens)} value={preview.greenPoints} />
+            <Row label={t.game.yellows(preview.yellows)} value={preview.yellowPoints} />
+            {preview.subtotal > SCORING.maxUnsolvedPoints ? (
+              <Row label={t.game.capRow} value={SCORING.maxUnsolvedPoints - preview.subtotal} />
+            ) : null}
+          </>
         )}
       </div>
       <div className="h-px bg-line" />

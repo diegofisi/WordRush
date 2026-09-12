@@ -43,6 +43,7 @@ export class EndRoundUseCase {
           secondsLeftAtSolve: round?.frozenSecondsLeft ?? 0,
           hintUsed: round?.hintUsed ?? false,
           greens: round?.greens ?? 0,
+          yellows: round?.yellows ?? 0,
         },
         initialSeconds,
         hintEnabled,

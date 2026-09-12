@@ -40,6 +40,11 @@ export const ScoringCard = ({ t }: ScoringCardProps) => (
       <Row label={t.lobby.scoringHint} value={`+${SCORING.hintKeptBonus}`} tone="pos" />
       <Row label={t.lobby.scoringFloor} value={t.lobby.scoringFloorValue(SCORING.solveFloor)} />
       <Row label={t.lobby.scoringGreens} value={`+${SCORING.pointsPerGreenUnsolved}`} />
+      <Row label={t.lobby.scoringYellows} value={`+${SCORING.pointsPerYellowUnsolved}`} />
+      <Row
+        label={t.lobby.scoringUnsolvedCap}
+        value={t.lobby.scoringCapValue(SCORING.maxUnsolvedPoints)}
+      />
     </div>
     <div className="h-px bg-line" />
     <div className="flex flex-col gap-2.5">

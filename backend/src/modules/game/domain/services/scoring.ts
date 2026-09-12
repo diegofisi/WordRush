@@ -14,6 +14,8 @@ export interface RoundResult {
   hintUsed: boolean;
   /** Distinct answer positions turned green. */
   greens: number;
+  /** Distinct answer positions known (yellow or hinted) but never turned green. */
+  yellows: number;
 }
 
 /** docs/context/03-scoring-system.md, one player. */
@@ -35,14 +37,16 @@ export function scoreRound(
     hintBonus: 0,
     greens: result.greens,
     greenPoints: 0,
+    yellows: result.yellows,
+    yellowPoints: 0,
     floorApplied: false,
     roundPoints: 0,
   };
 
   if (!result.solved) {
-    const greens = Math.min(SCORING.maxGreensUnsolved, result.greens);
-    base.greenPoints = SCORING.pointsPerGreenUnsolved * greens;
-    base.roundPoints = base.greenPoints;
+    base.greenPoints = SCORING.pointsPerGreenUnsolved * result.greens;
+    base.yellowPoints = SCORING.pointsPerYellowUnsolved * result.yellows;
+    base.roundPoints = Math.min(SCORING.maxUnsolvedPoints, base.greenPoints + base.yellowPoints);
     return base;
   }
 
