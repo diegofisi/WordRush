@@ -37,14 +37,14 @@ const Num = ({
 
 const Dot = () => <Num tone="mute">·</Num>;
 
-const gridCols = 'grid-cols-[36px_160px_90px_90px_90px_80px_80px_80px_90px]';
+const gridCols = 'grid-cols-[28px_148px_68px_60px_68px_72px_60px_64px_74px_70px]';
 
 /** Per-round points table with the exact columns of Results.dc.html. */
 export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
   const firstUnsolved = rows.findIndex((row) => !row.solved);
   return (
     <Card className="overflow-x-auto">
-      <div className="min-w-224" role="table">
+      <div className="min-w-204" role="table">
         <div
           role="row"
           className={cn(
@@ -55,6 +55,7 @@ export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
           <span>#</span>
           <span>{t.results.colPlayer}</span>
           <span className="text-right">{t.results.colTime}</span>
+          <span className="text-right">{t.results.colSolve}</span>
           <span className="text-right">{t.results.colAttempts}</span>
           <span className="text-right">{t.results.colPosition}</span>
           <span className="text-right">{t.results.colHint}</span>
@@ -95,6 +96,7 @@ export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
               {row.solved ? (
                 <>
                   <Num>{row.timeLeftPercent ?? 0} %</Num>
+                  <Num tone="pos">+{row.solveBonus}</Num>
                   {row.attemptPenalty !== 0 ? <Num tone="neg">{row.attemptPenalty}</Num> : <Dot />}
                   {row.positionBonus > 0 ? <Num tone="pos">+{row.positionBonus}</Num> : <Dot />}
                   {row.hintBonus > 0 ? (
@@ -107,6 +109,7 @@ export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
                 </>
               ) : (
                 <>
+                  <Dot />
                   <Dot />
                   <Dot />
                   <Dot />
@@ -127,15 +130,7 @@ export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
                   )}
                 </>
               )}
-              <Num className="text-base">
-                {row.roundPoints}
-                {row.floorApplied ? (
-                  <span className="ml-1 text-[11px] font-medium text-ink-3">{t.results.floor}</span>
-                ) : null}
-                {!row.solved && row.greenPoints + row.yellowPoints > row.roundPoints ? (
-                  <span className="ml-1 text-[11px] font-medium text-ink-3">{t.results.cap}</span>
-                ) : null}
-              </Num>
+              <Num className="text-base">{row.roundPoints}</Num>
             </div>
           </Fragment>
         ))}

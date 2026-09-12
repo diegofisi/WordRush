@@ -216,28 +216,29 @@ describe('WordRush game flow (socket.io integration)', () => {
       solved: true,
       attempt: 2,
       position: 1,
+      solveBonus: 40,
       attemptPenalty: -2,
-      positionBonus: 25,
+      positionBonus: 20,
       hintBonus: 10,
       greens: 5,
       greenPoints: 0,
       yellows: 0,
       yellowPoints: 0,
-      floorApplied: false,
     });
     expect(anaLine.timePoints).toBe(Math.round((solve.secondsLeft / 60) * 100));
-    expect(anaLine.roundPoints).toBe(anaLine.timePoints - 2 + 25 + 10);
+    expect(anaLine.roundPoints).toBe(anaLine.timePoints + 40 - 2 + 20 + 10);
 
     const brunoLine = endA.breakdown.find((b) => b.playerId === joined.playerId)!;
     expect(brunoLine).toMatchObject({
       solved: true,
       attempt: 1,
       position: 2,
+      solveBonus: 40,
       attemptPenalty: 0,
       positionBonus: 15,
       hintBonus: 0,
     });
-    expect(brunoLine.roundPoints).toBe(brunoLine.timePoints + 15);
+    expect(brunoLine.roundPoints).toBe(brunoLine.timePoints + 40 + 15);
 
     expect(endA.standings).toHaveLength(2);
     expect(endA.standings.map((s) => s.rank)).toEqual([1, 2]);

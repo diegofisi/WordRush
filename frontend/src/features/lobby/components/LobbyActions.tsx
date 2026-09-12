@@ -11,7 +11,6 @@ interface LobbyActionsProps {
   playerCount: number;
   minPlayers: number;
   starting: boolean;
-  onChangeRules: () => void;
   onToggleReady: () => void;
   onStart: () => void;
   onLeave: () => void;
@@ -21,6 +20,7 @@ interface LobbyActionsProps {
  * Footer of Lobby.dc.html: one row, everything on the same baseline.
  * The status sentence (or the reason the host cannot start yet) lives on the
  * left, so no caption under the buttons can push them out of line.
+ * Changing the rules lives next to the settings chips, not here.
  */
 export const LobbyActions = ({
   t,
@@ -31,7 +31,6 @@ export const LobbyActions = ({
   playerCount,
   minPlayers,
   starting,
-  onChangeRules,
   onToggleReady,
   onStart,
   onLeave,
@@ -46,19 +45,14 @@ export const LobbyActions = ({
         }`;
 
   return (
-    // One line when there is room; with the host's fourth button the sentence
-    // keeps its own line instead of being squeezed into a narrow column.
+    // One line when there is room; on narrow screens the sentence keeps its own
+    // line instead of being squeezed into a narrow column.
     <div className="mt-auto flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
       <p className="m-0 max-w-120 min-w-60 flex-1 text-sm text-ink-2">{status}</p>
       <div className="ml-auto flex flex-wrap items-center gap-2.5 sm:justify-end">
         <Button variant="outline" size="lg" onClick={onLeave}>
           {t.common.leaveRoom}
         </Button>
-        {isHost ? (
-          <Button variant="outline" size="lg" onClick={onChangeRules}>
-            {t.lobby.changeRules}
-          </Button>
-        ) : null}
         <Button
           variant="outline"
           size="lg"

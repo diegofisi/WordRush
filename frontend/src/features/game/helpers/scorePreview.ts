@@ -22,6 +22,8 @@ export interface ScorePreview {
   mode: 'solve' | 'unsolved';
   timePercent: number;
   timePoints: number;
+  /** Flat bonus for solving; 0 in the unsolved branch. */
+  solveBonus: number;
   /** 1-based attempt the solve happens (or would happen) on. */
   attempt: number;
   attemptsAfterFirst: number;
@@ -30,8 +32,6 @@ export interface ScorePreview {
   positionBonus: number;
   hintKept: boolean;
   hintBonus: number;
-  subtotal: number;
-  floorApplied: boolean;
   greens: number;
   greenPoints: number;
   yellows: number;
@@ -47,11 +47,11 @@ export const computeScorePreview = (input: ScorePreviewInput): ScorePreview => {
   if (input.finished && !input.solved) {
     const greenPoints = input.greens * SCORING.pointsPerGreenUnsolved;
     const yellowPoints = input.yellows * SCORING.pointsPerYellowUnsolved;
-    const total = Math.min(SCORING.maxUnsolvedPoints, greenPoints + yellowPoints);
     return {
       mode: 'unsolved',
       timePercent: 0,
       timePoints: 0,
+      solveBonus: 0,
       attempt: input.attempts,
       attemptsAfterFirst: 0,
       attemptPenalty: 0,
@@ -59,13 +59,11 @@ export const computeScorePreview = (input: ScorePreviewInput): ScorePreview => {
       positionBonus: 0,
       hintKept,
       hintBonus: 0,
-      subtotal: greenPoints + yellowPoints,
-      floorApplied: false,
       greens: input.greens,
       greenPoints,
       yellows: input.yellows,
       yellowPoints,
-      total,
+      total: greenPoints + yellowPoints,
     };
   }
 
@@ -79,13 +77,16 @@ export const computeScorePreview = (input: ScorePreviewInput): ScorePreview => {
     0,
     Math.round((input.secondsLeft / Math.max(1, input.initialSeconds)) * 100),
   );
-  const subtotal = timePercent + attemptPenalty + positionBonus + hintBonus;
-  const total = Math.max(SCORING.solveFloor, subtotal);
+  const total = Math.max(
+    SCORING.solveBonus,
+    timePercent + SCORING.solveBonus + attemptPenalty + positionBonus + hintBonus,
+  );
 
   return {
     mode: 'solve',
     timePercent,
     timePoints: timePercent,
+    solveBonus: SCORING.solveBonus,
     attempt,
     attemptsAfterFirst,
     attemptPenalty,
@@ -93,8 +94,6 @@ export const computeScorePreview = (input: ScorePreviewInput): ScorePreview => {
     positionBonus,
     hintKept,
     hintBonus,
-    subtotal,
-    floorApplied: subtotal < SCORING.solveFloor,
     greens: input.greens,
     greenPoints: 0,
     yellows: input.yellows,

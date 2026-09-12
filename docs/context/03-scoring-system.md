@@ -1,31 +1,32 @@
 # 03 · Scoring system
 
-Decided on 2026-09-11. Principle: **time and points are different things**.
-Time is your life in the round (see `02-game-rules.md`). Points are your result,
+Decided on 2026-09-11, simplified on 2026-09-12. Principle: **time and points are different
+things**. Time is your life in the round (see `02-game-rules.md`). Points are your result,
 and almost all of them come from the clock.
 
 ## Points per round
 
 | Concept | Points |
 |---|---|
-| You solve the word | 1 point for every 1 % of the **initial time** you have left when you solve |
+| You solve the word | **+40**, flat |
+| Time left when you solve | 1 point for every 1 % of the **initial time** you have left |
 | Each attempt after the first | −2 |
-| First, second and third to solve | +25, +15, +10 |
+| First, second and third to solve | +20, +15, +10 |
 | You finish the round still holding your hint | +10 |
-| **Floor for solving** | **minimum 30 points**, no matter what |
 | You do not solve, you have greens at the end | **8 per green** |
 | You do not solve, you know letters you never placed | **4 per yellow** |
-| **Cap for not solving** | **maximum 28 points**, however many letters you found |
 | You do not solve and you found nothing | 0 |
+
+Solving is `timePoints + 40 + attemptPenalty + positionBonus + hintBonus`, with no floor and
+no cap. Not solving is `8 × greens + 4 × yellows`, with no cap.
 
 A **green** is a distinct answer slot the player turned green. A **yellow** is a distinct
 answer slot the player knows holds a letter of the word but never turned green: a charged
 yellow, or a slot the hint revealed and the player never placed. A slot that was yellow and
-later went green counts once, as a green. So the consolation is
-`min(28, 8 × greens + 4 × yellows)`.
+later went green counts once, as a green.
 
 ### Why a percentage and not seconds
-If one room uses 60 s and another 300 s, a fixed 25-point bonus would be worth a great deal
+If one room uses 60 s and another 300 s, a fixed 20-point bonus would be worth a great deal
 in the first and nothing in the second. With a percentage the balance is the same whatever
 the room's clock. On screen it is shown as "te sobró 72 %" ("you had 72 % left").
 
@@ -35,21 +36,30 @@ fast and also hunted down a lot of new letters ends up above everyone else.
 ### Why attempts count so little
 The −2 penalty exists only so that two players with the same time left do not tie because
 one threw in an extra word. The aim is to promote speed and chaos, not caution. At −2 an
-eighth attempt costs 14 points, less than a quarter of a decent round: trying another word
+eighth attempt costs 14 points, less than a tenth of a decent round: trying another word
 is always better than sitting on the clock.
 
-### Why there is a floor of 30
-Somebody solving on attempt 8 with 2 seconds left would have 2 − 14 = −12. Solving can never
-be worth less than not solving, so the floor has to sit above the best consolation. At 30
-against a cap of 28 the worst solve still beats the best failure by 2 points, and a player
-who is one letter short always has a reason to keep guessing instead of stalling.
+### Why a flat +40 for solving instead of a floor and a cap
+The old rules protected the same idea with two moving parts: a floor of 30 points for
+solving and a cap of 28 on the consolation. Two numbers that only made sense next to each
+other, and a table row nobody could repeat from memory. A flat +40 does the same job with
+one number: solving is worth 40 points plus whatever the round gave you, and the best a
+player can get without solving is 4 greens and a yellow, 36 — below the bonus on its own.
+Nothing has to be clamped, every row on the results table adds up by hand, and the card in
+the lobby reads as a list of bonuses instead of a list of limits.
+
+The solve bonus is also the minimum a solve can score: the attempt penalty never eats into
+it. Without that, a solve on attempt 8 with the clock at zero and the hint spent would score
+40 − 14 = 26, under the 36 of a perfect consolation (4 greens + 1 yellow). With the minimum,
+the worst possible solve is 40 and solving always beats not solving. This is an invariant of
+the formula, not a line in the scoring card.
 
 ### Why greens without solving give 8, and yellows 4
 So that whoever came close does not walk away with zero and can stay in the game with a
 chance. A green is hard evidence (the slot is settled), a yellow is half of one (the letter
-is in the word, the place is not), so a yellow pays half. The cap of 28 keeps the whole
-thing a consolation and not a strategy: it sits below the 30-point floor for solving, and
-nobody plans a round around 28 points when solving fast gives more than 100.
+is in the word, the place is not), so a yellow pays half. It stays a consolation and not a
+strategy: the ceiling without solving is 36, and nobody plans a round around that when
+solving fast gives more than 150.
 
 ## Final table
 Sum of the points of every round. Tie-breaks: fewer total attempts, then fewer hints used.
@@ -70,33 +80,33 @@ Ana solves on attempt 3, second in the room, with 94 s. Her clock freezes there.
 | Concept | Points |
 |---|---|
 | Time left: 94 of the 90 initial = 104 % | 104 |
+| Solved the word | +40 |
 | Two attempts after the first | −4 |
 | Second to solve | +15 |
 | Hint kept | +10 |
-| **Round total** | **125** |
+| **Round total** | **165** |
 
 If Ana had used the hint at second 0 (marking the O in yellow), the green O on attempt 3
 would give 5 and not 10, and she loses the +10 for the hint. She would end with 89 s → 99 points
-for time → 110 total. Using the hint cost her 15 points, but it could have saved her an attempt.
+for time → 150 total. Using the hint cost her 15 points, but it could have saved her an attempt.
 
 Carla solves on attempt 5, at second 70, fourth in the room, with three −5 penalties and 35 s
-paid by letters. Final clock 40 → 44 %. Total: 44 − 8 + 0 + 10 = **46**.
+paid by letters. Final clock 40 → 44 %. Total: 44 + 40 − 8 + 0 + 10 = **86**.
 
-Elena solves on attempt 6 with 12 s left, fifth: 13 − 10 + 0 + 10 = 13, raised to the
-floor: **30**.
+Elena solves on attempt 6 with 12 s left, fifth: 13 + 40 − 10 + 0 + 10 = **53**.
 
-Fito does not solve but finishes with 4 greens: 4 × 8 = 32, capped at **28**. Gaby, with
-2 greens and one yellow she never placed: 16 + 4 = **20**. Hugo, who found nothing: **0**.
+Fito does not solve but finishes with 4 greens: 4 × 8 = **32**. Gaby, with 2 greens and one
+yellow she never placed: 16 + 4 = **20**. Hugo, who found nothing: **0**.
 
 ## Summary of an example round (for design and tests)
 
-| Pos | Player | Solved | Attempt | Time left | Attempts | Position | Hint | Greens | Yellows | Round |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Bruno | yes, 1st | 2 | 111 % | −2 | +25 | +10 | | | 144 |
-| 2 | Ana | yes, 2nd | 3 | 104 % | −4 | +15 | +10 | | | 125 |
-| 3 | Diego | yes, 3rd | 4 | 78 % | −6 | +10 | used | | | 82 |
-| 4 | Carla | yes, 4th | 5 | 44 % | −8 | | +10 | | | 46 |
-| 5 | Elena | yes, 5th | 6 | 13 % | −10 | | +10 | | | 30 (floor) |
-| 6 | Fito | no | | | | | | 4 | 0 | 28 (cap, 32 before it) |
-| 7 | Gaby | no | | | | | | 2 | 1 | 20 |
-| 8 | Hugo | no | | | | | | 0 | 0 | 0 |
+| Pos | Player | Solved | Attempt | Time left | Solve | Attempts | Position | Hint | Greens | Yellows | Round |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | Bruno | yes, 1st | 2 | 111 % | +40 | −2 | +20 | +10 | | | 179 |
+| 2 | Ana | yes, 2nd | 3 | 104 % | +40 | −4 | +15 | +10 | | | 165 |
+| 3 | Diego | yes, 3rd | 4 | 78 % | +40 | −6 | +10 | used | | | 122 |
+| 4 | Carla | yes, 4th | 5 | 44 % | +40 | −8 | | +10 | | | 86 |
+| 5 | Elena | yes, 5th | 6 | 13 % | +40 | −10 | | +10 | | | 53 |
+| 6 | Fito | no | | | | | | | 4 | 0 | 32 |
+| 7 | Gaby | no | | | | | | | 2 | 1 | 20 |
+| 8 | Hugo | no | | | | | | | 0 | 0 | 0 |

@@ -32,6 +32,7 @@ export function scoreRound(
     position: result.solved ? result.position : null,
     timeLeftPercent: null,
     timePoints: 0,
+    solveBonus: 0,
     attemptPenalty: 0,
     positionBonus: 0,
     hintBonus: 0,
@@ -39,20 +40,20 @@ export function scoreRound(
     greenPoints: 0,
     yellows: result.yellows,
     yellowPoints: 0,
-    floorApplied: false,
     roundPoints: 0,
   };
 
   if (!result.solved) {
     base.greenPoints = SCORING.pointsPerGreenUnsolved * result.greens;
     base.yellowPoints = SCORING.pointsPerYellowUnsolved * result.yellows;
-    base.roundPoints = Math.min(SCORING.maxUnsolvedPoints, base.greenPoints + base.yellowPoints);
+    base.roundPoints = base.greenPoints + base.yellowPoints;
     return base;
   }
 
   const percent = Math.round((result.secondsLeftAtSolve / initialSeconds) * 100);
   base.timeLeftPercent = percent;
   base.timePoints = percent;
+  base.solveBonus = SCORING.solveBonus;
   base.attemptPenalty = -SCORING.attemptPenalty * Math.max(0, result.attempt - 1);
   const position = result.position ?? 0;
   base.positionBonus =
@@ -61,9 +62,12 @@ export function scoreRound(
       : 0;
   base.hintBonus = hintEnabled && !result.hintUsed ? SCORING.hintKeptBonus : 0;
 
-  const sum = base.timePoints + base.attemptPenalty + base.positionBonus + base.hintBonus;
-  base.floorApplied = sum < SCORING.solveFloor;
-  base.roundPoints = Math.max(SCORING.solveFloor, sum);
+  // The solve bonus is also the minimum: penalties never eat into it, so a solve
+  // (>= 40) always outscores the best possible consolation (36).
+  base.roundPoints = Math.max(
+    SCORING.solveBonus,
+    base.timePoints + base.solveBonus + base.attemptPenalty + base.positionBonus + base.hintBonus,
+  );
   return base;
 }
 

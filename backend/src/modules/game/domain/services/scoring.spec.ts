@@ -1,3 +1,5 @@
+import { SCORING } from '@shared/contract';
+
 import { computeStandings, scoreRound, type RoundResult } from './scoring';
 
 const INITIAL = 90;
@@ -32,7 +34,7 @@ function unsolved(greens: number, yellows = 0): RoundResult {
 }
 
 describe('scoreRound (03-scoring-system.md)', () => {
-  it('Ana: 94 s of 90, attempt 3, second, hint kept -> 125', () => {
+  it('Ana: 94 s of 90, attempt 3, second, hint kept -> 165', () => {
     const b = scoreRound(
       solved({ name: 'Ana', secondsLeftAtSolve: 94, attempt: 3, position: 2 }),
       INITIAL,
@@ -40,14 +42,14 @@ describe('scoreRound (03-scoring-system.md)', () => {
     );
     expect(b.timeLeftPercent).toBe(104);
     expect(b.timePoints).toBe(104);
+    expect(b.solveBonus).toBe(40);
     expect(b.attemptPenalty).toBe(-4);
     expect(b.positionBonus).toBe(15);
     expect(b.hintBonus).toBe(10);
-    expect(b.floorApplied).toBe(false);
-    expect(b.roundPoints).toBe(125);
+    expect(b.roundPoints).toBe(165);
   });
 
-  it('Ana with the hint used: 89 s -> 99 -> 110', () => {
+  it('Ana with the hint used: 89 s -> 99 -> 150', () => {
     const b = scoreRound(
       solved({ secondsLeftAtSolve: 89, attempt: 3, position: 2, hintUsed: true }),
       INITIAL,
@@ -55,20 +57,21 @@ describe('scoreRound (03-scoring-system.md)', () => {
     );
     expect(b.timePoints).toBe(99);
     expect(b.hintBonus).toBe(0);
-    expect(b.roundPoints).toBe(110);
+    expect(b.roundPoints).toBe(150);
   });
 
-  it('Bruno: 100 s, attempt 2, first, hint kept -> 144', () => {
+  it('Bruno: 100 s, attempt 2, first, hint kept -> 179', () => {
     const b = scoreRound(
       solved({ secondsLeftAtSolve: 100, attempt: 2, position: 1 }),
       INITIAL,
       true,
     );
     expect(b.timePoints).toBe(111);
-    expect(b.roundPoints).toBe(144);
+    expect(b.positionBonus).toBe(20);
+    expect(b.roundPoints).toBe(179);
   });
 
-  it('Carla: 40 s, attempt 5, fourth, hint kept -> 46', () => {
+  it('Carla: 40 s, attempt 5, fourth, hint kept -> 86', () => {
     const b = scoreRound(
       solved({ secondsLeftAtSolve: 40, attempt: 5, position: 4 }),
       INITIAL,
@@ -78,40 +81,43 @@ describe('scoreRound (03-scoring-system.md)', () => {
     expect(b.attemptPenalty).toBe(-8);
     expect(b.positionBonus).toBe(0);
     expect(b.hintBonus).toBe(10);
-    expect(b.roundPoints).toBe(46);
+    expect(b.roundPoints).toBe(86);
   });
 
-  it('Elena: 12 s, attempt 6, fifth -> floor 30', () => {
+  it('Elena: 12 s, attempt 6, fifth, hint kept -> 53', () => {
     const b = scoreRound(
       solved({ secondsLeftAtSolve: 12, attempt: 6, position: 5 }),
       INITIAL,
       true,
     );
-    expect(b.timePoints + b.attemptPenalty + b.positionBonus + b.hintBonus).toBeLessThan(30);
-    expect(b.floorApplied).toBe(true);
-    expect(b.roundPoints).toBe(30);
+    expect(b.timePoints).toBe(13);
+    expect(b.solveBonus).toBe(40);
+    expect(b.attemptPenalty).toBe(-10);
+    expect(b.roundPoints).toBe(53);
   });
 
-  it('solving at attempt 8 with 2 seconds never scores below 30', () => {
+  it('a late solve never drops below the solve bonus: 2 s, attempt 8 -> raw 28, paid 40', () => {
     const b = scoreRound(
       solved({ secondsLeftAtSolve: 2, attempt: 8, position: 6 }),
       INITIAL,
       false,
     );
+    expect(b.timePoints).toBe(2);
     expect(b.hintBonus).toBe(0);
-    expect(b.floorApplied).toBe(true);
-    expect(b.roundPoints).toBe(30);
+    expect(b.attemptPenalty).toBe(-14);
+    expect(b.roundPoints).toBe(SCORING.solveBonus);
   });
 
-  it('the worst solve (30) still beats the best consolation (28)', () => {
-    const worstSolve = scoreRound(
-      solved({ secondsLeftAtSolve: 0, attempt: 8, position: 8 }),
-      INITIAL,
-      false,
-    );
+  it('solving never scores below the solve bonus, so it always beats the best consolation', () => {
     const bestConsolation = scoreRound(unsolved(4, 1), INITIAL, true);
-    expect(worstSolve.roundPoints).toBe(30);
-    expect(bestConsolation.roundPoints).toBe(28);
+    expect(bestConsolation.roundPoints).toBe(36);
+    // Worst solve: clock at 0, attempt 8 (−14), no position bonus, hint spent → 26 raw.
+    const worstSolve = scoreRound(
+      solved({ secondsLeftAtSolve: 0, attempt: 8, position: 8, hintUsed: true }),
+      INITIAL,
+      true,
+    );
+    expect(worstSolve.roundPoints).toBe(SCORING.solveBonus);
     expect(worstSolve.roundPoints).toBeGreaterThan(bestConsolation.roundPoints);
   });
 
@@ -122,14 +128,15 @@ describe('scoreRound (03-scoring-system.md)', () => {
       false,
     );
     expect(b.hintBonus).toBe(0);
-    expect(b.roundPoints).toBe(125);
+    expect(b.roundPoints).toBe(160);
   });
 
-  it('unsolved: 8 per green and 4 per yellow, capped at 28; nothing else', () => {
+  it('unsolved: 8 per green and 4 per yellow, with no cap; nothing else', () => {
     const fito = scoreRound(unsolved(4), INITIAL, true);
     expect(fito.greenPoints).toBe(32);
     expect(fito.yellowPoints).toBe(0);
-    expect(fito.roundPoints).toBe(28); // capped
+    expect(fito.roundPoints).toBe(32);
+    expect(fito.solveBonus).toBe(0);
     expect(fito.hintBonus).toBe(0);
     expect(fito.timeLeftPercent).toBeNull();
     expect(fito.position).toBeNull();
@@ -142,10 +149,10 @@ describe('scoreRound (03-scoring-system.md)', () => {
     expect(scoreRound(unsolved(0), INITIAL, true).roundPoints).toBe(0);
   });
 
-  it('unsolved: yellows alone pay, and never past the cap', () => {
+  it('unsolved: yellows alone pay', () => {
     expect(scoreRound(unsolved(0, 1), INITIAL, true).roundPoints).toBe(4);
     expect(scoreRound(unsolved(0, 5), INITIAL, true).roundPoints).toBe(20);
-    expect(scoreRound(unsolved(3, 2), INITIAL, true).roundPoints).toBe(28); // 24 + 8 capped
+    expect(scoreRound(unsolved(3, 2), INITIAL, true).roundPoints).toBe(32);
   });
 
   it('solving ignores greens and yellows entirely', () => {
@@ -156,7 +163,7 @@ describe('scoreRound (03-scoring-system.md)', () => {
     );
     expect(b.greenPoints).toBe(0);
     expect(b.yellowPoints).toBe(0);
-    expect(b.roundPoints).toBe(125);
+    expect(b.roundPoints).toBe(160);
   });
 });
 

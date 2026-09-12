@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 6;
+export const CONTRACT_VERSION = 7;
 
 export type Language = 'es' | 'en';
 export type TileColor = 'green' | 'yellow' | 'gray';
@@ -88,12 +88,11 @@ export const SCORING = {
   greenAfterHintSeconds: 5,
   penaltyOnRivalSolveSeconds: 5,
   attemptPenalty: 2,
-  positionBonus: [25, 15, 10] as const,
+  positionBonus: [20, 15, 10] as const,
   hintKeptBonus: 10,
-  solveFloor: 30,
+  solveBonus: 40,
   pointsPerGreenUnsolved: 8,
   pointsPerYellowUnsolved: 4,
-  maxUnsolvedPoints: 28,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -198,6 +197,8 @@ export interface RoundBreakdown {
   /** Percent of the initial time left at solve; null when not solved. */
   timeLeftPercent: number | null;
   timePoints: number;
+  /** Flat bonus for solving the word; 0 when not solved. */
+  solveBonus: number;
   attemptPenalty: number;
   positionBonus: number;
   hintBonus: number;
@@ -206,7 +207,6 @@ export interface RoundBreakdown {
   /** Answer slots known but never turned green; only pays when not solved. */
   yellows: number;
   yellowPoints: number;
-  floorApplied: boolean;
   roundPoints: number;
 }
 

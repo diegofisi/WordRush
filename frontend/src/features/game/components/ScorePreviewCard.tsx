@@ -1,5 +1,4 @@
 import { Card } from '@/shared/components/ui/Card';
-import { SCORING } from '@/shared/contract';
 import type { Dictionary } from '@/shared/i18n';
 import { cn } from '@/shared/lib/cn';
 
@@ -44,6 +43,7 @@ export const ScorePreviewCard = ({ t, preview, outcome }: ScorePreviewCardProps)
               <span className="text-ink-2">{t.game.timeLeftRow(preview.timePercent)}</span>
               <span className="font-mono font-semibold tabular-nums">+{preview.timePoints}</span>
             </div>
+            <Row label={t.game.solveRow} value={preview.solveBonus} />
             <Row
               label={
                 preview.attemptsAfterFirst === 0
@@ -64,17 +64,11 @@ export const ScorePreviewCard = ({ t, preview, outcome }: ScorePreviewCardProps)
               label={preview.hintKept ? t.game.hintKeptRow : t.game.hintUsedRow}
               value={preview.hintBonus}
             />
-            {preview.floorApplied ? (
-              <Row label={t.game.floorRow} value={SCORING.solveFloor - preview.subtotal} />
-            ) : null}
           </>
         ) : (
           <>
             <Row label={t.game.greens(preview.greens)} value={preview.greenPoints} />
             <Row label={t.game.yellows(preview.yellows)} value={preview.yellowPoints} />
-            {preview.subtotal > SCORING.maxUnsolvedPoints ? (
-              <Row label={t.game.capRow} value={SCORING.maxUnsolvedPoints - preview.subtotal} />
-            ) : null}
           </>
         )}
       </div>

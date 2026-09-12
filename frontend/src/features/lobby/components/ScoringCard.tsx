@@ -20,16 +20,14 @@ const Row = ({ label, value, tone }: { label: string; value: string; tone?: 'pos
   </div>
 );
 
-/** The "how scoring works" side card from Lobby.dc.html; numbers come from SCORING. */
+/** The lobby scoring card from Lobby.dc.html; every number comes from SCORING. */
 export const ScoringCard = ({ t }: ScoringCardProps) => (
   <Card className="flex flex-col gap-5 p-6 self-start">
-    <div className="flex flex-col gap-1">
-      <h3 className="m-0 font-display text-[22px] font-bold tracking-[-0.02em]">
-        {t.lobby.scoringTitle}
-      </h3>
-      <p className="m-0 text-[13px] text-ink-2">{t.lobby.scoringSubtitle}</p>
-    </div>
+    <h3 className="m-0 font-display text-[22px] font-bold tracking-[-0.02em]">
+      {t.lobby.scoringTitle}
+    </h3>
     <div className="flex flex-col gap-3">
+      <Row label={t.lobby.scoringSolve} value={`+${SCORING.solveBonus}`} tone="pos" />
       <Row label={t.lobby.scoringTime} value={t.lobby.scoringTimeValue} />
       <Row label={t.lobby.scoringAttempt} value={`−${SCORING.attemptPenalty}`} tone="neg" />
       <Row
@@ -38,13 +36,8 @@ export const ScoringCard = ({ t }: ScoringCardProps) => (
         tone="pos"
       />
       <Row label={t.lobby.scoringHint} value={`+${SCORING.hintKeptBonus}`} tone="pos" />
-      <Row label={t.lobby.scoringFloor} value={t.lobby.scoringFloorValue(SCORING.solveFloor)} />
       <Row label={t.lobby.scoringGreens} value={`+${SCORING.pointsPerGreenUnsolved}`} />
       <Row label={t.lobby.scoringYellows} value={`+${SCORING.pointsPerYellowUnsolved}`} />
-      <Row
-        label={t.lobby.scoringUnsolvedCap}
-        value={t.lobby.scoringCapValue(SCORING.maxUnsolvedPoints)}
-      />
     </div>
     <div className="h-px bg-line" />
     <div className="flex flex-col gap-2.5">

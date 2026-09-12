@@ -83,7 +83,9 @@ export const LobbyContainer = () => {
           code={lobby.code}
           settings={lobby.settings}
           playerCount={lobby.playerCount}
+          isHost={lobby.isHost}
           onCopyLink={() => void copyLink()}
+          onChangeRules={() => setRulesOpen(true)}
         />
         <PlayerSlots t={t} players={lobby.players} capacity={lobby.settings.capacity} />
         <LobbyActions
@@ -95,7 +97,6 @@ export const LobbyContainer = () => {
           playerCount={lobby.playerCount}
           minPlayers={ROOM_LIMITS.minPlayers}
           starting={starting}
-          onChangeRules={() => setRulesOpen(true)}
           onToggleReady={() => void toggleReady()}
           onStart={() => void start()}
           onLeave={leave}

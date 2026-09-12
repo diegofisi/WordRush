@@ -40,6 +40,17 @@ export const BackspaceIcon = (props: IconProps) => (
   </svg>
 );
 
+export const SlidersIcon = (props: IconProps) => (
+  <svg {...svgProps(props)}>
+    <path d="M4 7h9" />
+    <path d="M17 7h3" />
+    <circle cx="15" cy="7" r="2" />
+    <path d="M4 17h5" />
+    <path d="M13 17h7" />
+    <circle cx="11" cy="17" r="2" />
+  </svg>
+);
+
 export const CopyIcon = (props: IconProps) => (
   <svg {...svgProps(props)}>
     <rect x="9" y="9" width="12" height="12" rx="2" />
