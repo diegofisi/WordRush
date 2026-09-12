@@ -52,7 +52,12 @@ export class UseHintUseCase {
       event: 'player:hint',
       payload: { playerId: player.id },
     });
-    // Only the letter travels: the answer position stays on the server.
-    return { letter: pick.letter, secondsLeft: round.secondsLeft(now), at: now };
+    // Only the letter and its count travel: the answer position stays here.
+    return {
+      letter: pick.letter,
+      count: pick.count,
+      secondsLeft: round.secondsLeft(now),
+      at: now,
+    };
   }
 }

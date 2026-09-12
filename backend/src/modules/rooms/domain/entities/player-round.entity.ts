@@ -11,11 +11,13 @@ export type FinishReason = 'solved' | 'attempts' | 'timeout' | 'left';
 
 /**
  * What the hint picker resolved internally. The position stays on the server:
- * the contract's `HintReveal` only carries the letter.
+ * the contract's `HintReveal` carries the letter and how many times it occurs.
  */
 export interface HintPick {
   letter: string;
   position: number;
+  /** Occurrences of `letter` in the answer (1..WORD_LENGTH). */
+  count: number;
 }
 
 /**
@@ -99,7 +101,7 @@ export class PlayerRound {
   /** Stores the revealed letter and charges the position so it earns no yellow. */
   revealHint(pick: HintPick): void {
     this.hintUsed = true;
-    this.hint = { letter: pick.letter };
+    this.hint = { letter: pick.letter, count: pick.count };
     this.charges[pick.position].hinted = true;
   }
 }

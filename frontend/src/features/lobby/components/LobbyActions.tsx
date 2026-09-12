@@ -11,6 +11,7 @@ interface LobbyActionsProps {
   playerCount: number;
   minPlayers: number;
   starting: boolean;
+  onChangeRules: () => void;
   onToggleReady: () => void;
   onStart: () => void;
   onLeave: () => void;
@@ -30,6 +31,7 @@ export const LobbyActions = ({
   playerCount,
   minPlayers,
   starting,
+  onChangeRules,
   onToggleReady,
   onStart,
   onLeave,
@@ -44,12 +46,19 @@ export const LobbyActions = ({
         }`;
 
   return (
-    <div className="mt-auto flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-      <p className="m-0 max-w-120 text-sm text-ink-2">{status}</p>
-      <div className="flex shrink-0 flex-wrap items-center gap-2.5 sm:justify-end">
+    // One line when there is room; with the host's fourth button the sentence
+    // keeps its own line instead of being squeezed into a narrow column.
+    <div className="mt-auto flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+      <p className="m-0 max-w-120 min-w-60 flex-1 text-sm text-ink-2">{status}</p>
+      <div className="ml-auto flex flex-wrap items-center gap-2.5 sm:justify-end">
         <Button variant="outline" size="lg" onClick={onLeave}>
           {t.common.leaveRoom}
         </Button>
+        {isHost ? (
+          <Button variant="outline" size="lg" onClick={onChangeRules}>
+            {t.lobby.changeRules}
+          </Button>
+        ) : null}
         <Button
           variant="outline"
           size="lg"

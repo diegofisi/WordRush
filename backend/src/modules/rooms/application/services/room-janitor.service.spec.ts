@@ -123,6 +123,20 @@ describe('RoomJanitorService', () => {
     expect(rooms.findByCode('DONE')).toBeUndefined();
   });
 
+  it('never deletes a restarted room as "finished": it is a lobby again', () => {
+    const room = makeRoom('AGAIN', ['a', 'b'], T0);
+    room.status = 'finished';
+    room.finishedAt = T0;
+    rooms.save(room);
+
+    // "Play again" at T0 + 1 min: the room goes back to the lobby it came from.
+    room.resetForNewGame(T0 + MINUTE);
+
+    janitor.sweep(T0 + ROOM_LIFECYCLE.finishedTtlMs + 1);
+    expect(rooms.findByCode('AGAIN')).toBe(room);
+    expect(room.players).toHaveLength(2);
+  });
+
   it('survives a failing sweep without killing the timer', () => {
     jest.spyOn(rooms, 'all').mockImplementation(() => {
       throw new Error('boom');

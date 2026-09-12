@@ -2,13 +2,15 @@ import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
-import { Button } from '@/shared/components/ui/Button';
 import { PageLoading } from '@/shared/components/ui/PageState';
 import { useT } from '@/shared/i18n';
-import { gamePath, PATHS } from '@/shared/routes/paths';
+import { gamePath, lobbyPath, PATHS } from '@/shared/routes/paths';
+import { toast } from '@/shared/stores/useToastStore';
 
 import { useLeaveRoom } from '../api/leave-room/useLeaveRoom';
+import { useRestartRoom } from '../api/restart-room/useRestartRoom';
 import { BreakdownTable } from '../components/BreakdownTable';
+import { FinalBanner } from '../components/FinalBanner';
 import { RoundHeader } from '../components/RoundHeader';
 import { StandingsList } from '../components/StandingsList';
 import { toRoundResultsViewModel } from '../models/results.model';
@@ -24,11 +26,14 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
   const roundEnd = useResultsStore((state) => state.roundEnd);
   const gameEnd = useResultsStore((state) => state.gameEnd);
   const latestRoundStarted = useResultsStore((state) => state.latestRoundStarted);
+  const roomStatus = useResultsStore((state) => state.roomStatus);
+  const hostId = useResultsStore((state) => state.hostId);
   const myId = useSessionStore((state) => state.session?.playerId ?? null);
   const initialSeconds = useSessionStore(
     (state) => state.snapshot?.lobby.settings.initialSeconds ?? null,
   );
   const { leaveRoom } = useLeaveRoom();
+  const { restartRoom, pending: restarting } = useRestartRoom();
 
   // A new round:start after this round's end means play resumed: back to the board.
   useEffect(() => {
@@ -42,6 +47,14 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
     }
   }, [roundEnd, gameEnd, latestRoundStarted, roomCode, navigate]);
 
+  // The host pressed "play again": the finished room is a waiting room again,
+  // so everybody still on this screen moves to it. The stale table stays in the
+  // store until the next `round:end` overwrites it; this screen is gone by then.
+  useEffect(() => {
+    if (roomStatus !== 'lobby') return;
+    navigate(lobbyPath(roomCode), { replace: true });
+  }, [roomStatus, roomCode, navigate]);
+
   const results = useMemo(
     () => (roundEnd ? toRoundResultsViewModel(roundEnd, myId, gameEnd) : null),
     [roundEnd, myId, gameEnd],
@@ -49,7 +62,13 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
 
   if (!results) return <PageLoading title={t.results.waitingForRound} />;
 
-  const newGame = () => {
+  const playAgain = async () => {
+    const result = await restartRoom();
+    // On success the server's `lobby:update` is what moves everybody.
+    if (!result.ok) toast.error(result.error.code);
+  };
+
+  const leave = () => {
     navigate(PATHS.home, { replace: true });
     void leaveRoom();
   };
@@ -60,17 +79,15 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
     <div className="grid flex-1 grid-cols-1 gap-6 px-4 py-6 sm:px-7 lg:grid-cols-[minmax(0,1fr)_380px]">
       <div className="flex min-w-0 flex-col gap-4.5">
         {results.isFinal && winner ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-5 py-4 animate-fade-in">
-            <div className="flex flex-col gap-0.5">
-              <span className="label">{t.results.gameOver}</span>
-              <span className="font-display text-2xl font-extrabold tracking-[-0.02em]">
-                {winner.isMe ? t.results.youWin : t.results.winner(winner.name)}
-              </span>
-            </div>
-            <Button size="lg" onClick={newGame}>
-              {t.common.newGame}
-            </Button>
-          </div>
+          <FinalBanner
+            t={t}
+            winnerName={winner.name}
+            winnerIsMe={winner.isMe}
+            isHost={hostId !== null && hostId === myId}
+            restarting={restarting}
+            onPlayAgain={() => void playAgain()}
+            onLeave={leave}
+          />
         ) : null}
         <RoundHeader t={t} results={results} />
         <BreakdownTable t={t} rows={results.rows} />

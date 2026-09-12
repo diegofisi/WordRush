@@ -52,6 +52,21 @@ export class Player {
     this.disconnectedAt = now;
   }
 
+  /**
+   * Back to how the player entered the lobby the first time: no ready flag,
+   * no totals, no round. Somebody who is away keeps their seat but their
+   * lobby grace period starts again with the new lobby, so a restart does not
+   * hand the janitor a stale `disconnectedAt` to prune them with.
+   */
+  resetForNewGame(now: number): void {
+    this.ready = false;
+    this.totalPoints = 0;
+    this.totalAttempts = 0;
+    this.hintsUsed = 0;
+    this.round = null;
+    if (!this.connected) this.disconnectedAt = now;
+  }
+
   toPublic(): PlayerPublic {
     return {
       id: this.id,

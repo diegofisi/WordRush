@@ -41,7 +41,7 @@ Game rules and the scoring formula are **not** restated here. They live in
 
 | Module | Owns |
 |---|---|
-| `rooms` | Create room (settings: language, initial time, rounds, capacity, hint on/off), join by code, lobby state, ready flags, host actions. Room + Player aggregates. |
+| `rooms` | Create room (settings: language, initial time, rounds, capacity, hint on/off), join by code, lobby state, ready flags, host actions (start, change rules, restart into a new lobby). Room + Player aggregates. |
 | `game` | Round lifecycle: pick word, accept guesses, colour feedback, per-letter time bonuses (once per letter position), the −5 s broadcast, hint reveal, end-of-round scoring, accumulated table, tie-breaks. This module implements `docs/context/03-*`. |
 | `words` | Word lists ES/EN, validation of a guess (must be a real word), normalisation of accents and Ñ (see pending decision in `04-*`). Pure domain service; no I/O after boot. |
 | `reactions` | Emote broadcast with the per-player burst limit (more than 8 in 3 s pauses the player for 5 s). Tiny; may start inside `game`. |
@@ -62,9 +62,11 @@ Client → server (all payloads validated by class-validator DTOs):
 | `room:rejoin` | `{ roomCode, playerId, token }` | full state, or `room_not_found` / `session_expired` |
 | `room:leave` | — | frees the seat for good; broadcasts `player:left` + `lobby:update` |
 | `room:ready` | `{ ready: boolean }` | broadcast `lobby:update` |
+| `room:update-settings` | `{ settings }` (host only, lobby only) | broadcast `lobby:update`; errors `not_host` / `game_in_progress` / `invalid_payload` (capacity below the seated players) |
 | `room:start` | — (host only) | broadcast `round:start` |
+| `room:restart` | — (host only, finished game only) | "Play again": same room back to `lobby` with players, settings and host kept and everything the game produced cleared; broadcast `lobby:update`; errors `not_host` / `game_in_progress` ("The game has not finished yet") |
 | `game:guess` | `{ word }` | ack `{ colors[5], secondsGained, solved }` + broadcasts below |
-| `game:hint` | — | ack `{ letter }` (the position never leaves the server) |
+| `game:hint` | — | ack `{ letter, count }` — how many times the letter occurs; the position never leaves the server |
 | `reaction:send` | `{ emote }` | broadcast `reaction:show` |
 
 Server → client:

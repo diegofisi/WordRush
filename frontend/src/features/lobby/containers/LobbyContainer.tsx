@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { PageLoading } from '@/shared/components/ui/PageState';
-import { ROOM_LIMITS } from '@/shared/contract';
+import { ROOM_LIMITS, type RoomSettings } from '@/shared/contract';
 import { useT } from '@/shared/i18n';
 import { homeWithCode, PATHS, pathForStatus } from '@/shared/routes/paths';
 import { toast } from '@/shared/stores/useToastStore';
@@ -11,9 +11,11 @@ import { toast } from '@/shared/stores/useToastStore';
 import { useLeaveRoom } from '../api/leave-room/useLeaveRoom';
 import { useSetReady } from '../api/set-ready/useSetReady';
 import { useStartGame } from '../api/start-game/useStartGame';
+import { useUpdateSettings } from '../api/update-settings/useUpdateSettings';
 import { LobbyActions } from '../components/LobbyActions';
 import { PlayerSlots } from '../components/PlayerSlots';
 import { RoomCodeHeader } from '../components/RoomCodeHeader';
+import { RoomSettingsDialog } from '../components/RoomSettingsDialog';
 import { ScoringCard } from '../components/ScoringCard';
 import { useLobbyStore } from '../stores/useLobbyStore';
 
@@ -25,6 +27,8 @@ export const LobbyContainer = () => {
   const { setReady } = useSetReady();
   const { startGame, pending: starting } = useStartGame();
   const { leaveRoom } = useLeaveRoom();
+  const { updateSettings, pending: saving } = useUpdateSettings();
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   // Pushed transitions (round:start, or a lobby:update with a new status) move everyone along.
   useEffect(() => {
@@ -55,6 +59,17 @@ export const LobbyContainer = () => {
     if (!result.ok) toast.error(result.error.code);
   };
 
+  const saveRules = async (settings: RoomSettings) => {
+    const result = await updateSettings(settings);
+    if (!result.ok) {
+      toast.error(result.error.code);
+      return;
+    }
+    // The chips redraw from the server's `lobby:update`, never from these values.
+    setRulesOpen(false);
+    toast.success(t.lobby.rulesSaved);
+  };
+
   const leave = () => {
     navigate(PATHS.home, { replace: true });
     void leaveRoom();
@@ -80,12 +95,24 @@ export const LobbyContainer = () => {
           playerCount={lobby.playerCount}
           minPlayers={ROOM_LIMITS.minPlayers}
           starting={starting}
+          onChangeRules={() => setRulesOpen(true)}
           onToggleReady={() => void toggleReady()}
           onStart={() => void start()}
           onLeave={leave}
         />
       </div>
       <ScoringCard t={t} />
+      {lobby.isHost ? (
+        <RoomSettingsDialog
+          t={t}
+          open={rulesOpen}
+          settings={lobby.settings}
+          playerCount={lobby.playerCount}
+          pending={saving}
+          onCancel={() => setRulesOpen(false)}
+          onSave={(settings) => void saveRules(settings)}
+        />
+      ) : null}
     </div>
   );
 };

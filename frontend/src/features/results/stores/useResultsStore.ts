@@ -2,7 +2,13 @@ import { create } from 'zustand';
 
 import { socket } from '@/core/session/lib/socket';
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
-import type { FullState, GameEndPayload, RoundEndPayload } from '@/shared/contract';
+import type {
+  FullState,
+  GameEndPayload,
+  LobbyState,
+  RoomStatus,
+  RoundEndPayload,
+} from '@/shared/contract';
 
 interface ResultsState {
   roundEnd: RoundEndPayload | null;
@@ -11,6 +17,15 @@ interface ResultsState {
   nextRoundAt: number | null;
   /** Round number of the latest `round:start`; > roundEnd.round means play resumed. */
   latestRoundStarted: number | null;
+  /**
+   * Latest room status, tracked from every lifecycle event and not only from
+   * `lobby:update` (the server sends none when a round starts or the game
+   * ends). Back to `lobby` can then only mean one thing: the host restarted
+   * the room.
+   */
+  roomStatus: RoomStatus | null;
+  /** Who may press "play again"; it can change if the host leaves the results. */
+  hostId: string | null;
 }
 
 interface ResultsActions {
@@ -25,7 +40,14 @@ const initialState: ResultsState = {
   gameEnd: null,
   nextRoundAt: null,
   latestRoundStarted: null,
+  roomStatus: null,
+  hostId: null,
 };
+
+const fromLobby = (lobby: LobbyState) => ({
+  roomStatus: lobby.status,
+  hostId: lobby.players.find((player) => player.isHost)?.id ?? null,
+});
 
 export const useResultsStore = create<ResultsState & ResultsActions>((set) => {
   const hydrate = (snapshot: FullState) => {
@@ -43,6 +65,7 @@ export const useResultsStore = create<ResultsState & ResultsActions>((set) => {
           ? Date.now() + roundEnd.nextRoundIn * 1000
           : null,
       latestRoundStarted: snapshot.round?.round ?? null,
+      ...fromLobby(snapshot.lobby),
     });
   };
 
@@ -58,10 +81,18 @@ export const useResultsStore = create<ResultsState & ResultsActions>((set) => {
           roundEnd: payload,
           gameEnd: null,
           nextRoundAt: payload.nextRoundIn > 0 ? Date.now() + payload.nextRoundIn * 1000 : null,
+          roomStatus: payload.nextRoundIn > 0 ? 'between-rounds' : 'finished',
         }),
       );
-      socket.on('game:end', (payload) => set({ gameEnd: payload, nextRoundAt: null }));
-      socket.on('round:start', (round) => set({ latestRoundStarted: round.round }));
+      socket.on('game:end', (payload) =>
+        set({ gameEnd: payload, nextRoundAt: null, roomStatus: 'finished' }),
+      );
+      socket.on('round:start', (round) =>
+        set({ latestRoundStarted: round.round, roomStatus: 'playing' }),
+      );
+      // Carries the restart ("play again" turns the room back into a lobby) and
+      // any change of host while the results are on screen.
+      socket.on('lobby:update', (lobby) => set(fromLobby(lobby)));
 
       const current = useSessionStore.getState().snapshot;
       if (current) hydrate(current);

@@ -40,6 +40,17 @@ describe('EnsureNotInRoomUseCase', () => {
     }
   });
 
+  it('treats a restarted lobby as a live seat again', () => {
+    room.status = 'finished';
+    expect(() => useCase.execute({ roomCode: 'ABCD', playerId: 'p1' })).not.toThrow();
+
+    // "Play again": the seat is real once more, so creating or joining elsewhere is refused.
+    room.resetForNewGame(T0 + 1_000);
+    expect(() => useCase.execute({ roomCode: 'ABCD', playerId: 'p1' })).toThrow(
+      new DomainException('already_in_room'),
+    );
+  });
+
   it('ignores a stale seat: finished game, deleted room or player already gone', () => {
     room.status = 'finished';
     expect(() => useCase.execute({ roomCode: 'ABCD', playerId: 'p1' })).not.toThrow();

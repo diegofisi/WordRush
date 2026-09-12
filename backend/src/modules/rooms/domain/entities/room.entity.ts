@@ -84,6 +84,39 @@ export class Room {
   }
 
   /**
+   * "Play again": the finished game is wiped and the room becomes the very
+   * lobby it started as (docs/context/02-game-rules.md -> "Playing again").
+   * Code, settings, host and the player list survive — disconnected players
+   * included, so they can still come back. Everything the game wrote (round
+   * counter, word, used words, standings, per-round state) and the janitor's
+   * `finishedAt` marker are cleared, so the room is judged by lobby rules
+   * again and is never deleted as "a finished game".
+   */
+  resetForNewGame(now: number): void {
+    this.status = 'lobby';
+    this.currentRound = 0;
+    this.word = null;
+    this.usedWords.length = 0;
+    this.roundStartedAt = 0;
+    this.solvedCount = 0;
+    this.lastRoundEnd = null;
+    this.finishedAt = null;
+    this.nextRoundAt = null;
+    this.emptiedAt = null;
+    for (const player of this.players) player.resetForNewGame(now);
+    this.touch(now);
+  }
+
+  /**
+   * Replaces the settings in place (the reference is shared with whatever the
+   * round already read). Only legal in the lobby: the use case checks the
+   * status and that the new capacity still fits everybody in the room.
+   */
+  updateSettings(next: RoomSettings): void {
+    Object.assign(this.settings, next);
+  }
+
+  /**
    * Epoch ms since which nobody has been connected; null while someone is.
    * An empty room keeps the moment it was emptied, so the abandonment clock
    * does not restart when its last player is removed.

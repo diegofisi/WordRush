@@ -1,6 +1,6 @@
 import { PlayerRound } from '@modules/rooms/domain/entities/player-round.entity';
 import { computeFeedback } from './color-feedback';
-import { pickHint } from './hint-picker';
+import { countLetter, pickHint } from './hint-picker';
 import { chargeGuess } from './time-ledger';
 
 /** Plays a guess through the ledger so the charges match a real round. */
@@ -16,6 +16,16 @@ function possibleLetters(answer: string, round: PlayerRound): Set<string> {
     if (pick) letters.add(pick.letter);
   }
   return letters;
+}
+
+/** Every (letter, count) pair the hint can come out with, over all draws. */
+function possiblePicks(answer: string, round: PlayerRound): Map<string, number> {
+  const picks = new Map<string, number>();
+  for (let i = 0; i < round.charges.length; i++) {
+    const pick = pickHint(answer, round.charges, () => i / round.charges.length);
+    if (pick) picks.set(pick.letter, pick.count);
+  }
+  return picks;
 }
 
 describe('pickHint', () => {
@@ -55,6 +65,35 @@ describe('pickHint', () => {
     expect(pick).not.toBeNull();
     expect(pick?.position ?? 0).toBeGreaterThan(0); // never the green slot
     expect(possibleLetters(answer, round)).toEqual(new Set(['l', 'a', 't', 'o']));
+  });
+
+  it('reports how many times the letter occurs in an answer with repeats', () => {
+    const answer = 'llama'; // L L A M A
+    const round = new PlayerRound(0, 90);
+
+    expect(possiblePicks(answer, round)).toEqual(
+      new Map([
+        ['l', 2],
+        ['a', 2],
+        ['m', 1],
+      ]),
+    );
+  });
+
+  it('reports a count of 1 on an answer with no repeated letter', () => {
+    const answer = 'plato';
+    const round = new PlayerRound(0, 90);
+
+    const counts = [...possiblePicks(answer, round).values()];
+    expect(counts).toHaveLength(5);
+    expect(counts.every((c) => c === 1)).toBe(true);
+  });
+
+  it('counts occurrences of a letter in the answer', () => {
+    expect(countLetter('llama', 'l')).toBe(2);
+    expect(countLetter('llama', 'a')).toBe(2);
+    expect(countLetter('llama', 'm')).toBe(1);
+    expect(countLetter('llama', 'z')).toBe(0);
   });
 
   it('never reveals a green slot and returns null when all of them are green', () => {

@@ -56,7 +56,7 @@ export const GameMobile = (props: GameViewProps) => {
 
       {props.hint ? (
         <div className="flex justify-end">
-          <HintLetterChip t={t} letter={props.hint.letter} />
+          <HintLetterChip t={t} letter={props.hint.letter} count={props.hint.count} />
         </div>
       ) : null}
 

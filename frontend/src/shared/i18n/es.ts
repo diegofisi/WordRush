@@ -1,5 +1,8 @@
 import type { Emote, ErrorCode, Language } from '@/shared/contract';
 
+/** Feminine number words for the hint chip; beyond three the digit is used. */
+const SPANISH_COUNTS: Record<number, string> = { 1: 'una', 2: 'dos', 3: 'tres' };
+
 /** Spanish is the source dictionary: its shape is the `Dictionary` type. */
 export const es = {
   common: {
@@ -27,7 +30,6 @@ export const es = {
     leaveGameBody: 'Tu reloj sigue corriendo para los demás y no podrás volver a esta sala.',
     cancel: 'Cancelar',
     confirmLeave: 'Salir',
-    newGame: 'Nueva partida',
     backHome: 'Volver al inicio',
     ordinal: (n: number) => `${n}.º`,
     percent: (n: number) => `${n} %`,
@@ -117,6 +119,13 @@ export const es = {
       'Cada letra cobra una vez por color. Cuando alguien acierta, el resto pierde 5 s.',
     hintOff: 'sin pista',
     shareHint: 'Comparte el enlace o el código para que entren.',
+    changeRules: 'Cambiar reglas',
+    rulesTitle: 'Reglas de la sala',
+    rulesSubtitle: 'Solo tú puedes cambiarlas, y solo antes de empezar.',
+    rulesMinCapacity: (n: number) => `Mínimo ${n}: ya hay esa cantidad de jugadores.`,
+    saveRules: 'Guardar',
+    savingRules: 'Guardando…',
+    rulesSaved: 'Reglas actualizadas',
   },
   game: {
     rivals: 'Rivales',
@@ -137,7 +146,9 @@ export const es = {
     hintAvailable: '1 disponible',
     hintUsed: 'usada',
     hintOff: 'sin pista',
-    hintInWord: (letter: string) => `Hay una ${letter} en la palabra`,
+    /** "Hay dos L en la palabra" when the letter is repeated in the answer. */
+    hintInWord: (letter: string, count: number) =>
+      `Hay ${SPANISH_COUNTS[count] ?? String(count)} ${letter} en la palabra`,
     liveFeed: 'Sala en vivo',
     feedEmpty: 'Todavía no ha pasado nada. Escribe tu primera palabra.',
     feedSolved: 'respondió correctamente',
@@ -220,6 +231,8 @@ export const es = {
     youWin: '¡Ganaste la partida!',
     attemptsTotal: (n: number) => (n === 1 ? '1 intento' : `${n} intentos`),
     hintsTotal: (n: number) => (n === 1 ? '1 pista' : `${n} pistas`),
+    playAgain: 'Jugar de nuevo',
+    waitingForHost: 'Esperando a que el anfitrión inicie otra partida…',
     waitingForRound: 'Esperando los resultados de la ronda…',
     backToGame: 'Volver al juego',
   },

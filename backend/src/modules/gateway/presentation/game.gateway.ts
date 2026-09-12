@@ -24,6 +24,7 @@ import { CreateRoomDto } from '@modules/rooms/application/dtos/create-room.dto';
 import { JoinRoomDto } from '@modules/rooms/application/dtos/join-room.dto';
 import { RejoinRoomDto } from '@modules/rooms/application/dtos/rejoin-room.dto';
 import { SetReadyDto } from '@modules/rooms/application/dtos/set-ready.dto';
+import { UpdateRoomSettingsDto } from '@modules/rooms/application/dtos/update-room-settings.dto';
 import {
   CreateRoomUseCase,
   RoomSession,
@@ -33,7 +34,9 @@ import { JoinRoomUseCase } from '@modules/rooms/application/use-cases/join-room.
 import { LeaveRoomUseCase } from '@modules/rooms/application/use-cases/leave-room.use-case';
 import { MarkDisconnectedUseCase } from '@modules/rooms/application/use-cases/mark-disconnected.use-case';
 import { RejoinRoomUseCase } from '@modules/rooms/application/use-cases/rejoin-room.use-case';
+import { RestartRoomUseCase } from '@modules/rooms/application/use-cases/restart-room.use-case';
 import { SetReadyUseCase } from '@modules/rooms/application/use-cases/set-ready.use-case';
+import { UpdateRoomSettingsUseCase } from '@modules/rooms/application/use-cases/update-room-settings.use-case';
 import { toFullState } from '@modules/rooms/domain/services/state-presenter';
 import { SessionRegistry } from './session-registry';
 import { type RateLimit, SocketRateLimiter } from './socket-rate-limiter';
@@ -69,6 +72,8 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     private readonly joinRoom: JoinRoomUseCase,
     private readonly rejoinRoom: RejoinRoomUseCase,
     private readonly setReady: SetReadyUseCase,
+    private readonly updateRoomSettings: UpdateRoomSettingsUseCase,
+    private readonly restartRoom: RestartRoomUseCase,
     private readonly leaveRoom: LeaveRoomUseCase,
     private readonly markDisconnected: MarkDisconnectedUseCase,
     private readonly settleRound: SettleRoundUseCase,
@@ -144,10 +149,28 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     return OK_EMPTY;
   }
 
+  @SubscribeMessage('room:update-settings')
+  onUpdateSettings(
+    @ConnectedSocket() client: GameSocket,
+    @MessageBody() dto: UpdateRoomSettingsDto,
+  ): EmptyAck {
+    const { roomCode, playerId } = this.requireSession(client);
+    this.updateRoomSettings.execute(roomCode, playerId, dto.settings);
+    return OK_EMPTY;
+  }
+
   @SubscribeMessage('room:start')
   onStart(@ConnectedSocket() client: GameSocket): EmptyAck {
     const { roomCode, playerId } = this.requireSession(client);
     this.startGame.execute(roomCode, playerId);
+    return OK_EMPTY;
+  }
+
+  /** "Play again": the finished room goes back to being a lobby, same seats. */
+  @SubscribeMessage('room:restart')
+  onRestart(@ConnectedSocket() client: GameSocket): EmptyAck {
+    const { roomCode, playerId } = this.requireSession(client);
+    this.restartRoom.execute(roomCode, playerId);
     return OK_EMPTY;
   }
 

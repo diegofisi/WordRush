@@ -15,6 +15,9 @@ const ordinal = (n: number) => {
   }
 };
 
+/** Number words for the hint chip; beyond three the digit is used. */
+const ENGLISH_COUNTS: Record<number, string> = { 2: 'two', 3: 'three' };
+
 export const en: Dictionary = {
   common: {
     appName: 'WordRush',
@@ -42,7 +45,6 @@ export const en: Dictionary = {
       'Your clock keeps running for the others and you will not be able to come back to this room.',
     cancel: 'Cancel',
     confirmLeave: 'Leave',
-    newGame: 'New game',
     backHome: 'Back to start',
     ordinal,
     percent: (n) => `${n}%`,
@@ -131,6 +133,13 @@ export const en: Dictionary = {
     letterTimeNote: 'Each letter pays once per colour. When someone solves, the rest lose 5 s.',
     hintOff: 'no hint',
     shareHint: 'Share the link or the code so others can join.',
+    changeRules: 'Change rules',
+    rulesTitle: 'Room rules',
+    rulesSubtitle: 'Only you can change them, and only before the game starts.',
+    rulesMinCapacity: (n) => `Minimum ${n}: that many players are already in.`,
+    saveRules: 'Save',
+    savingRules: 'Saving…',
+    rulesSaved: 'Rules updated',
   },
   game: {
     rivals: 'Rivals',
@@ -151,7 +160,10 @@ export const en: Dictionary = {
     hintAvailable: '1 available',
     hintUsed: 'used',
     hintOff: 'no hint',
-    hintInWord: (letter) => `There is an ${letter} in the word`,
+    hintInWord: (letter, count) =>
+      count === 1
+        ? `There is one ${letter} in the word`
+        : `There are ${ENGLISH_COUNTS[count] ?? String(count)} ${letter}'s in the word`,
     liveFeed: 'Live room',
     feedEmpty: 'Nothing has happened yet. Type your first word.',
     feedSolved: 'solved it',
@@ -232,6 +244,8 @@ export const en: Dictionary = {
     youWin: 'You win the game!',
     attemptsTotal: (n) => (n === 1 ? '1 attempt' : `${n} attempts`),
     hintsTotal: (n) => (n === 1 ? '1 hint' : `${n} hints`),
+    playAgain: 'Play again',
+    waitingForHost: 'Waiting for the host to start another game…',
     waitingForRound: 'Waiting for the round results…',
     backToGame: 'Back to the game',
   },

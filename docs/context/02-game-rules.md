@@ -9,6 +9,10 @@
   ("Ready") button.
 - The invite link (`/?code=XXXX`) opens a reduced view that only asks for the name; it does not show the create-room form.
 - The host can start with fewer players than the capacity, as long as at least 2 are connected. Not everybody has to be "ready".
+- The host can change the settings while in the lobby ("Cambiar reglas" / "Change rules"):
+  language, initial time, rounds, capacity and hint on/off. Only the host, only before the
+  game starts, and the capacity can never drop below the number of players already in the
+  room. The chips update live for everybody and nobody's "ready" flag is reset.
 
 ## Round
 - Every player gets the same 5-letter word.
@@ -49,6 +53,9 @@ Maximum possible per round: 50 seconds (5 letters × 10). With repeated letters 
 ## Hint
 - Every player gets **one hint per round**. If they do not use it, it is lost when the round ends; it does not carry over.
 - Using it reveals **one letter that is in the word, without saying in which position**. It is marked on the keyboard with the hint style (dotted yellow). Nothing is marked on the board.
+- The chip says how many times that letter appears: "Hay una M en la palabra", "Hay dos L en
+  la palabra" ("There is one M…", "There are two L's…"). The count is real information about
+  the word; the positions are still never revealed.
 - The hint never repeats something you already know: it reveals a letter from an **answer position that is neither green nor already charged yellow**. It works per position, so repeated letters still count: on `LLAMA`, a player who has one `L` in yellow can still be hinted the other `L` (nothing told them the word has two); once both `L` positions are known, `L` can no longer come out.
 - If every non-green position is already known, the hint does not fail: it reveals one of those letters anyway. Unknown positions always come first.
 - The hint letter does **not** add the 5 s for a yellow. If you later place it in green, it adds only 5 s. A hint that lands on a position already charged yellow changes nothing in the time ledger.
@@ -132,3 +139,17 @@ room at a time. There is never a doubt about "which game do I go back to".
 - The configured rounds are played. The final table sums the points of every round.
 - If the game is a single round, exactly the same applies.
 - Tie-breaks, in order: fewer total attempts, fewer hints used.
+
+## Playing again
+- On the final results the host has **"Jugar de nuevo" ("Play again")**. The room is reused:
+  same code, same players, same settings, same host. It goes back to being a waiting room,
+  so the host can change the rules before starting, and everybody lands in it automatically.
+- Everything the finished game produced is wiped: ready flags, the accumulated table, totals,
+  attempts, hints and the list of words already played (a word may come up again). The
+  "deleted 5 minutes after finishing" clock is cancelled; from then on the lobby rules apply
+  (deleted after 10 minutes with nobody connected).
+- Players who are disconnected keep their seat and rejoin the new lobby with their stored
+  session, exactly as they would have rejoined the game.
+- Guests read "Esperando a que el anfitrión inicie otra partida…" ("Waiting for the host to
+  start another game…") and keep "Salir de la sala" ("Leave room"). Only the host can restart,
+  and only once the game has finished: between rounds the game is still running.

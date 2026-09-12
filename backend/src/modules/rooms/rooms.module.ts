@@ -6,7 +6,9 @@ import { JoinRoomUseCase } from './application/use-cases/join-room.use-case';
 import { LeaveRoomUseCase } from './application/use-cases/leave-room.use-case';
 import { MarkDisconnectedUseCase } from './application/use-cases/mark-disconnected.use-case';
 import { RejoinRoomUseCase } from './application/use-cases/rejoin-room.use-case';
+import { RestartRoomUseCase } from './application/use-cases/restart-room.use-case';
 import { SetReadyUseCase } from './application/use-cases/set-ready.use-case';
+import { UpdateRoomSettingsUseCase } from './application/use-cases/update-room-settings.use-case';
 import { ROOM_REPOSITORY } from './domain/interfaces/room-repository.interface';
 import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-room.repository';
 
@@ -18,6 +20,8 @@ import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-
     JoinRoomUseCase,
     RejoinRoomUseCase,
     SetReadyUseCase,
+    UpdateRoomSettingsUseCase,
+    RestartRoomUseCase,
     LeaveRoomUseCase,
     MarkDisconnectedUseCase,
     EnsureNotInRoomUseCase,
@@ -28,6 +32,8 @@ import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-
     JoinRoomUseCase,
     RejoinRoomUseCase,
     SetReadyUseCase,
+    UpdateRoomSettingsUseCase,
+    RestartRoomUseCase,
     LeaveRoomUseCase,
     MarkDisconnectedUseCase,
     EnsureNotInRoomUseCase,

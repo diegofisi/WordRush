@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 4;
+export const CONTRACT_VERSION = 6;
 
 export type Language = 'es' | 'en';
 export type TileColor = 'green' | 'yellow' | 'gray';
@@ -152,6 +152,8 @@ export interface OwnRow {
 /** The hint reveals a letter that is in the word, never its position. */
 export interface HintReveal {
   letter: string;
+  /** How many times `letter` occurs in the answer (1..WORD_LENGTH). */
+  count: number;
 }
 
 export type GainKind = 'yellow' | 'green' | 'green-after-yellow' | 'green-after-hint';
@@ -300,6 +302,11 @@ export interface ReactionPayload {
   emote: Emote;
 }
 
+/** Host-only, lobby-only edit of the room settings. */
+export interface UpdateSettingsPayload {
+  settings: RoomSettings;
+}
+
 export interface SessionAck {
   roomCode: string;
   playerId: string;
@@ -331,6 +338,9 @@ export interface ClientToServerEvents {
   'room:leave': (ack?: (r: EmptyAck) => void) => void;
   'room:ready': (payload: { ready: boolean }, ack?: (r: EmptyAck) => void) => void;
   'room:start': (ack?: (r: EmptyAck) => void) => void;
+  /** Host-only, finished-game only: reset the room to a fresh lobby and play again. */
+  'room:restart': (ack?: (r: EmptyAck) => void) => void;
+  'room:update-settings': (payload: UpdateSettingsPayload, ack?: (r: EmptyAck) => void) => void;
   'game:guess': (payload: GuessPayload, ack: (r: Ack<GuessAck>) => void) => void;
   'game:hint': (ack: (r: Ack<HintAck>) => void) => void;
   'reaction:send': (payload: ReactionPayload, ack?: (r: EmptyAck) => void) => void;

@@ -16,8 +16,9 @@ import type { HintPick, PositionCharge } from '@modules/rooms/domain/entities/pl
  *
  * Returns null only when there is nothing left at all (every slot green).
  * The position never leaves the server: it only feeds the time ledger (no
- * yellow seconds there, 5 s when it turns green); the player is told the
- * letter alone.
+ * yellow seconds there, 5 s when it turns green). The player is told the
+ * letter and how many times it occurs in the answer -- on `LLAMA` an `L`
+ * comes with a count of 2 -- so the chip can read "Hay dos L en la palabra".
  */
 export function pickHint(
   answer: string,
@@ -34,5 +35,13 @@ export function pickHint(
   const pool = unknown.length > 0 ? unknown : known;
   if (pool.length === 0) return null;
   const position = pool[Math.floor(random() * pool.length)];
-  return { letter: answer[position], position };
+  const letter = answer[position];
+  return { letter, position, count: countLetter(answer, letter) };
+}
+
+/** How many times `letter` occurs in the answer. */
+export function countLetter(answer: string, letter: string): number {
+  let total = 0;
+  for (const char of answer) if (char === letter) total += 1;
+  return total;
 }

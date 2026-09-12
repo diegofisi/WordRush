@@ -41,7 +41,7 @@ const GameTopBarActions = () => {
         disabled={status !== 'playing' || me.finished}
         onClick={() => void onHint()}
       />
-      {me.hint ? <HintLetterChip t={t} letter={me.hint.letter} /> : null}
+      {me.hint ? <HintLetterChip t={t} letter={me.hint.letter} count={me.hint.count} /> : null}
     </>
   );
 };

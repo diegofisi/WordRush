@@ -400,7 +400,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
               me: {
                 ...state.me,
                 hintUsed: true,
-                hint: { letter: ack.letter },
+                hint: { letter: ack.letter, count: ack.count },
                 secondsLeft: ack.secondsLeft,
                 at: ack.at,
               },
