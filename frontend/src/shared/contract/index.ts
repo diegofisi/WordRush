@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 7;
+export const CONTRACT_VERSION = 8;
 
 export type Language = 'es' | 'en';
 export type TileColor = 'green' | 'yellow' | 'gray';
@@ -247,6 +247,8 @@ export interface FullState {
 export type ErrorCode =
   | 'room_not_found'
   | 'room_full'
+  /** The server is at its room cap; unrelated to a single room being full. */
+  | 'server_full'
   | 'game_in_progress'
   | 'name_taken'
   | 'invalid_payload'

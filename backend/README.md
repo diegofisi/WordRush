@@ -29,8 +29,14 @@ pnpm lint:check                     # eslint without --fix (includes layer bound
 | `PORT`         | `3000`  | HTTP + Socket.IO port. Railway injects its own.                       |
 | `FRONTEND_URL` | unset   | Comma-separated CORS allowlist. Unset allows every origin (dev only). |
 | `NODE_ENV`     | unset   | Informational, except that `production` disables the testing hook.    |
+| `MAX_ROOMS`    | `500`   | Rooms held at once. Past it `room:create` answers `server_full`.      |
 
 See `.env.example`.
+
+`MAX_ROOMS` exists because rooms live in this process: without a ceiling a burst
+of creations ends in an out-of-memory restart, and a restart drops every game in
+progress. The default is a starting point, not a measurement — `/health` reports
+the live room count, so raise or lower it once this deployment has been watched.
 
 ## Testing
 
