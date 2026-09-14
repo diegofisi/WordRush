@@ -46,6 +46,10 @@ export const en: Dictionary = {
     cancel: 'Cancel',
     confirmLeave: 'Leave',
     backHome: 'Back to start',
+    reload: 'Reload',
+    crashTitle: 'Something broke',
+    crashBody:
+      'This screen stopped responding. Reloading usually fixes it. If it happens again, go back to the start: your game is still on the server.',
     ordinal,
     percent: (n) => `${n}%`,
     points: (n) => (n > 0 ? `+${n}` : `${n}`),
