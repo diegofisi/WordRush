@@ -31,6 +31,10 @@ export const es = {
     cancel: 'Cancelar',
     confirmLeave: 'Salir',
     backHome: 'Volver al inicio',
+    reload: 'Recargar',
+    crashTitle: 'Algo se rompió',
+    crashBody:
+      'Esta pantalla dejó de responder. Recargar suele bastar. Si vuelve a pasar, vuelve al inicio: tu partida sigue en el servidor.',
     ordinal: (n: number) => `${n}.º`,
     percent: (n: number) => `${n} %`,
     points: (n: number) => (n > 0 ? `+${n}` : `${n}`),
