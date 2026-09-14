@@ -225,6 +225,12 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     shakeKey,
     guessNotice,
     keyStates,
+    tileLabels: {
+      green: t.game.tileCorrect,
+      yellow: t.game.tilePresent,
+      gray: t.game.tileAbsent,
+      hint: t.game.tileHint,
+    },
     outcome,
     solvedPosition,
     rivals,

@@ -41,12 +41,14 @@ export const GameDesktop = (props: GameViewProps) => {
           shakeKey={props.shakeKey}
           notice={props.guessNotice}
           finished={props.outcome !== 'playing'}
+          colorLabels={props.tileLabels}
           size="lg"
         />
         {props.outcome === 'playing' ? (
           <Keyboard
             language={props.wordLanguage}
             keyStates={props.keyStates}
+            stateLabels={props.tileLabels}
             disabled={false}
             enterLabel={t.game.enter}
             backspaceLabel={t.game.backspace}

@@ -8,6 +8,9 @@ import type { KeyState } from '../models/game.model';
 interface KeyboardProps {
   language: Language;
   keyStates: Record<string, KeyState>;
+  /** Wording for a key that already carries a state; without it the colour is
+   * the only signal and a screen reader never hears which letters are ruled out. */
+  stateLabels: Record<KeyState, string>;
   disabled: boolean;
   enterLabel: string;
   backspaceLabel: string;
@@ -26,6 +29,7 @@ const stateClass: Record<KeyState, string> = {
 export const Keyboard = ({
   language,
   keyStates,
+  stateLabels,
   disabled,
   enterLabel,
   backspaceLabel,
@@ -34,20 +38,26 @@ export const Keyboard = ({
   onBackspace,
 }: KeyboardProps) => {
   const rows = keyboardRows(language);
-  const letterKey = (letter: string) => (
-    <button
-      key={letter}
-      type="button"
-      disabled={disabled}
-      onClick={() => onLetter(letter)}
-      className={cn(
-        'key min-w-0 flex-1 sm:flex-none sm:min-w-10 sm:px-2.5 disabled:opacity-60',
-        keyStates[letter] ? stateClass[keyStates[letter]] : undefined,
-      )}
-    >
-      {letter}
-    </button>
-  );
+  const letterKey = (letter: string) => {
+    const state = keyStates[letter];
+    return (
+      <button
+        key={letter}
+        type="button"
+        disabled={disabled}
+        // Only once the key carries a state: an untried key reads fine from its
+        // own text, and an aria-label would replace that text for no gain.
+        aria-label={state ? `${letter}, ${stateLabels[state]}` : undefined}
+        onClick={() => onLetter(letter)}
+        className={cn(
+          'key min-w-0 flex-1 sm:flex-none sm:min-w-10 sm:px-2.5 disabled:opacity-60',
+          state ? stateClass[state] : undefined,
+        )}
+      >
+        {letter}
+      </button>
+    );
+  };
 
   return (
     <div
