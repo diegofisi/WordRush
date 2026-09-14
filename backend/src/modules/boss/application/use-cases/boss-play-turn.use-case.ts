@@ -1,0 +1,274 @@
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { BOSS, MAX_ATTEMPTS } from '@shared/contract';
+import { RoomEventsBus } from '@shared/events/room-events.bus';
+import {
+  HINT_PORT,
+  ROUND_BOOKKEEPING,
+  type IHintPort,
+  type IRoundBookkeeping,
+} from '@modules/game/domain/interfaces/round-bookkeeping.interface';
+import { applyGuessRow } from '@modules/game/domain/services/apply-guess';
+import type { Player } from '@modules/rooms/domain/entities/player.entity';
+import type { Room } from '@modules/rooms/domain/entities/room.entity';
+import { IWordList, WORD_LIST } from '@modules/words/domain/interfaces/word-list.interface';
+import {
+  BOSS_BRAIN,
+  type BossSituation,
+  type IBossBrain,
+} from '../../domain/interfaces/boss-brain.interface';
+import { ALPHABET, scoreWord } from '../../domain/services/letter-readout';
+import type { LetterState, SlotState } from '../../domain/services/boss-wiring';
+import { BossMemoryService, type BossMemory } from '../services/boss-memory.service';
+
+/**
+ * How long a turn takes her, in wall milliseconds.
+ *
+ * These numbers are the balance of the whole mode, not decoration.
+ *
+ * Measured on 2026-09-13 over ten random words: at ~5 s a turn she finished a
+ * round in 7 to 24 seconds while a human takes 30 to 90. The two never
+ * overlapped, so the team's damage always landed after she was already done and
+ * no clock setting could make the fight real. A turn now costs 12 to 23 s, which
+ * puts her finish inside the window where humans actually solve
+ * (docs/context/06-boss-mode.md).
+ */
+export const BOSS_CADENCE = {
+  /** How long a turn takes her, flat. Pacing is not help; it is reaction time. */
+  thinkMs: 12000,
+  /** She types the word out rather than submitting it instantly. */
+  typeMsPerLetter: 600,
+  /** How soon to look again when the brain has not answered at all. */
+  retryMs: 1500,
+} as const;
+
+/**
+ * One turn of the fly. She plays through the same round object, the same time
+ * ledger and the same solve announcement as a human; the two differences are
+ * the ones the rules call for (docs/context/06-boss-mode.md): she earns no time
+ * from letters, and her solve damages humans instead of her teammates.
+ */
+@Injectable()
+export class BossPlayTurnUseCase {
+  private readonly logger = new Logger(BossPlayTurnUseCase.name);
+  /** So a brain that never comes up says so once instead of every 200 ms. */
+  private warnedSilent = false;
+
+  constructor(
+    @Inject(WORD_LIST) private readonly wordList: IWordList,
+    @Inject(BOSS_BRAIN) private readonly brain: IBossBrain,
+    @Inject(ROUND_BOOKKEEPING) private readonly rounds: IRoundBookkeeping,
+    @Inject(HINT_PORT) private readonly hints: IHintPort,
+    private readonly memory: BossMemoryService,
+    private readonly bus: RoomEventsBus,
+  ) {}
+
+  /** Returns true when she actually acted. Awaits the brain on its own thread. */
+  async execute(room: Room, bot: Player, now: number): Promise<boolean> {
+    const round = bot.round;
+    const answer = room.word;
+    if (!round || !answer || round.finished) return false;
+
+    /*
+     * Every word a player may type, not the 870 the answer is drawn from.
+     *
+     * Choosing from the answer list was a 92% cut of the search space handed to
+     * her for nothing: every word she played could be the answer, while a human
+     * spends attempts on words that never could be. Same keyboard, same
+     * dictionary, same odds (docs/context/06-boss-mode.md, 2026-09-13).
+     */
+    const pool = this.wordList.guessable(room.settings.language);
+    const memory = this.memory.forRound(room.code, room.currentRound, now);
+    if (now < memory.nextMoveAt || memory.thinking) return false;
+
+    // Half a second of brain is long enough for the ticker to come round again.
+    memory.thinking = true;
+    let decision;
+    try {
+      decision = await this.brain.decide(this.situationOf(room, round, memory));
+    } finally {
+      memory.thinking = false;
+    }
+    // The round can end while she is thinking.
+    if (round.finished || room.status !== 'playing' || room.word !== answer) return false;
+
+    // No brain, no move. There used to be a hand-written policy standing in for
+    // her here, which meant a broken worker was invisible and an algorithm was
+    // quietly playing the game. Standing still is the honest failure.
+    if (!decision.letterPreference) {
+      if (!this.warnedSilent) {
+        this.warnedSilent = true;
+        this.logger.warn('The brain did not answer; the fly will not move until it does');
+      }
+      memory.nextMoveAt = now + BOSS_CADENCE.retryMs;
+      return false;
+    }
+
+    /*
+     * Her hint. The readout asks for it; the rules answer.
+     *
+     * The room may have hints switched off and she may have spent hers already,
+     * exactly as for a human — she presses a button that is sometimes not there.
+     * What comes back is a letter she now perceives as present, reaching her
+     * through the same channel her own greens and yellows use. It narrows no
+     * list, because she has no list.
+     */
+    let hintSpent = false;
+    if (decision.hintWant > 0.5 && room.settings.hintEnabled && !round.hintUsed) {
+      const reveal = this.hints.reveal(room.code, bot.id);
+      if (reveal) {
+        memory.hintLetter = reveal.letter;
+        hintSpent = true;
+      }
+    }
+
+    const announce = (typing: string) =>
+      this.bus.publish({
+        roomCode: room.code,
+        event: 'boss:decision',
+        payload: {
+          playerId: bot.id,
+          action: 'guess',
+          confidence: Math.round(decision.confidence * 100) / 100,
+          hintWant: Math.round(decision.hintWant * 100) / 100,
+          hintSpent,
+          attempt: round.attempt,
+          letters: preferenceToLetters(decision.letterPreference),
+          brain: decision.rates.length > 0,
+          biologicalMs: decision.biologicalMs,
+          wallMs: decision.wallMs,
+          telemetry: decision.telemetry,
+          typing,
+        },
+      });
+
+    /*
+     * The whole of her move, and all of it hers.
+     *
+     * Every real word is legal — the list is the keyboard, not a filter, and it
+     * is the same restriction a human plays under. What she may not do is send
+     * a word she has already sent, which is memory of her own acts rather than
+     * deduction about the answer.
+     *
+     * What used to stand here instead: the answer list narrowed to what her
+     * colours allowed, a policy choosing between probing and committing, and a
+     * hand-tuned discount on letters she already knew. All three were the
+     * algorithm playing (docs/context/06-boss-mode.md, 2026-09-13).
+     */
+    const legal = pool.filter((candidate) => !memory.played.has(candidate));
+    const word = bestMatch(legal.length > 0 ? legal : pool, decision.letterPreference);
+
+    announce(word);
+    this.guess(room, bot, word, answer, memory, now);
+
+    // A flat pace. It used to be scaled by the policy's confidence, and that
+    // confidence was invented by the policy, so the timing was telling the room
+    // something no neuron had said.
+    memory.nextMoveAt = now + BOSS_CADENCE.thinkMs + BOSS_CADENCE.typeMsPerLetter * word.length;
+    return true;
+  }
+
+  private situationOf(
+    room: Room,
+    round: NonNullable<Player['round']>,
+    memory: BossMemory,
+  ): BossSituation {
+    return {
+      slots: slotsOf(round),
+      letters: lettersOf(round, memory.hintLetter),
+      seed: (room.currentRound * 1_000_003 + round.attempt * 7919 + room.code.charCodeAt(0)) >>> 0,
+    };
+  }
+
+  private guess(
+    room: Room,
+    bot: Player,
+    word: string,
+    answer: string,
+    memory: BossMemory,
+    now: number,
+  ): void {
+    const round = bot.round;
+    if (!round) return;
+
+    applyGuessRow(round, word, answer, BOSS.earnsTimeFromLetters);
+    memory.played.add(word);
+    room.touch(now);
+
+    const solved = word === answer;
+    if (solved) {
+      room.solvedCount += 1;
+      round.markSolved(room.solvedCount, now);
+    } else if (round.attempt >= MAX_ATTEMPTS) {
+      round.finish('attempts', now);
+    }
+
+    this.rounds.publishProgress(room, bot, now);
+    if (solved) this.rounds.announceSolve(room, bot, now);
+    this.rounds.endRoundIfOver(room, now);
+
+    this.logger.debug(`Room ${room.code}: fly played ${word} on attempt ${round.attempt}`);
+  }
+}
+
+/** What her own board looks like: one colour per slot, as the brain sees it. */
+function slotsOf(round: NonNullable<Player['round']>): SlotState[] {
+  const slots: SlotState[] = ['unknown', 'unknown', 'unknown', 'unknown', 'unknown'];
+  for (const row of round.rows) {
+    for (let i = 0; i < row.colors.length; i += 1) {
+      const colour = row.colors[i];
+      if (colour === 'green') slots[i] = 'green';
+      else if (slots[i] !== 'green') slots[i] = colour === 'yellow' ? 'yellow' : 'gray';
+    }
+  }
+  return slots;
+}
+
+/** Her keyboard: what every letter she has spent turned out to be. */
+function lettersOf(
+  round: NonNullable<Player['round']>,
+  hintLetter: string | null,
+): [string, LetterState][] {
+  const state = new Map<string, LetterState>();
+  // A hint is perceived, not deduced: the letter it named is one she now knows
+  // is in the word, and it reaches her through the same channel her own yellows
+  // and greens do.
+  if (hintLetter) state.set(hintLetter, 'present');
+  for (const row of round.rows) {
+    for (let i = 0; i < row.colors.length; i += 1) {
+      const letter = row.word[i];
+      if (row.colors[i] === 'gray') {
+        if (!state.has(letter)) state.set(letter, 'absent');
+      } else {
+        state.set(letter, 'present');
+      }
+    }
+  }
+  return [...state];
+}
+
+/**
+ * The legal word that best spends the letters her brain asked for. `legal` is
+ * already filtered: it never holds a word she has played.
+ */
+function bestMatch(legal: readonly string[], preference: Float32Array): string {
+  let best = legal[0];
+  let bestScore = -Infinity;
+  for (const word of legal) {
+    const score = scoreWord(word, preference);
+    if (score > bestScore) {
+      bestScore = score;
+      best = word;
+    }
+  }
+  return best;
+}
+
+/** The letters she wants most this turn, for the room to see. */
+function preferenceToLetters(preference: Float32Array | null): string[] {
+  if (!preference) return [];
+  return [...preference]
+    .map((value, index) => ({ value, letter: ALPHABET[index] }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6)
+    .map((entry) => entry.letter.toUpperCase());
+}

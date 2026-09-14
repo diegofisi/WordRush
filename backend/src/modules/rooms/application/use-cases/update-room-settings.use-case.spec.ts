@@ -21,6 +21,7 @@ const BASE: RoomSettings = {
   rounds: 3,
   capacity: 8,
   hintEnabled: true,
+  bossMode: false,
 };
 
 describe('UpdateRoomSettingsUseCase', () => {
@@ -51,6 +52,7 @@ describe('UpdateRoomSettingsUseCase', () => {
 
   it('lets the host rewrite every setting and broadcasts the new lobby', () => {
     useCase.execute('ABCD', 'host', {
+      bossMode: false,
       language: 'en',
       initialSeconds: 60,
       rounds: 5,
@@ -59,6 +61,7 @@ describe('UpdateRoomSettingsUseCase', () => {
     });
 
     expect(room.settings).toEqual({
+      bossMode: false,
       language: 'en',
       initialSeconds: 60,
       rounds: 5,

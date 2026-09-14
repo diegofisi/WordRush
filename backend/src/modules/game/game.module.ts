@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { HINT_PORT, ROUND_BOOKKEEPING } from './domain/interfaces/round-bookkeeping.interface';
+import { HintPortAdapter } from './application/services/hint-port.adapter';
 import { RoomsModule } from '@modules/rooms/rooms.module';
 import { WordsModule } from '@modules/words/words.module';
 import { RoomTickerService } from './application/services/room-ticker.service';
@@ -15,6 +17,9 @@ import { UseHintUseCase } from './application/use-cases/use-hint.use-case';
 @Module({
   imports: [RoomsModule, WordsModule],
   providers: [
+    HintPortAdapter,
+    { provide: ROUND_BOOKKEEPING, useExisting: RoundLifecycleService },
+    { provide: HINT_PORT, useExisting: HintPortAdapter },
     RoundSchedulerService,
     RoundLifecycleService,
     RoomTickerService,
@@ -26,6 +31,14 @@ import { UseHintUseCase } from './application/use-cases/use-hint.use-case';
     UseHintUseCase,
     SettleRoundUseCase,
   ],
-  exports: [StartGameUseCase, SubmitGuessUseCase, UseHintUseCase, SettleRoundUseCase],
+  exports: [
+    // Ports an optional mode may drive without reaching into this layer.
+    ROUND_BOOKKEEPING,
+    HINT_PORT,
+    StartGameUseCase,
+    SubmitGuessUseCase,
+    UseHintUseCase,
+    SettleRoundUseCase,
+  ],
 })
 export class GameModule {}

@@ -6,6 +6,7 @@ import { cn } from '@/shared/lib/cn';
 
 import { LangSegmented } from './LangSegmented';
 import { Logo } from './Logo';
+import { SoundToggle } from './SoundToggle';
 import { ThemeToggle } from './ThemeToggle';
 
 interface TopBarProps {
@@ -63,6 +64,7 @@ export const TopBar = ({
         ) : null}
         {actions}
         <LangSegmented />
+        <SoundToggle />
         <ThemeToggle />
         {leaveAction}
         {playerName ? (

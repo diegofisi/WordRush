@@ -42,7 +42,14 @@ describe('RejoinRoomUseCase', () => {
 
     room = Room.create(
       'ABCD',
-      { language: 'es', initialSeconds: 60, rounds: 3, capacity: 8, hintEnabled: true },
+      {
+        language: 'es',
+        initialSeconds: 60,
+        rounds: 3,
+        capacity: 8,
+        hintEnabled: true,
+        bossMode: false,
+      },
       T0,
     );
     room.addPlayer(

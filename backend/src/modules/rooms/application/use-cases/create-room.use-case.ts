@@ -7,6 +7,7 @@ import {
   IRoomRepository,
   ROOM_REPOSITORY,
 } from '../../domain/interfaces/room-repository.interface';
+import { syncBossSeat } from '../../domain/services/boss-seat';
 import { generateRoomCode } from '../../domain/services/room-code.generator';
 import { CreateRoomDto } from '../dtos/create-room.dto';
 
@@ -38,6 +39,7 @@ export class CreateRoomUseCase {
       joinedAt: now,
     });
     room.addPlayer(player);
+    syncBossSeat(room, now);
     this.rooms.save(room);
     return { room, player };
   }

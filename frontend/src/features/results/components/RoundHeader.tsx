@@ -26,6 +26,17 @@ export const RoundHeader = ({ t, results }: RoundHeaderProps) => {
           ))}
         </div>
         <div className="flex flex-col gap-0.5">
+          {results.bossDefeated !== null ? (
+            <span
+              className={
+                results.bossDefeated
+                  ? 'w-fit rounded-full bg-green-soft px-3 py-1 text-xs font-bold text-green-ink'
+                  : 'w-fit rounded-full bg-red-soft px-3 py-1 text-xs font-bold text-red'
+              }
+            >
+              {results.bossDefeated ? t.results.bossBeaten : t.results.bossWon}
+            </span>
+          ) : null}
           <h2 className="m-0 font-display text-[26px] font-bold tracking-[-0.02em]">
             {results.solvedCount > 0
               ? t.results.solvedCount(results.solvedCount, results.playerCount)
@@ -37,6 +48,19 @@ export const RoundHeader = ({ t, results }: RoundHeaderProps) => {
               : ''}
             {t.results.missedCount(missed)}
           </p>
+          {results.boss ? (
+            <p className="m-0 text-sm text-ink-2">
+              {results.boss.solved
+                ? t.results.bossSolvedIn(results.boss.attempts)
+                : t.results.bossFellAfter(results.boss.attempts)}{' '}
+              <span className="text-ink-3">{t.results.bossNoScore}</span>
+            </p>
+          ) : null}
+          {results.bossDefeated && results.bossBonus > 0 ? (
+            <p className="m-0 text-sm text-green-ink">
+              {t.results.bossBonusNote(results.bossBonus)}
+            </p>
+          ) : null}
         </div>
       </div>
       <div className="flex gap-2.5">

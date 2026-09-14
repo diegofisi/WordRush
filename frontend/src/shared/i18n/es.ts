@@ -1,4 +1,4 @@
-import type { Emote, ErrorCode, Language } from '@/shared/contract';
+import type { BossAction, Emote, ErrorCode, Language } from '@/shared/contract';
 
 /** Feminine number words for the hint chip; beyond three the digit is used. */
 const SPANISH_COUNTS: Record<number, string> = { 1: 'una', 2: 'dos', 3: 'tres' };
@@ -19,6 +19,8 @@ export const es = {
     roundOf: (round: number, total: number) => `Ronda ${round} de ${total}`,
     language: { es: 'Español', en: 'English' } satisfies Record<Language, string>,
     uiLanguage: 'Idioma de la interfaz',
+    soundOff: 'Silenciar los sonidos',
+    soundOn: 'Activar los sonidos',
     themeLight: 'Cambiar a modo claro',
     themeDark: 'Cambiar a modo oscuro',
     copyLink: 'Copiar enlace',
@@ -65,6 +67,8 @@ export const es = {
     fewerPlayers: 'Menos jugadores',
     morePlayers: 'Más jugadores',
     hintToggle: 'Una pista por jugador y ronda',
+    bossToggle: 'Jugad contra la mosca',
+    bossToggleHint: 'De 1 a 8 humanos, un solo objetivo',
     create: 'Crear sala',
     creating: 'Creando…',
     haveCode: '¿Tienes un código?',
@@ -111,9 +115,9 @@ export const es = {
     scoringGreens: 'No acertar, por cada letra en verde',
     scoringYellows: 'No acertar, por cada letra en amarillo',
     letterTime: 'Tiempo por letras',
-    letterTimeNote:
-      'Cada letra suma tiempo una vez. Cuando alguien acierta, el resto pierde 5 s.',
+    letterTimeNote: 'Cada letra suma tiempo una vez. Cuando alguien acierta, el resto pierde 5 s.',
     hintOff: 'sin pista',
+    bossOn: 'vs la mosca',
     shareHint: 'Comparte el enlace o el código para que entren.',
     changeRules: 'Cambiar reglas',
     rulesTitle: 'Reglas de la sala',
@@ -125,6 +129,105 @@ export const es = {
   },
   game: {
     rivals: 'Rivales',
+    team: 'Equipo',
+    boss: 'La mosca',
+    bossHealth: 'Reloj de la mosca',
+    bossStart: (n: number) => `inicio ${n} s`,
+    bossDamage: (n: number) => `equipo −${n} s`,
+    bossForfeited: (n: number) => `letras +${n} s`,
+    bossAttempt: (n: number) => `intento ${n} de 8`,
+    bossSolvedIt: 'resolvió',
+    bossDown: 'derrotada',
+    bossHit: (n: number) => `−${n} s a la mosca`,
+    bossThinking: 'Qué está haciendo',
+    bossAction: {
+      guess: 'juega lo que pide su cerebro',
+    } satisfies Record<BossAction, string>,
+    bossConfidence: (n: number) => `seguridad ${n.toFixed(2)}`,
+    bossWants: 'Letras que pide su cerebro',
+    bossOpen: 'Ver su cerebro',
+    bossOpenHint: 'Se abre en otra pestaña',
+    bossClose: 'Ocultar su cerebro',
+    bossLinkLive: 'Conectado a la partida',
+    bossLinkWaiting: 'Esperando la partida',
+    bossLinkHelp:
+      'Esta pestaña mide el cerebro de la mosca mientras juega. Deja abierta la pestaña de la partida y los datos aparecen aquí.',
+    bossNoBrain:
+      'Todavía no ha pensado con el conectoma en esta ronda. Aparece en cuanto tome un turno.',
+    bossBrainTitle: 'Su cerebro mientras decidía',
+    bossNetwork: 'Red de decisión',
+    bossNetworkNote:
+      'La lectura entrenada, dibujada con sus propios pesos. Entra la tasa real de las descendentes, salen las 27 letras. La más brillante es la que más quiere.',
+    bossParams: (params: number, samples: number) =>
+      `${params} parámetros, ajustados sobre ${samples} muestras del conectoma`,
+    bossExcites: 'excita',
+    bossInhibits: 'inhibe',
+    bossFlyNote: (hz: number) =>
+      `Malla real "Shy fly" (Maf'j Alvarez, CC-BY 3.0), recoloreada como Drosophila. Teclea la palabra que de verdad envía, al ritmo de su población motora: ${hz} Hz.`,
+    bossStimulus: 'Estímulo · fila anterior',
+    bossStimulusNote: 'Poisson inyectado en cada canal, en Hz. Es toda la entrada que recibe.',
+    bossWantsNote: 'Se juega la candidata legal que mejor gasta estas letras.',
+    bossCloud: 'Nube de neuronas',
+    bossMode: {
+      transmitter: 'Modo · neurotransmisor',
+      atlas: 'Modo · atlas',
+      circuit: 'Modo · circuito',
+    },
+    bossModeNote: {
+      transmitter: () =>
+        'Coloreada por el neurotransmisor real. Mezcla aditiva: las zonas densas brillan más, y eso es lo que hace legible la anatomía.',
+      atlas: () =>
+        'Gris: el atlas sin simular. Verde: excitadoras (acetilcolina y demás). Naranja: inhibidoras (GABA y glutamato). Solo se colorea lo que dispara.',
+      circuit: (synapses: number) =>
+        `Las 64 células descendentes que lee el readout, en su sitio real dentro del cerebro, y las ${synapses} sinapsis que hay entre ellas en el conectoma. El brillo de cada nodo es su frecuencia medida; una línea se enciende cuando su célula de origen dispara.`,
+    },
+    bossOrbitOn: 'Órbita activa',
+    bossOrbitOff: 'Órbita detenida',
+    bossStateLive: 'Estado del modelo en vivo',
+    bossStateHeld: 'Última decisión',
+    bossStateMean: (mean: string, firing: number) =>
+      `actividad media ${mean} · ${firing} células encendidas`,
+    bossCloudColour:
+      'Color por neurotransmisor real. Mezcla aditiva: donde hay más neuronas, más brilla, y así se lee la anatomía.',
+    bossCloudNote: (total: number, fired: number, ms: number) =>
+      `Muestra de ${total} neuronas reales. Dispararon ${fired} en los últimos ${ms} ms biológicos.`,
+    bossRaster: 'Traza de disparos',
+    bossRasterNote: (rows: number, ms: number) =>
+      `Una fila por célula descendente (${rows}). Un tick por disparo, ${ms} ms biológicos.`,
+    bossVoltage: 'Voltaje de membrana',
+    bossVoltageNote: 'Histograma sobre todo el cerebro. Reposo −52 mV, umbral −45 mV.',
+    bossPopulations: 'Tasa por población',
+    bossPopulationsNote: 'Disparos por neurona y segundo, por clase anatómica de FlyWire.',
+    bossBalance: 'Excit. / inhib.',
+    bossBalanceUnit: 'corriente entrante, mV',
+    bossBio: 'Tiempo biológico',
+    bossLive: 'ms bio / ms reales, en vivo',
+    bossBioUnit: (wall: number) => `ms simulados en ${wall} ms reales`,
+    bossLetters: 'Letra más pedida',
+    bossLettersUnit: 'la que más quiere su readout',
+    bossConfidenceLabel: 'Confianza',
+    bossConfidenceUnit: 'margen de la decisión',
+    bossTraining: 'Cómo se entrenó',
+    bossTrainShape: 'Readout',
+    bossTrainShapeUnit: 'entradas · ocultas · salidas',
+    bossTrainSamples: 'Muestras',
+    bossTrainSamplesUnit: 'tableros simulados en el conectoma',
+    bossTrainError: 'Error fuera de muestra',
+    bossTrainErrorUnit: (flat: string) => `contra ${flat} ignorando el cerebro`,
+    bossTrainGain: 'Aporte del cerebro',
+    bossTrainGainUnit: 'mejor que una salida constante',
+    bossTrainTeacher:
+      'Objetivo: las letras que de verdad estaban en la palabra. El maestro es la respuesta, no un solver — nadie le enseñó a imitar a un algoritmo.',
+    bossTrainHint:
+      'La salida 28 es su pista: aprendió en qué tableros vale la pena gastarla. Ningún umbral escrito a mano decide eso. Si la sala no tiene pistas, la pide y las reglas le dicen que no, igual que a un humano.',
+    bossTrainFixed:
+      'Lo único ajustado es este readout. Las 138.639 neuronas y los 2.700.513 sinapsis de antes son anatomía de FlyWire y no se tocaron nunca.',
+    bossTrainWhen: (date: string, epochs: number) =>
+      `Entrenado el ${date}, época ${epochs} (la mejor fuera de muestra).`,
+    bossProvenance:
+      'Todo lo de arriba está medido sobre el modelo en marcha: la traza son sus tiempos de disparo, el histograma es el voltaje de cada neurona, las tasas son disparos contados. Nada se genera para el dibujo.',
+    bossSimulated: (bio: number, wall: number) => `${bio} ms de cerebro simulados en ${wall} ms`,
+    bossNoScore: 'El jefe no puntúa: su reloj es vida, no tiempo de sobra.',
     alreadySolved: (n: number) => (n === 1 ? '1 ya resolvió' : `${n} ya resolvieron`),
     solved: 'Resolvió',
     attempt: (n: number) => `Intento ${n}`,
@@ -202,6 +305,17 @@ export const es = {
       n === 0 ? 'Todos la sacaron.' : n === 1 ? 'Un jugador no la sacó.' : `${n} no la sacaron.`,
     yourRound: 'Tu ronda',
     yourTotal: 'Tu acumulado',
+    colBoss: 'Jefe',
+    bossWon: 'La mosca resolvió y gana la ronda',
+    bossBeaten: 'La mosca cayó: gana el equipo',
+    bossWords: 'Lo que jugó la mosca',
+    bossSolvedIn: (n: number) =>
+      n === 1 ? 'La mosca acertó al primer intento.' : `La mosca acertó en ${n} intentos.`,
+    bossFellAfter: (n: number) =>
+      n === 1 ? 'La mosca cayó tras 1 intento.' : `La mosca cayó tras ${n} intentos.`,
+    bossNoScore: 'Juega con tu mismo reloj y puntúa con la misma fórmula.',
+    bossBonusNote: (n: number) => `+${n} de bono para cada humano que aguantó la ronda.`,
+    teamWins: 'El equipo gana',
     colPlayer: 'Jugador',
     colTime: 'Tiempo',
     colSolve: 'Acierto',

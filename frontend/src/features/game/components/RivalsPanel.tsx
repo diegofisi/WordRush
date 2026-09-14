@@ -13,6 +13,8 @@ interface RivalsPanelProps {
   rivalClocks: Record<string, number>;
   solvedCount: number;
   lowTimeThreshold: number;
+  /** Overrides the heading; boss mode calls the column a team. */
+  title?: string;
 }
 
 const statusLine = (t: Dictionary, rival: RivalViewModel) => {
@@ -41,11 +43,12 @@ export const RivalsPanel = ({
   rivalClocks,
   solvedCount,
   lowTimeThreshold,
+  title,
 }: RivalsPanelProps) => (
   <Card className="flex min-h-0 flex-col overflow-hidden">
     <div className="flex items-center justify-between px-4 pt-3.5 pb-2.5">
       <span className="label">
-        {t.game.rivals} · {rivals.length}
+        {title ?? t.game.rivals} · {rivals.length}
       </span>
       {solvedCount > 0 ? (
         <span className="text-xs text-ink-3">{t.game.alreadySolved(solvedCount)}</span>

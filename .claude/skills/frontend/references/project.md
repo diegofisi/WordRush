@@ -98,9 +98,9 @@ client never declares a timeout; it waits for the server.
 
 ## Routing shape
 
-Flat router under `RootLayout`: `/` (create / join), `/sala/:code` (lobby),
-`/juego/:code` (game), `/resultados/:code` (results). Path constants in
-`shared/routes/*-path.ts`. A reload on `/juego/:code` re-joins with the stored
+Flat router under `RootLayout`: `/` (create / join), `/room/:code` (lobby),
+`/game/:code` (game), `/results/:code` (results). Path constants in
+`shared/routes/*-path.ts`. A reload on `/game/:code` re-joins with the stored
 playerId; if the server rejects it, go to `/`.
 
 ## Verification commands

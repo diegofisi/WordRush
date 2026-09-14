@@ -22,4 +22,8 @@ export class RoomSettingsDto implements RoomSettings {
 
   @IsBoolean()
   hintEnabled!: boolean;
+
+  /** The room plays against the fly. docs/context/06-boss-mode.md */
+  @IsBoolean()
+  bossMode!: boolean;
 }

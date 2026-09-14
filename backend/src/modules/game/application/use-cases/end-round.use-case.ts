@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ROOM_LIMITS, type RoundEndPayload } from '@shared/contract';
+import { BOSS, ROOM_LIMITS, type RoundEndPayload } from '@shared/contract';
 import { CLOCK, type Clock } from '@shared/domain/clock';
 import { RoomEventsBus } from '@shared/events/room-events.bus';
 import { Room } from '@modules/rooms/domain/entities/room.entity';
@@ -29,9 +29,20 @@ export class EndRoundUseCase {
   ) {}
 
   execute(room: Room, now: number): RoundEndPayload {
-    const { initialSeconds, hintEnabled, rounds } = room.settings;
+    const { initialSeconds, hintEnabled, rounds, bossMode } = room.settings;
 
-    const breakdown = room.players.map((player) => {
+    // The team wins the round when the fly did not solve it, whether she ran
+    // out of clock or out of attempts (docs/context/06-boss-mode.md).
+    const bot = room.bot;
+    const bossDefeated = bossMode && bot ? bot.round?.solved !== true : null;
+    const teamBonus = bossDefeated === true ? BOSS.defeatedBonus : 0;
+
+    // She plays on the room's clock now, so the points formula measures her
+    // against the same number as everyone and she belongs in the table like any
+    // other player (docs/context/06-boss-mode.md).
+    const scored = room.players;
+
+    const breakdown = scored.map((player) => {
       const round = player.round;
       const result = scoreRound(
         {
@@ -47,6 +58,7 @@ export class EndRoundUseCase {
         },
         initialSeconds,
         hintEnabled,
+        teamBonus,
       );
       player.totalPoints += result.roundPoints;
       player.totalAttempts += result.attempt;
@@ -55,7 +67,7 @@ export class EndRoundUseCase {
     });
 
     const standings = computeStandings(
-      room.players.map((p) => ({
+      scored.map((p) => ({
         playerId: p.id,
         name: p.name,
         total: p.totalPoints,
@@ -75,6 +87,17 @@ export class EndRoundUseCase {
       breakdown,
       standings,
       nextRoundIn: isLast ? 0 : ROOM_LIMITS.betweenRoundsSeconds,
+      bossDefeated,
+      boss:
+        bossMode && bot?.round
+          ? {
+              solved: bot.round.solved,
+              attempts: bot.round.attempt,
+              defeated: !bot.round.solved,
+              secondsLeft: bot.round.secondsLeft(now),
+              rows: bot.round.rows.map((row) => ({ word: row.word, colors: [...row.colors] })),
+            }
+          : null,
     };
 
     room.lastRoundEnd = payload;

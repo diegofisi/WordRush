@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { bossClockSeconds } from '@shared/contract';
 import { RoomEventsBus } from '@shared/events/room-events.bus';
 import { PlayerRound } from '@modules/rooms/domain/entities/player-round.entity';
 import { Room } from '@modules/rooms/domain/entities/room.entity';
@@ -27,9 +28,14 @@ export class StartRoundUseCase {
     room.nextRoundAt = null;
     room.touch(now);
 
+    // Same clock for the fly as for everyone: she is a player, not a timer.
+    const bossSeconds = bossClockSeconds(room.settings.initialSeconds);
     for (const player of room.players) {
       player.ready = false;
-      player.round = new PlayerRound(now, room.settings.initialSeconds);
+      player.round = new PlayerRound(
+        now,
+        player.isBot ? bossSeconds : room.settings.initialSeconds,
+      );
     }
 
     // `me` differs per player, so the payload is addressed socket by socket.

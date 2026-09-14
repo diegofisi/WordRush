@@ -7,6 +7,8 @@ export interface PlayerProps {
   name: string;
   isHost: boolean;
   joinedAt: number;
+  /** The fly's seat: no socket, no capacity slot, never host. */
+  isBot?: boolean;
 }
 
 export class Player {
@@ -15,6 +17,8 @@ export class Player {
   readonly token: string;
   readonly name: string;
   readonly joinedAt: number;
+  /** True only for the fly. docs/context/06-boss-mode.md */
+  readonly isBot: boolean;
   isHost: boolean;
   ready = false;
   connected = true;
@@ -36,6 +40,7 @@ export class Player {
     this.name = props.name;
     this.isHost = props.isHost;
     this.joinedAt = props.joinedAt;
+    this.isBot = props.isBot === true;
   }
 
   static create(props: PlayerProps): Player {
@@ -74,6 +79,7 @@ export class Player {
       isHost: this.isHost,
       ready: this.ready,
       connected: this.connected,
+      isBot: this.isBot,
     };
   }
 }

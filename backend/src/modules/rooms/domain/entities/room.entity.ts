@@ -47,16 +47,35 @@ export class Room {
     return this.players.some((p) => p.name.toLowerCase() === wanted);
   }
 
+  /**
+   * Human seats. The fly does not consume capacity, is never counted towards
+   * the minimum to start, and never keeps an abandoned room alive.
+   */
+  humanPlayers(): Player[] {
+    return this.players.filter((p) => !p.isBot);
+  }
+
+  /** The fly's seat, when the room is in boss mode. */
+  get bot(): Player | undefined {
+    return this.players.find((p) => p.isBot);
+  }
+
+  /**
+   * Connected **humans**. Everything that asks "is anybody still here?" means
+   * humans: the minimum to start, and whether a room has been abandoned. The
+   * fly is always marked connected and would otherwise keep a dead room alive.
+   */
   connectedPlayers(): Player[] {
-    return this.players.filter((p) => p.connected);
+    return this.players.filter((p) => p.connected && !p.isBot);
   }
 
   isFull(): boolean {
-    return this.players.length >= this.settings.capacity;
+    return this.humanPlayers().length >= this.settings.capacity;
   }
 
+  /** Empty of humans: the fly alone does not keep a room open. */
   isEmpty(): boolean {
-    return this.players.length === 0;
+    return this.humanPlayers().length === 0;
   }
 
   addPlayer(player: Player): void {
@@ -71,10 +90,11 @@ export class Room {
     const index = this.players.findIndex((p) => p.id === id);
     if (index === -1) return undefined;
     const [removed] = this.players.splice(index, 1);
-    if (removed.isHost && this.players.length > 0) {
-      const byAge = [...this.players].sort((a, b) => a.joinedAt - b.joinedAt);
+    if (removed.isHost) {
+      // The fly never inherits the room.
+      const byAge = this.humanPlayers().sort((a, b) => a.joinedAt - b.joinedAt);
       const heir = byAge.find((p) => p.connected) ?? byAge[0];
-      heir.isHost = true;
+      if (heir) heir.isHost = true;
     }
     return removed;
   }

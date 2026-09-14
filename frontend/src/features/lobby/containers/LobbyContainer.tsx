@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { PageLoading } from '@/shared/components/ui/PageState';
-import { ROOM_LIMITS, type RoomSettings } from '@/shared/contract';
+import { BOSS, ROOM_LIMITS, type RoomSettings } from '@/shared/contract';
 import { useT } from '@/shared/i18n';
 import { homeWithCode, PATHS, pathForStatus } from '@/shared/routes/paths';
 import { toast } from '@/shared/stores/useToastStore';
@@ -95,7 +95,7 @@ export const LobbyContainer = () => {
           isReady={lobby.me?.ready ?? false}
           readyCount={lobby.readyCount}
           playerCount={lobby.playerCount}
-          minPlayers={ROOM_LIMITS.minPlayers}
+          minPlayers={lobby.settings.bossMode ? BOSS.minHumans : ROOM_LIMITS.minPlayers}
           starting={starting}
           onToggleReady={() => void toggleReady()}
           onStart={() => void start()}

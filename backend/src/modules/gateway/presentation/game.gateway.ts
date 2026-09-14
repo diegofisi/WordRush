@@ -19,6 +19,8 @@ import { StartGameUseCase } from '@modules/game/application/use-cases/start-game
 import { SubmitGuessUseCase } from '@modules/game/application/use-cases/submit-guess.use-case';
 import { UseHintUseCase } from '@modules/game/application/use-cases/use-hint.use-case';
 import { ReactionDto } from '@modules/reactions/application/dtos/reaction.dto';
+import { BossWatchersService } from '@modules/boss/application/services/boss-watchers.service';
+import { BossWatchDto } from '../application/dtos/boss-watch.dto';
 import { SendReactionUseCase } from '@modules/reactions/application/use-cases/send-reaction.use-case';
 import { CreateRoomDto } from '@modules/rooms/application/dtos/create-room.dto';
 import { JoinRoomDto } from '@modules/rooms/application/dtos/join-room.dto';
@@ -81,6 +83,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     private readonly submitGuess: SubmitGuessUseCase,
     private readonly useHint: UseHintUseCase,
     private readonly sendReaction: SendReactionUseCase,
+    private readonly watchers: BossWatchersService,
   ) {}
 
   afterInit(): void {
@@ -93,6 +96,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   handleDisconnect(client: GameSocket): void {
     this.limiter.forget(client.id);
+    if (client.data.playerId) this.watchers.drop(client.data.playerId);
     if (!this.sessions.isCurrent(client)) {
       this.sessions.detach(client);
       return;
@@ -189,6 +193,14 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   onHint(@ConnectedSocket() client: GameSocket): Ack<HintAck> {
     const { roomCode, playerId } = this.requireSession(client);
     return { ok: true, ...this.useHint.execute(roomCode, playerId) };
+  }
+
+  /** The fly's brain panel opened or closed; only watched rooms get live frames. */
+  @SubscribeMessage('boss:watch')
+  onBossWatch(@ConnectedSocket() client: GameSocket, @MessageBody() dto: BossWatchDto): EmptyAck {
+    const { roomCode, playerId } = this.requireSession(client);
+    this.watchers.set(roomCode, playerId, dto.watching);
+    return OK_EMPTY;
   }
 
   @SubscribeMessage('reaction:send')

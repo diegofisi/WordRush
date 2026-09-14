@@ -11,6 +11,8 @@ export interface CreateRoomForm {
   rounds: number;
   capacity: number;
   hintEnabled: boolean;
+  /** The room plays against the fly. docs/context/06-boss-mode.md */
+  bossMode: boolean;
 }
 
 export const toCreateRoomRequest = (form: CreateRoomForm): CreateRoomRequest => ({
@@ -21,5 +23,6 @@ export const toCreateRoomRequest = (form: CreateRoomForm): CreateRoomRequest => 
     rounds: form.rounds,
     capacity: form.capacity,
     hintEnabled: form.hintEnabled,
+    bossMode: form.bossMode,
   },
 });

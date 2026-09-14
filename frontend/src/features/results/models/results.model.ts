@@ -1,4 +1,10 @@
-import type { GameEndPayload, RoundBreakdown, RoundEndPayload, Standing } from '@/shared/contract';
+import type {
+  BossSummary,
+  GameEndPayload,
+  RoundBreakdown,
+  RoundEndPayload,
+  Standing,
+} from '@/shared/contract';
 
 export interface BreakdownRowViewModel extends RoundBreakdown {
   rank: number;
@@ -23,6 +29,12 @@ export interface RoundResultsViewModel {
   myRow: BreakdownRowViewModel | null;
   myStanding: StandingViewModel | null;
   isFinal: boolean;
+  /** True when the team beat the fly, false when she solved; null outside boss mode. */
+  bossDefeated: boolean | null;
+  /** The flat bonus every surviving human took, 0 when she was not beaten. */
+  bossBonus: number;
+  /** How the fly finished. She is the opponent, so she is not in the tables. */
+  boss: BossSummary | null;
 }
 
 const byRoundResult = (first: RoundBreakdown, second: RoundBreakdown) => {
@@ -65,5 +77,8 @@ export const toRoundResultsViewModel = (
     myRow: rows.find((row) => row.isMe) ?? null,
     myStanding: standings.find((standing) => standing.isMe) ?? null,
     isFinal: gameEnd !== null || payload.nextRoundIn === 0 || payload.round >= payload.totalRounds,
+    bossDefeated: payload.bossDefeated,
+    boss: payload.boss,
+    bossBonus: Math.max(0, ...rows.map((row) => row.bossBonus)),
   };
 };

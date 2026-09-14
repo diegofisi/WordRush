@@ -133,6 +133,18 @@ export const CreateRoomForm = ({
       />
     </div>
 
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-accent/40 bg-accent-soft px-4 py-3.5">
+      <div className="flex min-w-0 flex-col gap-0.5 text-accent">
+        <span className="text-sm font-semibold">{t.home.bossToggle}</span>
+        <span className="text-xs text-ink-3">{t.home.bossToggleHint}</span>
+      </div>
+      <Toggle
+        checked={values.bossMode}
+        onChange={(bossMode) => onChange({ bossMode })}
+        label={t.home.bossToggle}
+      />
+    </div>
+
     <Button type="submit" size="lg" loading={pending} className="w-full">
       {pending ? t.home.creating : t.home.create}
     </Button>
