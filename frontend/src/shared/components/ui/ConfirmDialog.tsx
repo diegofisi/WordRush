@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { Button } from '@/shared/components/ui/Button';
+import { useFocusTrap } from '@/shared/hooks/useFocusTrap';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -15,7 +16,8 @@ interface ConfirmDialogProps {
 
 /**
  * Small modal question. Hand-made (no UI kit): overlay + centred card, focus
- * on the confirm button, Escape and a click outside cancel.
+ * on the confirm button, trapped inside while it is open, Escape and a click
+ * outside cancel.
  */
 export const ConfirmDialog = ({
   open,
@@ -27,6 +29,9 @@ export const ConfirmDialog = ({
   onCancel,
   onConfirm,
 }: ConfirmDialogProps) => {
+  const card = useRef<HTMLDivElement>(null);
+  useFocusTrap(card, open);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
@@ -44,6 +49,7 @@ export const ConfirmDialog = ({
       onClick={onCancel}
     >
       <div
+        ref={card}
         role="dialog"
         aria-modal="true"
         aria-label={title}
