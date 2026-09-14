@@ -3,17 +3,22 @@ name: frontend
 description: >
   React frontend architecture doctrine. Use when asked to create or modify a
   view, page, component, hook, store, form, route, feature slice, or any React
-  UI work. Covers React 19 + TypeScript + MUI 5 + Zustand + React Query,
-  vertical slices, Container/Presentational, and the Adapter Pattern over the
-  transport layer (axios HTTP client).
+  UI work. Covers vertical slices, Container/Presentational, stores, and the
+  Adapter Pattern over whatever the transport is. The doctrine's examples are
+  written in MUI + React Query; what THIS repo actually uses is in
+  references/project.md, which is read first and wins.
 ---
 
-# Frontend (React 19 + MUI)
+# Frontend (React 19)
 
-React architecture doctrine, bound to this project's stack (**React 19 + TS +
-Vite + MUI 5 + Zustand + React Query**; no Tailwind/Shadcn/i18n). Reference
-files carry the universal doctrine adapted to MUI; everything specific to the
-current project lives in `references/project.md` — **read it first**.
+Portable React architecture doctrine. Its examples are written against
+**MUI 5 + React Query + axios**, which is where it came from — that is a
+vocabulary for the patterns, **not** a description of the repo you are in.
+
+WordRush is React 19 + Vite + **Tailwind v4** with hand-made primitives,
+**Zustand**, **socket.io** and **no React Query**, and it does have an ES/EN
+i18n layer. Every one of those mappings lives in `references/project.md`, which
+you read **first** and which wins wherever it disagrees with a doctrine file.
 
 ## How to use this skill
 
@@ -53,7 +58,7 @@ current project lives in `references/project.md` — **read it first**.
 3. Create `features/{feature}/api/{endpoint}/`:
    - `{endpoint}.dto.ts` — TS mirror of the transport shape + `to{Model}` mapper.
    - `use{Action}.ts` — fetcher call in `queryFn`/`mutationFn`, `select: toModel` (queries) or mapper inside `mutationFn` (mutations).
-4. This transport has no push events/websockets; don't add polling unless a status has no better signal (`references/data-flow.md`).
+4. In this repo the transport **is** websockets: anything the server pushes is store-driven (subscribe in the store's `bind()`), and only emit-with-ack gets an `api/` folder. Never poll — `references/project.md` → Transport.
 
 ## Workflow C — New page
 
@@ -89,13 +94,14 @@ Never a thin wrapper page around a single container. Register route + path const
 ## Validation checklist (before finishing any task)
 
 Run the project's verification commands — read them from `references/project.md`
-or the repo's `CLAUDE.md`. Typical set: typecheck (`tsc --noEmit`), lint
-(with the boundaries plugin enforcing layer imports), unit tests, and any
-combined check script. If a script fails for tooling reasons, check
-`package.json` for its current form instead of assuming.
+→ Verification commands, not from memory. Here that is `pnpm typecheck`,
+`pnpm lint`, `pnpm build`, plus `pnpm check-contract` from the repo root. If a
+script fails for tooling reasons, check `package.json` for its current form
+instead of assuming.
 
-Also verify: no cross-feature imports, no DTO reaching a component, no raw HTML
-layout tags (MUI `Box`/`Stack`/`Grid`/`Typography` instead), no hardcoded route
-strings (use the `common/routes/` path constants), and the transport
-(`httpClient`/React Query) imported only from `api/`/`stores/`. There is no i18n
-layer — user-facing strings are inline English.
+Also verify: no cross-feature imports beyond the sanctioned facades — nothing
+lints this on the frontend, so it is on you; no DTO reaching a component; no
+hardcoded route strings (use `shared/routes/paths.ts`); the socket imported only
+from `api/` and `stores/`; no raw hex and no `var(--x)` in a `className`; and
+every user-facing string coming from the `es`/`en` dictionary rather than typed
+inline.

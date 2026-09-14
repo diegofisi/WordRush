@@ -7,11 +7,13 @@ paths:
 # Gateways and controllers (presentation layer)
 
 - Handlers are thin: validate the payload with a class-validator DTO → call
-  one use case → return `BaseResponse.ok(...)` (HTTP) or the ack object
-  (socket). No repository, room store or rule logic here.
-- Socket events and payloads are the contract in
-  `.claude/skills/backend/references/project.md` → Socket contract. Adding or
-  renaming an event updates that table and the frontend DTO in the same change.
+  one use case → return the ack object. No repository, room store or rule logic
+  here. (There is no `BaseResponse` in this repo; the one HTTP route, `/health`,
+  returns a plain object.)
+- Socket events and payloads are owned by `src/shared/contract/index.ts`.
+  Adding or renaming an event means editing that file, bumping
+  `CONTRACT_VERSION`, running `pnpm sync-contract` from the repo root, and
+  changing the frontend DTO in the same commit.
 - The round word is **never** part of any emitted payload before `round:end`.
   Other players' guesses are broadcast as colours only, never letters.
 - Everything time-related (seconds left, penalties, who solved first) is
