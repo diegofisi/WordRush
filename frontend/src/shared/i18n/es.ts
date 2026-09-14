@@ -240,6 +240,7 @@ export const es = {
   errors: {
     room_not_found: 'Esa sala no existe.',
     room_full: 'La sala está llena.',
+    server_full: 'El servidor está lleno ahora mismo. Inténtalo en un momento.',
     game_in_progress: 'La partida ya empezó.',
     name_taken: 'Ese nombre ya está en uso en la sala.',
     invalid_payload: 'Datos no válidos.',

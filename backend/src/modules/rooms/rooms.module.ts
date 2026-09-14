@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MAX_ROOMS, parseMaxRooms } from '@shared/config/env';
 import { RoomJanitorService } from './application/services/room-janitor.service';
 import { CreateRoomUseCase } from './application/use-cases/create-room.use-case';
 import { EnsureNotInRoomUseCase } from './application/use-cases/ensure-not-in-room.use-case';
@@ -15,6 +16,7 @@ import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-
 @Module({
   providers: [
     { provide: ROOM_REPOSITORY, useClass: InMemoryRoomRepository },
+    { provide: MAX_ROOMS, useFactory: () => parseMaxRooms(process.env.MAX_ROOMS) },
     RoomJanitorService,
     CreateRoomUseCase,
     JoinRoomUseCase,
