@@ -26,7 +26,11 @@ export const Toaster = () => {
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-4 bottom-(--toast-bottom) z-50 flex flex-col items-center gap-2 sm:inset-x-auto sm:top-20 sm:right-5 sm:bottom-auto sm:w-90 sm:max-w-[calc(100vw-2.5rem)] sm:items-end"
+      // Phones: `fixed`, so the shell's padding does not reach it and the
+      // insets are added here — to the bottom on top of whatever furniture
+      // `--toast-bottom` is already clearing, and to the sides for a landscape
+      // notch. From `sm:` up the desktop corner takes over and insets are 0.
+      className="pointer-events-none fixed right-[calc(var(--spacing)*4+var(--safe-right))] bottom-[calc(var(--toast-bottom)+var(--safe-bottom))] left-[calc(var(--spacing)*4+var(--safe-left))] z-50 flex flex-col items-center gap-2 sm:inset-x-auto sm:top-20 sm:right-5 sm:bottom-auto sm:w-90 sm:max-w-[calc(100vw-2.5rem)] sm:items-end"
     >
       {items.map((item) => (
         <div

@@ -35,7 +35,9 @@ export const TopBar = ({
   return (
     <header
       className={cn(
-        'flex min-h-16 flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2 sm:px-7',
+        // `pt` carries the status-bar / notch inset on top of its own padding;
+        // the bar is the first thing under the top edge on every screen.
+        'flex min-h-16 flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 pt-[calc(var(--spacing)*2+var(--safe-top))] pb-2 sm:px-7',
         !bare && 'border-b border-line bg-surface',
       )}
     >
