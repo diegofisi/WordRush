@@ -83,6 +83,7 @@ export const GameMobile = (props: GameViewProps) => {
           shakeKey={props.shakeKey}
           notice={props.guessNotice}
           finished={props.outcome !== 'playing'}
+          colorLabels={props.tileLabels}
           size="sm"
         />
       </div>
@@ -93,6 +94,7 @@ export const GameMobile = (props: GameViewProps) => {
           <Keyboard
             language={props.wordLanguage}
             keyStates={props.keyStates}
+            stateLabels={props.tileLabels}
             disabled={false}
             enterLabel={t.game.enter}
             backspaceLabel={t.game.backspace}
