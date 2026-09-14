@@ -246,6 +246,7 @@ export const en: Dictionary = {
   errors: {
     room_not_found: 'That room does not exist.',
     room_full: 'The room is full.',
+    server_full: 'The server is full right now. Try again in a moment.',
     game_in_progress: 'The game already started.',
     name_taken: 'That name is already taken in this room.',
     invalid_payload: 'Invalid data.',

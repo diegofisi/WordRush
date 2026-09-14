@@ -4,6 +4,7 @@ import type { ErrorCode } from '@shared/contract';
 export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   room_not_found: 'Room not found',
   room_full: 'The room is full',
+  server_full: 'The server is full right now; try again in a moment',
   game_in_progress: 'The game has already started',
   name_taken: 'That name is already taken in this room',
   invalid_payload: 'Invalid payload',
