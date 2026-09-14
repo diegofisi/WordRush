@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { useT } from '@/shared/i18n';
 import { cn } from '@/shared/lib/cn';
@@ -10,15 +11,73 @@ const toneClass: Record<ToastItem['tone'], string> = {
   success: 'bg-green-soft text-green-ink border-green/20',
 };
 
+/** How long a toast stays up once nobody is reading it. */
+const TOAST_MS = 3200;
+
+interface ToastRowProps {
+  item: ToastItem;
+  text: string;
+  dismissLabel: string;
+  paused: boolean;
+  onPausedChange: (paused: boolean) => void;
+  onDismiss: (id: number) => void;
+}
+
+const ToastRow = ({
+  item,
+  text,
+  dismissLabel,
+  paused,
+  onPausedChange,
+  onDismiss,
+}: ToastRowProps) => {
+  useEffect(() => {
+    if (paused) return;
+    const timer = window.setTimeout(() => onDismiss(item.id), TOAST_MS);
+    return () => window.clearTimeout(timer);
+  }, [paused, item.id, onDismiss]);
+
+  return (
+    <div
+      role={item.tone === 'error' ? 'alert' : 'status'}
+      onMouseEnter={() => onPausedChange(true)}
+      onMouseLeave={() => onPausedChange(false)}
+      onFocus={() => onPausedChange(true)}
+      onBlur={() => onPausedChange(false)}
+      className={cn(
+        'pointer-events-auto flex max-w-full items-center gap-3 rounded-xl border px-4 py-3 text-sm font-semibold shadow-pop animate-toast-in',
+        toneClass[item.tone],
+      )}
+    >
+      <span>{text}</span>
+      <button
+        type="button"
+        onClick={() => onDismiss(item.id)}
+        aria-label={dismissLabel}
+        className="-mr-1 flex h-7 w-7 items-center justify-center rounded-md opacity-70 hover:opacity-100"
+      >
+        <X size={14} />
+      </button>
+    </div>
+  );
+};
+
 /**
  * Mount once in the app shell. Toasts never sit over the middle of the screen,
  * which on the game board is the clock: from 640 px up they stack in a narrow
  * top-right column under the top bar, and on phones at the bottom, above
  * whatever the screen puts there (`--toast-bottom`, see `useToastSafeBottom`).
+ *
+ * The countdown lives here rather than in the store because only the view knows
+ * whether somebody is reading: pointing at a toast or tabbing to its close
+ * button holds the whole stack, and the clock starts over on the way out. A
+ * fixed 3.2 s with no way to hold it is a notice a slower reader never gets to
+ * finish, and errors are announced through this same stack.
  */
 export const Toaster = () => {
   const items = useToastStore((state) => state.items);
   const dismiss = useToastStore((state) => state.dismiss);
+  const [paused, setPaused] = useState(false);
   const t = useT();
 
   if (items.length === 0) return null;
@@ -29,24 +88,15 @@ export const Toaster = () => {
       className="pointer-events-none fixed inset-x-4 bottom-(--toast-bottom) z-50 flex flex-col items-center gap-2 sm:inset-x-auto sm:top-20 sm:right-5 sm:bottom-auto sm:w-90 sm:max-w-[calc(100vw-2.5rem)] sm:items-end"
     >
       {items.map((item) => (
-        <div
+        <ToastRow
           key={item.id}
-          role={item.tone === 'error' ? 'alert' : 'status'}
-          className={cn(
-            'pointer-events-auto flex max-w-full items-center gap-3 rounded-xl border px-4 py-3 text-sm font-semibold shadow-pop animate-toast-in',
-            toneClass[item.tone],
-          )}
-        >
-          <span>{item.text ?? (item.code ? t.errors[item.code] : '')}</span>
-          <button
-            type="button"
-            onClick={() => dismiss(item.id)}
-            aria-label="×"
-            className="-mr-1 flex h-7 w-7 items-center justify-center rounded-md opacity-70 hover:opacity-100"
-          >
-            <X size={14} />
-          </button>
-        </div>
+          item={item}
+          text={item.text ?? (item.code ? t.errors[item.code] : '')}
+          dismissLabel={t.common.dismiss}
+          paused={paused}
+          onPausedChange={setPaused}
+          onDismiss={dismiss}
+        />
       ))}
     </div>
   );
