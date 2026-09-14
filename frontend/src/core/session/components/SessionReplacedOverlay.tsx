@@ -1,5 +1,8 @@
+import { useRef } from 'react';
+
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { Button } from '@/shared/components/ui/Button';
+import { useFocusTrap } from '@/shared/hooks/useFocusTrap';
 import { useT } from '@/shared/i18n';
 
 /**
@@ -11,11 +14,16 @@ export const SessionReplacedOverlay = () => {
   const t = useT();
   const replaced = useSessionStore((state) => state.replaced);
   const resumeHere = useSessionStore((state) => state.resumeHere);
+  const panel = useRef<HTMLDivElement>(null);
+  // The overlay is opaque, so the app behind it is invisible but still
+  // tabbable: without a trap the keyboard walks into controls nobody can see.
+  useFocusTrap(panel, replaced);
 
   if (!replaced) return null;
 
   return (
     <div
+      ref={panel}
       role="alertdialog"
       aria-modal="true"
       aria-label={t.common.replacedTitle}
