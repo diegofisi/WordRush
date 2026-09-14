@@ -131,6 +131,13 @@ export const es = {
     usedHint: 'usó pista',
     greens: (n: number) => (n === 1 ? '1 verde' : `${n} verdes`),
     yellows: (n: number) => (n === 1 ? '1 amarillo' : `${n} amarillos`),
+    /** Read out after the letter on a board tile and on a keyboard key
+     * ("C, correcta"). The colour alone never reaches a screen reader, so
+     * without these the result of a guess is invisible to it. */
+    tileCorrect: 'correcta',
+    tilePresent: 'en la palabra, en otro lugar',
+    tileAbsent: 'no está en la palabra',
+    tileHint: 'revelada por la pista',
     outOfAttempts: 'Sin intentos',
     outOfTime: 'Sin tiempo',
     disconnected: 'desconectado',

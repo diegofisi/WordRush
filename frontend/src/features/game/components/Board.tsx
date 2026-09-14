@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-import { MAX_ATTEMPTS, WORD_LENGTH, type OwnRow } from '@/shared/contract';
+import { MAX_ATTEMPTS, WORD_LENGTH, type OwnRow, type TileColor } from '@/shared/contract';
 import { cn } from '@/shared/lib/cn';
 
 interface BoardProps {
@@ -12,6 +12,9 @@ interface BoardProps {
   finished: boolean;
   /** Guess error printed under the row being typed; the id restarts the fade. */
   notice?: { id: number; text: string } | null;
+  /** Wording for the colour of a revealed tile; the colour alone is invisible
+   * to a screen reader, so every revealed tile is labelled "C, correcta". */
+  colorLabels: Record<TileColor, string>;
   size: 'lg' | 'sm';
 }
 
@@ -31,6 +34,7 @@ export const Board = ({
   shakeKey,
   finished,
   notice = null,
+  colorLabels,
   size,
 }: BoardProps) => {
   const currentRow = finished ? -1 : rows.length;
@@ -71,6 +75,7 @@ export const Board = ({
                     <div
                       key={col}
                       role="gridcell"
+                      aria-label={`${letter}, ${colorLabels[color]}`}
                       className={cn('tile', `tile-${color}`, isReveal && 'animate-tile-flip')}
                       style={{
                         ...tileStyle,
