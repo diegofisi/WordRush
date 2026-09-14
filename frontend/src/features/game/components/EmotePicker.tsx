@@ -181,7 +181,10 @@ export const EmotePicker = ({
           onKeyDown={keepActivationKeys}
           className={cn(
             // Phones: a sheet pinned to the bottom edge, always inside the viewport.
-            'animate-emote-pop fixed inset-x-0 bottom-0 z-50 flex flex-col gap-1.5 rounded-t-2xl border border-line bg-surface px-3 pt-8 pb-4 shadow-pop',
+            // The phone sheet is pinned to the bottom edge, so it clears the
+            // home indicator itself: `AppLayout`'s padding does not reach a
+            // `fixed` element.
+            'animate-emote-pop fixed inset-x-0 bottom-0 z-50 flex flex-col gap-1.5 rounded-t-2xl border border-line bg-surface px-3 pt-8 pb-[calc(var(--spacing)*4+var(--safe-bottom))] shadow-pop',
             // From 640 px up it is anchored above the trigger. Right-aligned in
             // both variants: at 64 px the grid is wider than the column it hangs
             // off, and centring it on the trigger pushed it off the screen edge.
