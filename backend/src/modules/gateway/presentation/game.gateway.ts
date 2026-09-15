@@ -31,6 +31,7 @@ import { ReactionDto } from '@modules/reactions/application/dtos/reaction.dto';
 import { SendReactionUseCase } from '@modules/reactions/application/use-cases/send-reaction.use-case';
 import { CreateRoomDto } from '@modules/rooms/application/dtos/create-room.dto';
 import { JoinRoomDto } from '@modules/rooms/application/dtos/join-room.dto';
+import { KickDto } from '@modules/rooms/application/dtos/kick.dto';
 import { ObserverSitDto } from '@modules/rooms/application/dtos/observer.dto';
 import { RejoinRoomDto } from '@modules/rooms/application/dtos/rejoin-room.dto';
 import { SetReadyDto } from '@modules/rooms/application/dtos/set-ready.dto';
@@ -46,6 +47,7 @@ import {
 } from '@modules/rooms/application/use-cases/create-room.use-case';
 import { EnsureNotInRoomUseCase } from '@modules/rooms/application/use-cases/ensure-not-in-room.use-case';
 import { JoinRoomUseCase } from '@modules/rooms/application/use-cases/join-room.use-case';
+import { KickPlayerUseCase } from '@modules/rooms/application/use-cases/kick-player.use-case';
 import { LeaveRoomUseCase } from '@modules/rooms/application/use-cases/leave-room.use-case';
 import { MarkDisconnectedUseCase } from '@modules/rooms/application/use-cases/mark-disconnected.use-case';
 import { SitObserverUseCase } from '@modules/rooms/application/use-cases/observer.use-cases';
@@ -112,6 +114,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     private readonly sendChat: SendChatUseCase,
     private readonly chatHistory: ChatHistoryUseCase,
     private readonly sitObserver: SitObserverUseCase,
+    private readonly kickPlayer: KickPlayerUseCase,
   ) {}
 
   afterInit(): void {
@@ -174,6 +177,18 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('room:leave')
   onLeave(@ConnectedSocket() client: GameSocket): EmptyAck {
     this.leaveCurrentRoom(client);
+    return OK_EMPTY;
+  }
+
+  /** Host throws somebody out; their socket loses its seat on the spot. */
+  @SubscribeMessage('room:kick')
+  onKick(@ConnectedSocket() client: GameSocket, @MessageBody() dto: KickDto): EmptyAck {
+    const { roomCode, playerId } = this.requireSession(client);
+    this.kickPlayer.execute(roomCode, playerId, dto.playerId);
+    const victim = this.sessions.socketOf(dto.playerId);
+    if (victim) this.sessions.detach(victim);
+    // Nobody may be left to play the round for: close it now.
+    this.settleRound.execute(roomCode);
     return OK_EMPTY;
   }
 

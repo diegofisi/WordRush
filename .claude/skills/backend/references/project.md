@@ -5,7 +5,7 @@ inherited from a previous project (a cloud-drive API) and are project-agnostic;
 this file says how they map onto **this** game server. Read it first, then the
 workflow's doctrine files.
 
-**Status (2026-09-14):** `backend/` exists and follows this binding. Modules: `words`, `rooms`, `game`, `reactions`, `gateway`, `health`. Where this file and the code disagree, the code wins; fix the file.
+**Status (2026-09-14):** `backend/` exists and follows this binding. Modules: `words`, `rooms`, `game`, `reactions`, `chat`, `gateway`, `health`. Where this file and the code disagree, the code wins; fix the file.
 
 ## What it is
 
@@ -41,10 +41,11 @@ Game rules and the scoring formula are **not** restated here. They live in
 
 | Module | Owns |
 |---|---|
-| `rooms` | Create room (settings: language, initial time, rounds, capacity, hint on/off), join by code, lobby state, ready flags, host actions (start, change rules, restart into a new lobby). Room + Player aggregates. |
+| `rooms` | Create room (settings: language, mode normal/teams, word length, initial time, rounds, capacity, hint on/off), join by code (as an observer once the game runs, two at most), lobby state, ready flags, teams (join, host assigns, name and colour, counters), observers taking a seat, host actions (start, change rules, kick with a 30 s name block, restart into a new lobby). Room + Player + Team aggregates. |
 | `game` | Round lifecycle: pick word, accept guesses, colour feedback, per-letter time bonuses (once per letter position), the −5 s broadcast, hint reveal, end-of-round scoring, accumulated table, tie-breaks. This module implements `docs/context/03-*`. |
 | `words` | Word lists ES/EN, validation of a guess (must be a real word), normalisation of accents and Ñ (see pending decision in `04-*`). Pure domain service; no I/O after boot. |
 | `reactions` | Emote broadcast with the per-player burst limit (more than 8 in 3 s pauses the player for 5 s). Its own module. |
+| `chat` | Text chat kept on the room per game: visibility rules (`chat-visibility.ts`: finished-only while a round runs, team channel, everybody between rounds, observers always), 200 chars, one per second, slur masking, history on demand. Implements `docs/context/06-v1.1.md` -> Chat. |
 | `gateway` | The Socket.IO gateway(s): auth-less join by room code + display name, event validation via DTOs, mapping domain exceptions to socket error payloads. Presentation layer only — no rules here. |
 
 Shared kernel (`backend/src/shared/`): `contract/` (owns the socket contract),

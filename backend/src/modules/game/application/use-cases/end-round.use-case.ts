@@ -132,6 +132,16 @@ export class EndRoundUseCase {
       totalRounds: rounds,
       mode,
       word: room.word ?? '',
+      // The word is public from here on: every board can show its letters.
+      boards: room.players.map((player) => ({
+        playerId: player.id,
+        name: player.name,
+        team: player.team,
+        rows: player.round
+          ? player.round.rows.map((row) => ({ word: row.word, colors: [...row.colors] }))
+          : [],
+        solved: player.round?.solved ?? false,
+      })),
       breakdown,
       standings,
       teams,

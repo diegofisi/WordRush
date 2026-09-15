@@ -56,6 +56,7 @@ describe('RestartRoomUseCase', () => {
       totalRounds: 3,
       mode: 'normal',
       word: 'ahora',
+      boards: [],
       breakdown: [],
       standings: [],
       teams: [],

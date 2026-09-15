@@ -56,6 +56,8 @@ export interface LobbyViewModel {
   me: LobbyPlayerViewModel | null;
   readyCount: number;
   playerCount: number;
+  /** Seated players with a live socket. */
+  connectedCount: number;
   freeSeats: number;
 }
 
@@ -100,6 +102,7 @@ export const toLobbyViewModel = (dto: LobbyState, myId: string | null): LobbyVie
     me,
     readyCount: players.filter((player) => player.ready).length,
     playerCount: players.length,
+    connectedCount: players.filter((player) => player.connected).length,
     freeSeats: Math.max(0, dto.settings.capacity - players.length),
   };
 };

@@ -9,6 +9,7 @@ import { cn } from '@/shared/lib/cn';
 import { otherTeam, paintFor, teamLabel } from '@/shared/lib/teamColor';
 
 import type { LobbyPlayerViewModel, LobbyTeamViewModel } from '../models/lobby.model';
+import { KickButton } from './KickButton';
 
 interface TeamSlotsProps {
   t: Dictionary;
@@ -21,6 +22,8 @@ interface TeamSlotsProps {
   onAssign: (playerId: string, team: TeamId) => void;
   onCustomize: (team: TeamId, patch: { name?: string; color?: TeamColor }) => void;
   onResetGames: () => void;
+  /** Host only. */
+  onKick?: (playerId: string) => void;
 }
 
 /** A member's own team name field: typed locally, sent on blur or Enter. */
@@ -65,6 +68,7 @@ const MemberRow = ({
   isHost,
   pending,
   onAssign,
+  onKick,
 }: {
   t: Dictionary;
   member: LobbyPlayerViewModel;
@@ -72,6 +76,7 @@ const MemberRow = ({
   isHost: boolean;
   pending: boolean;
   onAssign: TeamSlotsProps['onAssign'];
+  onKick?: TeamSlotsProps['onKick'];
 }) => {
   const subtitle = [member.isHost ? t.common.host : null, member.isMe ? t.common.you : null]
     .filter(Boolean)
@@ -109,6 +114,14 @@ const MemberRow = ({
           <ArrowRightIcon size={14} />
         </button>
       ) : null}
+      {isHost && onKick && !member.isMe ? (
+        <KickButton
+          label={t.lobby.kick}
+          name={member.name}
+          disabled={pending}
+          onClick={() => onKick(member.id)}
+        />
+      ) : null}
     </li>
   );
 };
@@ -130,6 +143,7 @@ export const TeamSlots = ({
   onAssign,
   onCustomize,
   onResetGames,
+  onKick,
 }: TeamSlotsProps) => {
   const freeSeats = Math.max(0, capacity - playerCount);
   return (
@@ -201,6 +215,7 @@ export const TeamSlots = ({
                     isHost={isHost}
                     pending={pending}
                     onAssign={onAssign}
+                    onKick={onKick}
                   />
                 ))}
                 {team.members.length === 0 ? (

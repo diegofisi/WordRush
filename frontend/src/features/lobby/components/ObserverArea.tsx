@@ -4,6 +4,7 @@ import type { Dictionary } from '@/shared/i18n';
 import { cn } from '@/shared/lib/cn';
 
 import type { LobbyObserverViewModel } from '../models/lobby.model';
+import { KickButton } from './KickButton';
 
 interface ObserverAreaProps {
   t: Dictionary;
@@ -12,13 +13,22 @@ interface ObserverAreaProps {
   freeSeats: number;
   pending: boolean;
   onSit: (wants: boolean) => void;
+  /** Host only. */
+  onKick?: (playerId: string) => void;
 }
 
 /**
  * docs/context/06-v1.1.md -> Observers: their own area under the slots. They
  * joined a running game; in the lobby they take a free seat when they want to.
  */
-export const ObserverArea = ({ t, observers, freeSeats, pending, onSit }: ObserverAreaProps) => {
+export const ObserverArea = ({
+  t,
+  observers,
+  freeSeats,
+  pending,
+  onSit,
+  onKick,
+}: ObserverAreaProps) => {
   if (observers.length === 0) return null;
   return (
     <section
@@ -65,6 +75,15 @@ export const ObserverArea = ({ t, observers, freeSeats, pending, onSit }: Observ
                     ? t.lobby.stayObserving
                     : t.lobby.sitNextRound}
               </Button>
+            ) : null}
+            {onKick && !observer.isMe ? (
+              <KickButton
+                label={t.lobby.kick}
+                name={observer.name}
+                disabled={pending}
+                onClick={() => onKick(observer.id)}
+                className="ml-1"
+              />
             ) : null}
           </li>
         ))}

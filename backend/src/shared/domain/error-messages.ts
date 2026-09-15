@@ -22,6 +22,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   not_in_team: 'That team action needs team mode and a seat in that team.',
   chat_not_allowed: 'You cannot write in that channel right now',
   not_observer: 'Only an observer can do that',
+  kicked: 'The host removed you from this room; you may come back in a moment',
   session_expired: 'Your session has expired',
   internal: 'Unexpected server error',
 };

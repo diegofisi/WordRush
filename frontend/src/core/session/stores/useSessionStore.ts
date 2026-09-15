@@ -109,6 +109,11 @@ export const useSessionStore = create<SessionState & SessionActions>((set, get) 
     });
     socket.on('disconnect', () => set({ connection: 'disconnected' }));
     socket.on('session:replaced', () => set({ replaced: true }));
+    // Thrown out by the host: the seat is gone, the guarded routes send me home.
+    socket.on('room:kicked', () => {
+      get().clearSession();
+      toast.error('kicked');
+    });
     socket.on('connect_error', () => set({ connection: 'disconnected' }));
     socket.on('error', (payload) => {
       toast.error(payload.code);

@@ -1,9 +1,11 @@
 import type {
   GameEndPayload,
   GameMode,
+  OwnRow,
   RoundBreakdown,
   RoundEndPayload,
   Standing,
+  TeamColor,
   TeamId,
   TeamRoundBreakdown,
   TeamStanding,
@@ -30,11 +32,25 @@ export interface TeamStandingViewModel extends TeamStanding {
   barPercent: number;
 }
 
+/** A player's board at round end, letters included (the word is public). */
+export interface BoardViewModel {
+  playerId: string;
+  name: string;
+  rows: OwnRow[];
+  solved: boolean;
+  isMe: boolean;
+  /** Team mode: the team's colour. */
+  color: TeamColor | null;
+}
+
 export interface RoundResultsViewModel {
   mode: GameMode;
   round: number;
   totalRounds: number;
   word: string;
+  wordLength: number;
+  /** Solved boards first, then by fewest rows. */
+  boards: BoardViewModel[];
   rows: BreakdownRowViewModel[];
   standings: StandingViewModel[];
   /** Team mode: both teams' round cards, mine first; empty otherwise. */
@@ -107,11 +123,26 @@ export const toRoundResultsViewModel = (
   const myTeamRow = teamRows.find((team) => team.isMine) ?? null;
   const myTeamStanding = teamStandings.find((team) => team.isMine) ?? null;
   const teamMode = payload.mode === 'teams';
+  const boards = [...(payload.boards ?? [])]
+    .map((board) => ({
+      playerId: board.playerId,
+      name: board.name,
+      rows: board.rows,
+      solved: board.solved,
+      isMe: board.playerId === myId,
+      color: payload.teams.find((team) => team.team === board.team)?.color ?? null,
+    }))
+    .sort((first, second) => {
+      if (first.solved !== second.solved) return first.solved ? -1 : 1;
+      return first.rows.length - second.rows.length;
+    });
   return {
     mode: payload.mode,
     round: payload.round,
     totalRounds: payload.totalRounds,
     word: payload.word.toUpperCase(),
+    wordLength: payload.word.length,
+    boards,
     rows,
     standings,
     teamRows,

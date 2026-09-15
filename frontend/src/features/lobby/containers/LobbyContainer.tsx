@@ -8,6 +8,7 @@ import { useT } from '@/shared/i18n';
 import { homeWithCode, PATHS, pathForStatus } from '@/shared/routes/paths';
 import { toast } from '@/shared/stores/useToastStore';
 
+import { useKickPlayer } from '../api/kick-player/useKickPlayer';
 import { useLeaveRoom } from '../api/leave-room/useLeaveRoom';
 import { useSitObserver } from '../api/observer-sit/useSitObserver';
 import { useSetReady } from '../api/set-ready/useSetReady';
@@ -34,6 +35,7 @@ export const LobbyContainer = () => {
   const { updateSettings, pending: saving } = useUpdateSettings();
   const teamActions = useTeamActions();
   const { sit, pending: sitting } = useSitObserver();
+  const { kick, pending: kicking } = useKickPlayer();
   const [rulesOpen, setRulesOpen] = useState(false);
 
   // Pushed transitions (round:start, or a lobby:update with a new status) move everyone along.
@@ -45,8 +47,9 @@ export const LobbyContainer = () => {
 
   if (!lobby || !session) return <PageLoading title={t.common.loading} />;
 
+  const inviteLink = `${window.location.origin}${homeWithCode(lobby.code)}`;
   const copyLink = async () => {
-    const link = `${window.location.origin}${homeWithCode(lobby.code)}`;
+    const link = inviteLink;
     try {
       await navigator.clipboard.writeText(link);
       toast.success(t.common.copied);
@@ -86,6 +89,19 @@ export const LobbyContainer = () => {
     void leaveRoom();
   };
 
+  const kickPlayer = lobby.isHost
+    ? (playerId: string) => {
+        const name =
+          lobby.players.find((player) => player.id === playerId)?.name ??
+          lobby.observers.find((observer) => observer.id === playerId)?.name ??
+          '';
+        void kick(playerId).then((result) => {
+          if (result.ok) toast.info(t.lobby.kicked(name));
+          else report(result);
+        });
+      }
+    : undefined;
+
   return (
     <div className="grid flex-1 grid-cols-1 gap-8 px-4 py-6 sm:px-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-16 lg:py-9">
       <div className="flex flex-col gap-7">
@@ -94,6 +110,8 @@ export const LobbyContainer = () => {
           code={lobby.code}
           settings={lobby.settings}
           playerCount={lobby.playerCount}
+          connectedCount={lobby.connectedCount}
+          inviteLink={inviteLink}
           isHost={lobby.isHost}
           onCopyLink={() => void copyLink()}
           onChangeRules={() => setRulesOpen(true)}
@@ -110,16 +128,24 @@ export const LobbyContainer = () => {
             onAssign={(playerId, team) => void teamActions.assignTeam(playerId, team).then(report)}
             onCustomize={(team, patch) => void teamActions.customizeTeam(team, patch).then(report)}
             onResetGames={() => void teamActions.resetGames().then(report)}
+            onKick={kickPlayer}
           />
         ) : (
-          <PlayerSlots t={t} players={lobby.players} capacity={lobby.settings.capacity} />
+          <PlayerSlots
+            t={t}
+            players={lobby.players}
+            capacity={lobby.settings.capacity}
+            onKick={kickPlayer}
+            kickPending={kicking}
+          />
         )}
         <ObserverArea
           t={t}
           observers={lobby.observers}
           freeSeats={lobby.freeSeats}
-          pending={sitting}
+          pending={sitting || kicking}
           onSit={(wants) => void sit(wants).then(report)}
+          onKick={kickPlayer}
         />
         <LobbyActions
           t={t}

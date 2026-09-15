@@ -13,6 +13,7 @@ import { useLeaveRoom } from '../api/leave-room/useLeaveRoom';
 import { useRestartRoom } from '../api/restart-room/useRestartRoom';
 import { BreakdownTable } from '../components/BreakdownTable';
 import { FinalBanner } from '../components/FinalBanner';
+import { RoundBoards } from '../components/RoundBoards';
 import { RoundHeader } from '../components/RoundHeader';
 import { StandingsList } from '../components/StandingsList';
 import { TeamBreakdownCards } from '../components/TeamBreakdownCards';
@@ -125,6 +126,7 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
         {initialSeconds !== null ? (
           <p className="m-0 text-[13px] text-ink-3">{t.results.timeNote(initialSeconds)}</p>
         ) : null}
+        <RoundBoards t={t} wordLength={results.wordLength} boards={results.boards} />
       </div>
       <div className="flex min-w-0 flex-col gap-4">
         {teamMode ? (

@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 13;
+export const CONTRACT_VERSION = 14;
 
 export type Language = 'es' | 'en';
 export type TileColor = 'green' | 'yellow' | 'gray';
@@ -98,6 +98,8 @@ export const ROOM_LIMITS = {
   /** docs/context/06-v1.1.md -> Chat: 200 characters, one message per second. */
   chatMaxLength: 200,
   chatIntervalSeconds: 1,
+  /** docs/context/06-v1.1.md -> Room management: a kicked player may come back after this. */
+  kickRejoinSeconds: 30,
 } as const;
 
 /** docs/context/02-game-rules.md and 03-scoring-system.md */
@@ -343,11 +345,22 @@ export interface TeamStanding {
   rank: number;
 }
 
+/** A player's board as it ended the round; the word is public by then. */
+export interface PlayerBoard {
+  playerId: string;
+  name: string;
+  team: TeamId | null;
+  rows: OwnRow[];
+  solved: boolean;
+}
+
 export interface RoundEndPayload {
   round: number;
   totalRounds: number;
   mode: GameMode;
   word: string;
+  /** Every seated player's board with letters (docs/context/06-v1.1.md -> Room management). */
+  boards: PlayerBoard[];
   /** Per player in the normal mode; empty in team mode (points are the team's). */
   breakdown: RoundBreakdown[];
   standings: Standing[];
@@ -400,6 +413,8 @@ export type ErrorCode =
   | 'chat_not_allowed'
   /** Observer actions from somebody who is seated. */
   | 'not_observer'
+  /** Joining under a name the host kicked less than `kickRejoinSeconds` ago. */
+  | 'kicked'
   | 'session_expired'
   | 'internal';
 
@@ -484,6 +499,11 @@ export interface ObserverSitPayload {
   wants: boolean;
 }
 
+/** Host only: throws a player or observer out; their name is blocked for 30 s. */
+export interface KickPayload {
+  playerId: string;
+}
+
 /** Host-only, lobby-only edit of the room settings. */
 export interface UpdateSettingsPayload {
   settings: RoomSettings;
@@ -533,6 +553,7 @@ export interface ClientToServerEvents {
   'room:join': (payload: JoinRoomPayload, ack: (r: Ack<SessionAck>) => void) => void;
   'room:rejoin': (payload: RejoinPayload, ack: (r: Ack<SessionAck>) => void) => void;
   'room:leave': (ack?: (r: EmptyAck) => void) => void;
+  'room:kick': (payload: KickPayload, ack?: (r: EmptyAck) => void) => void;
   'room:ready': (payload: { ready: boolean }, ack?: (r: EmptyAck) => void) => void;
   'room:start': (ack?: (r: EmptyAck) => void) => void;
   /** Host-only, finished-game only: reset the room to a fresh lobby and play again. */
@@ -589,6 +610,13 @@ export interface SessionReplacedPayload {
   roomCode: string;
 }
 
+/** Delivered to the kicked socket right before it loses its seat. */
+export interface KickedPayload {
+  roomCode: string;
+  /** Seconds before the same name may join this room again. */
+  rejoinAfterSeconds: number;
+}
+
 export interface ServerToClientEvents {
   'lobby:update': (lobby: LobbyState) => void;
   'round:start': (round: RoundState) => void;
@@ -609,5 +637,6 @@ export interface ServerToClientEvents {
   /** Delivered only to the sockets that may read it (see `ChatMessage.duringPlay`). */
   'chat:message': (payload: ChatMessage) => void;
   'session:replaced': (payload: SessionReplacedPayload) => void;
+  'room:kicked': (payload: KickedPayload) => void;
   error: (payload: ErrorPayload) => void;
 }

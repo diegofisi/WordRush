@@ -4,6 +4,7 @@ import { RoomJanitorService } from './application/services/room-janitor.service'
 import { CreateRoomUseCase } from './application/use-cases/create-room.use-case';
 import { EnsureNotInRoomUseCase } from './application/use-cases/ensure-not-in-room.use-case';
 import { JoinRoomUseCase } from './application/use-cases/join-room.use-case';
+import { KickPlayerUseCase } from './application/use-cases/kick-player.use-case';
 import { LeaveRoomUseCase } from './application/use-cases/leave-room.use-case';
 import { MarkDisconnectedUseCase } from './application/use-cases/mark-disconnected.use-case';
 import { SitObserverUseCase } from './application/use-cases/observer.use-cases';
@@ -34,6 +35,7 @@ import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-
     CustomizeTeamUseCase,
     ResetTeamGamesUseCase,
     SitObserverUseCase,
+    KickPlayerUseCase,
     UpdateRoomSettingsUseCase,
     RestartRoomUseCase,
     LeaveRoomUseCase,
@@ -56,6 +58,7 @@ import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-
     CustomizeTeamUseCase,
     ResetTeamGamesUseCase,
     SitObserverUseCase,
+    KickPlayerUseCase,
   ],
 })
 export class RoomsModule {}

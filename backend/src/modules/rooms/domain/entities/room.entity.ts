@@ -39,6 +39,8 @@ export class Room {
   /** The whole game's chat, oldest first; a new game starts it afresh. */
   readonly chat: ChatMessage[] = [];
   private nextChatId = 1;
+  /** Kicked names (lower-cased) -> epoch ms until which they may not come back. */
+  private readonly blockedNames = new Map<string, number>();
 
   private constructor(
     readonly code: string,
@@ -174,6 +176,22 @@ export class Room {
       seated.push(observer);
     }
     return seated;
+  }
+
+  // -------------------------------------------------------------- kicks
+
+  blockName(name: string, until: number): void {
+    this.blockedNames.set(name.trim().toLowerCase(), until);
+  }
+
+  isNameBlocked(name: string, now: number): boolean {
+    const until = this.blockedNames.get(name.trim().toLowerCase());
+    if (until === undefined) return false;
+    if (now >= until) {
+      this.blockedNames.delete(name.trim().toLowerCase());
+      return false;
+    }
+    return true;
   }
 
   // -------------------------------------------------------------- chat

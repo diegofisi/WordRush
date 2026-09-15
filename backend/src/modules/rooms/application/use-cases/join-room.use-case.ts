@@ -31,8 +31,9 @@ export class JoinRoomUseCase {
       throw new DomainException('room_full');
     }
     if (room.hasName(dto.name)) throw new DomainException('name_taken');
-
     const now = this.clock.now();
+    if (room.isNameBlocked(dto.name, now)) throw new DomainException('kicked');
+
     const player = Player.create({
       id: randomUUID(),
       token: newPlayerToken(),
