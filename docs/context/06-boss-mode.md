@@ -343,19 +343,27 @@ Each of her turns:
 3. Her readout — a ridge fit over all 1,299 descending cells, trained against
    ground truth — scores the 8 by how much more than usual it wants each letter.
    **She plays the highest.** This is the only decision in the turn that is hers.
-4. She has **5 attempts** (`BOSS.maxAttempts`), not a human's 8. Her brain
-   chooses no better than a coin (below), so this number is the balance knob:
+4. She has **10 attempts** (`BOSS.maxAttempts`), more than a human's 8, and
+   is never charged per attempt — she is only a fly. Her brain chooses no
+   better than a coin (below), so the attempt count is a balance knob;
    measured over 3,000 rounds, a coin among the filtered survivors solves
 
    | attempts | 3 | 4 | 5 | 6 | 7 | 8 |
    |---|---|---|---|---|---|---|
    | she solves | 13.5 % | 43 % | 70 % | 86.5 % | 94 % | 98 % |
 
-   Four (the first value) had her losing with over a minute still on her
-   clock; five means the team wins about three rounds in ten by her failing,
-   plus whatever they take off her clock. Her pace is 9 s of think per turn
-   counted from the tick that starts it, brain time included, so a word lands
-   about every 12 s and five fit inside a 90 s round.
+   The knob was set to 4, then 5, then on 2026-09-14 to 10: at ten, attempts
+   almost never end her round. What the team plays against is therefore
+   **her clock**: solve before she does and take 8 s off it each time; she is
+   beaten when it runs out, not when her attempts do.
+
+   Her pace is bounded by computation, not biology: a decision is 960 ms of
+   simulated brain, and simulating it costs about 7 s of wall time on the
+   development machine. `thinkMs` is 6 s counted from the tick that starts the
+   turn, so the word lands when the brain answers (~7 s) and the next turn
+   begins after 3 s of typing: a word every ~9 s, about nine in a 90 s round.
+   Going faster means a shorter read-out window (900 ms, calibrated in `07`)
+   or a faster machine.
 
 What is honest to say about her, and what her page says: she is a real brain
 choosing among words the game has already narrowed; her choice is real and

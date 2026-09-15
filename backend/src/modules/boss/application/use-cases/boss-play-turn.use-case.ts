@@ -35,11 +35,16 @@ import { BossMemoryService, type BossMemory } from '../services/boss-memory.serv
  */
 export const BOSS_CADENCE = {
   /**
-   * How long a turn takes her, flat, counted from the tick that starts it; the
-   * seven seconds her brain takes to answer are inside it, so a word lands
-   * about every 12 s. Pacing is not help; it is reaction time.
+   * How long a turn takes her, flat, counted from the tick that starts it.
+   *
+   * The biology is 960 ms of simulated brain per decision; what costs about
+   * seven seconds of wall time is simulating it, 138,639 neurons at 0.1 ms
+   * steps. Those seconds are inside this value, so with 6 s the word lands
+   * when the brain answers (~7 s) and the next turn starts 3 s of typing
+   * later: a word every ~9 s, which is the floor on this machine. Pacing is
+   * not help; it is reaction time.
    */
-  thinkMs: 9000,
+  thinkMs: 6000,
   /** She types the word out rather than submitting it instantly. */
   typeMsPerLetter: 600,
   /** How soon to look again when the brain has not answered at all. */
@@ -159,9 +164,10 @@ export class BossPlayTurnUseCase {
      *
      * Measured on 2026-09-14 and recorded in docs/context/07-what-the-fly-can-do.md:
      * without the filter she cannot converge at all (0 of 30 rounds), and with
-     * it at 8 attempts a random choice already wins 98.6% — which is why she
-     * gets BOSS.maxAttempts and not a human's 8. The filter is declared on her
-     * panel in as many words.
+     * it a random choice already wins 98.6% of rounds in 8 attempts. She gets
+     * BOSS.maxAttempts, more than a human's 8, uncharged; the round the team
+     * plays is against her clock. The filter is declared on her panel in as
+     * many words.
      */
     const compatible = candidatesFrom(
       pool,
