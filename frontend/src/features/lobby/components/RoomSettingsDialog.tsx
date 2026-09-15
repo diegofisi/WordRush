@@ -5,7 +5,13 @@ import { Button } from '@/shared/components/ui/Button';
 import { Segmented } from '@/shared/components/ui/Segmented';
 import { Stepper } from '@/shared/components/ui/Stepper';
 import { Toggle } from '@/shared/components/ui/Toggle';
-import { ROOM_LIMITS, type Language, type RoomSettings } from '@/shared/contract';
+import {
+  ROOM_LIMITS,
+  WORD_LENGTHS,
+  type Language,
+  type RoomSettings,
+  type WordLength,
+} from '@/shared/contract';
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap';
 import type { Dictionary } from '@/shared/i18n';
 
@@ -95,6 +101,16 @@ export const RoomSettingsDialog = ({
           />
         </div>
 
+        <div className="flex flex-col gap-2">
+          <span className="label">{t.home.wordLength}</span>
+          <Segmented<WordLength>
+            mono
+            label={t.home.wordLength}
+            value={values.wordLength}
+            onChange={(wordLength) => patch({ wordLength })}
+            options={WORD_LENGTHS.map((length) => ({ value: length, label: String(length) }))}
+          />
+        </div>
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between gap-3">
             <span className="label">{t.home.initialTime}</span>

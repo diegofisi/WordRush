@@ -30,7 +30,7 @@ describe('RandomWordPicker', () => {
       return seed / 2147483647;
     };
     const picker = new RandomWordPicker(wordList, rng);
-    const picks = Array.from({ length: 4000 }, () => picker.pick('es', new Set()));
+    const picks = Array.from({ length: 4000 }, () => picker.pick('es', 5, new Set()));
     const inFirstQuarter = picks.filter((w) => answers.indexOf(w) < 25).length / picks.length;
     const inFirstTenth = picks.filter((w) => answers.indexOf(w) < 10).length / picks.length;
     expect(inFirstQuarter).toBeGreaterThan(0.45);
@@ -41,11 +41,11 @@ describe('RandomWordPicker', () => {
 
   it('skips excluded words and keeps the ranking of the rest', () => {
     const picker = new RandomWordPicker(wordList, () => 0);
-    expect(picker.pick('es', new Set(['w000', 'w001']))).toBe('w002');
+    expect(picker.pick('es', 5, new Set(['w000', 'w001']))).toBe('w002');
   });
 
   it('falls back to the full list when everything is excluded', () => {
     const picker = new RandomWordPicker(wordList, () => 0);
-    expect(picker.pick('es', new Set(answers))).toBe('w000');
+    expect(picker.pick('es', 5, new Set(answers))).toBe('w000');
   });
 });

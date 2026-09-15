@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { ROOM_LIMITS } from '@/shared/contract';
+import { DEFAULT_WORD_LENGTH, ROOM_LIMITS } from '@/shared/contract';
 import { useT } from '@/shared/i18n';
 import { lobbyPath } from '@/shared/routes/paths';
 import { toast } from '@/shared/stores/useToastStore';
@@ -17,6 +17,7 @@ import { JoinRoomForm } from '../components/JoinRoomForm';
 const defaultValues = (name: string, uiLang: 'es' | 'en'): CreateRoomFormValues => ({
   name,
   language: uiLang,
+  wordLength: DEFAULT_WORD_LENGTH,
   initialSeconds: 90,
   rounds: 3,
   capacity: ROOM_LIMITS.maxPlayers,

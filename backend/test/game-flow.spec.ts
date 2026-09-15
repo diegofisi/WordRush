@@ -6,6 +6,7 @@ import { io, type Socket } from 'socket.io-client';
 import { AppModule } from '../src/app.module';
 import { WORD_PICKER } from '@modules/words/domain/interfaces/word-picker.interface';
 import esWords from '@modules/words/data/es.json';
+import es6Words from '@modules/words/data/es6.json';
 import { ROOM_LIMITS } from '@shared/contract';
 import type {
   ClientToServerEvents,
@@ -21,6 +22,8 @@ type Client = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 const ANSWER = esWords.answers[0];
 const WRONG = esWords.answers.find((w) => w !== ANSWER && w[0] !== ANSWER[0])!;
+const ANSWER6 = es6Words.answers[0];
+const WRONG6 = es6Words.answers.find((w) => w !== ANSWER6 && w[0] !== ANSWER6[0])!;
 
 function waitFor<K extends keyof ServerToClientEvents>(
   socket: Client,
@@ -52,7 +55,7 @@ describe('WordRush game flow (socket.io integration)', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(WORD_PICKER)
-      .useValue({ pick: () => ANSWER })
+      .useValue({ pick: (_language: string, length: number) => (length === 6 ? ANSWER6 : ANSWER) })
       .compile();
     app = moduleRef.createNestApplication({ logger: false });
     await app.listen(0, '127.0.0.1');
@@ -73,7 +76,14 @@ describe('WordRush game flow (socket.io integration)', () => {
     // --- lobby ---------------------------------------------------------
     const created = await ana.emitWithAck('room:create', {
       name: '  Ana ',
-      settings: { language: 'es', initialSeconds: 60, rounds: 1, capacity: 4, hintEnabled: true },
+      settings: {
+        language: 'es',
+        wordLength: 5,
+        initialSeconds: 60,
+        rounds: 1,
+        capacity: 4,
+        hintEnabled: true,
+      },
     });
     if (!created.ok) throw new Error(created.message);
     expect(created.roomCode).toMatch(/^[A-HJ-NP-Z2-9]{4}$/);
@@ -278,9 +288,55 @@ describe('WordRush game flow (socket.io integration)', () => {
     expect(emptied).toEqual({ status: 'ok', rooms: 0 });
   });
 
+  it('plays a round of six letters with nine attempts', async () => {
+    const ana = await connect();
+    const bruno = await connect();
+    const created = await ana.emitWithAck('room:create', {
+      name: 'Ana',
+      settings: {
+        language: 'es',
+        wordLength: 6,
+        initialSeconds: 60,
+        rounds: 1,
+        capacity: 4,
+        hintEnabled: false,
+      },
+    });
+    if (!created.ok) throw new Error(created.message);
+    const joined = await bruno.emitWithAck('room:join', {
+      roomCode: created.roomCode,
+      name: 'Bruno',
+    });
+    if (!joined.ok) throw new Error(joined.message);
+
+    const roundStart = waitFor(ana, 'round:start');
+    await ana.emitWithAck('room:start');
+    const round: RoundState = await roundStart;
+    expect(round.wordLength).toBe(6);
+    expect(round.maxAttempts).toBe(9);
+
+    // A five-letter word is the wrong shape here, whatever the list says.
+    expect(await ana.emitWithAck('game:guess', { word: ANSWER })).toMatchObject({
+      ok: false,
+      code: 'word_length',
+    });
+    const miss = await ana.emitWithAck('game:guess', { word: WRONG6 });
+    if (!miss.ok) throw new Error(miss.message);
+    expect(miss.colors).toHaveLength(6);
+    expect(miss.solved).toBe(false);
+    const hit = await ana.emitWithAck('game:guess', { word: ANSWER6 });
+    if (!hit.ok) throw new Error(hit.message);
+    expect(hit.solved).toBe(true);
+    expect(hit.attempt).toBe(2);
+
+    ana.disconnect();
+    bruno.disconnect();
+  });
+
   it('throttles room creation per socket, spending the budget on failed attempts too', async () => {
     const settings = {
       language: 'es' as const,
+      wordLength: 5 as const,
       initialSeconds: 60,
       rounds: 1,
       capacity: 2,

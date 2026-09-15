@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { MAX_ATTEMPTS, SCORING, WORD_LENGTH, type GuessAck } from '@shared/contract';
+import { attemptsFor, SCORING, type GuessAck } from '@shared/contract';
 import { CLOCK, type Clock } from '@shared/domain/clock';
 import { DomainException } from '@shared/domain/domain.exception';
 import { RoomEventsBus } from '@shared/events/room-events.bus';
@@ -48,7 +48,7 @@ export class SubmitGuessUseCase {
     }
 
     const word = normalizeWord(rawWord);
-    if (!isWordShaped(word, WORD_LENGTH)) throw new DomainException('word_length');
+    if (!isWordShaped(word, room.settings.wordLength)) throw new DomainException('word_length');
     if (!this.wordList.isAllowed(room.settings.language, word)) {
       throw new DomainException('word_not_in_list');
     }
@@ -64,7 +64,7 @@ export class SubmitGuessUseCase {
     if (solved) {
       room.solvedCount += 1;
       round.markSolved(room.solvedCount, now);
-    } else if (round.attempt >= MAX_ATTEMPTS) {
+    } else if (round.attempt >= attemptsFor(room.settings.wordLength)) {
       round.finish('attempts', now);
     }
 

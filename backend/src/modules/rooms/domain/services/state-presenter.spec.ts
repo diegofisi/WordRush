@@ -6,6 +6,7 @@ import { toFullState } from './state-presenter';
 
 const SETTINGS: RoomSettings = {
   language: 'es',
+  wordLength: 5,
   initialSeconds: 60,
   rounds: 3,
   capacity: 8,
@@ -24,7 +25,7 @@ const roundEnd = (): RoundEndPayload => ({
 const makeRoom = (now: number) => {
   const room = Room.create('ABCD', SETTINGS, now);
   const player = Player.create({ id: 'p1', token: 't', name: 'Ana', isHost: true, joinedAt: now });
-  player.round = new PlayerRound(now, SETTINGS.initialSeconds);
+  player.round = new PlayerRound(now, SETTINGS.initialSeconds, 5);
   room.addPlayer(player);
   room.currentRound = 1;
   room.lastRoundEnd = roundEnd();

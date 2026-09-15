@@ -102,9 +102,10 @@ respectively so each service only redeploys when its own folder changes.
 
 ## Word bank
 
-Lives in the repository as JSON, not in a database:
-`backend/src/modules/words/data/es.json` and `en.json`, each with `answers` (words the
-game picks) and `allowed` (valid guesses, a superset of the answers). Loaded into memory
+Lives in the repository as JSON, not in a database: one file per language and word
+length in `backend/src/modules/words/data/` (`es.json`, `es6.json`, `es7.json`, `en.json`,
+`en6.json`, `en7.json`), each with `answers` (words the game picks) and `allowed` (valid
+guesses, a superset of the answers). Loaded into memory
 at boot. Reason: fixed, small (under 200 KB), read-only lists; a database would add a
 service without adding anything.
 
@@ -115,10 +116,14 @@ Spanish room accepts only Spanish and an English room only English. The script d
 its sources. Accents are ignored (`limón` and `limon` are the same word) and `ñ` is a
 letter of its own.
 
-| Language | Words the game picks | Valid guesses |
-|---|---|---|
-| Spanish | 870 | 10835 |
-| English | 898 | 10202 |
+| Language | Letters | Words the game picks | Valid guesses |
+|---|---|---|---|
+| Spanish | 5 | 1060 | 10835 |
+| Spanish | 6 | 1000 | 25409 |
+| Spanish | 7 | 900 | 49133 |
+| English | 5 | 1300 | 10202 |
+| English | 6 | 1000 | 14132 |
+| English | 7 | 900 | 16320 |
 
 Answers are **base forms only** (infinitives, singular nouns, masculine singular
 adjectives; in English no plurals or past tenses), in neutral Spanish, the most used words

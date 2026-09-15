@@ -13,7 +13,7 @@ describe('chargeGuess (time ledger)', () => {
   let round: PlayerRound;
 
   beforeEach(() => {
-    round = new PlayerRound(0, 90);
+    round = new PlayerRound(0, 90, 5);
   });
 
   it('reproduces the simulation in 03-scoring-system.md (Ana)', () => {

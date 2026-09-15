@@ -4,7 +4,7 @@ import { Input } from '@/shared/components/ui/Input';
 import { Segmented } from '@/shared/components/ui/Segmented';
 import { Stepper } from '@/shared/components/ui/Stepper';
 import { Toggle } from '@/shared/components/ui/Toggle';
-import { ROOM_LIMITS, type Language } from '@/shared/contract';
+import { ROOM_LIMITS, WORD_LENGTHS, type Language, type WordLength } from '@/shared/contract';
 import type { Dictionary } from '@/shared/i18n';
 
 import type { CreateRoomForm as CreateRoomFormValues } from '../api/create-room/create-room.dto';
@@ -73,6 +73,16 @@ export const CreateRoomForm = ({
       />
     </div>
 
+    <div className="flex flex-col gap-2">
+      <span className="label">{t.home.wordLength}</span>
+      <Segmented<WordLength>
+        mono
+        label={t.home.wordLength}
+        value={values.wordLength}
+        onChange={(wordLength) => onChange({ wordLength })}
+        options={WORD_LENGTHS.map((length) => ({ value: length, label: String(length) }))}
+      />
+    </div>
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between">
         <span className="label">{t.home.initialTime}</span>

@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 8;
+export const CONTRACT_VERSION = 9;
 
 export type Language = 'es' | 'en';
 export type TileColor = 'green' | 'yellow' | 'gray';
@@ -36,8 +36,13 @@ export type Emote =
   | 'shh';
 export type RoomStatus = 'lobby' | 'playing' | 'between-rounds' | 'finished';
 
-export const WORD_LENGTH = 5;
-export const MAX_ATTEMPTS = 8;
+/** Room setting since v1.1: five, six or seven letters (docs/context/06-v1.1.md). */
+export type WordLength = 5 | 6 | 7;
+export const WORD_LENGTHS: readonly WordLength[] = [5, 6, 7];
+export const DEFAULT_WORD_LENGTH: WordLength = 5;
+/** Attempts per round grow with the word: 8 / 9 / 10. */
+export const ATTEMPTS_BY_LENGTH: Record<WordLength, number> = { 5: 8, 6: 9, 7: 10 };
+export const attemptsFor = (length: WordLength): number => ATTEMPTS_BY_LENGTH[length];
 /** Picker order: the 5x4 grid reads row by row in this order. */
 export const EMOTES: readonly Emote[] = [
   'love',
@@ -101,6 +106,7 @@ export const SCORING = {
 
 export interface RoomSettings {
   language: Language;
+  wordLength: WordLength;
   initialSeconds: number;
   rounds: number;
   capacity: number;
@@ -151,7 +157,7 @@ export interface OwnRow {
 /** The hint reveals a letter that is in the word, never its position. */
 export interface HintReveal {
   letter: string;
-  /** How many times `letter` occurs in the answer (1..WORD_LENGTH). */
+  /** How many times `letter` occurs in the answer (1..wordLength). */
   count: number;
 }
 
@@ -178,6 +184,9 @@ export interface SelfState {
 export interface RoundInfo {
   round: number;
   totalRounds: number;
+  /** Letters per word and attempts this round, from the room settings. */
+  wordLength: WordLength;
+  maxAttempts: number;
   initialSeconds: number;
   startedAt: number;
   hintAvailable: boolean;

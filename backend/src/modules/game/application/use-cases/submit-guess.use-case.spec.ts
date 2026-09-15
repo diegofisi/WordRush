@@ -24,7 +24,7 @@ class FakeClock implements Clock {
 
 function makePlayer(id: string, now: number): Player {
   const p = Player.create({ id, token: `t-${id}`, name: id, isHost: id === 'a', joinedAt: now });
-  p.round = new PlayerRound(now, 60);
+  p.round = new PlayerRound(now, 60, 5);
   return p;
 }
 
@@ -53,7 +53,14 @@ describe('SubmitGuessUseCase', () => {
 
     room = Room.create(
       'ABCD',
-      { language: 'es', initialSeconds: 60, rounds: 3, capacity: 8, hintEnabled: true },
+      {
+        language: 'es',
+        wordLength: 5,
+        initialSeconds: 60,
+        rounds: 3,
+        capacity: 8,
+        hintEnabled: true,
+      },
       T0,
     );
     room.status = 'playing';

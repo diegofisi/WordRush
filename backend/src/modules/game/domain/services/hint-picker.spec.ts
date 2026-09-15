@@ -31,7 +31,7 @@ function possiblePicks(answer: string, round: PlayerRound): Map<string, number> 
 describe('pickHint', () => {
   it('never reveals a letter the player already holds in yellow', () => {
     const answer = 'plato'; // no repeated letters
-    const round = new PlayerRound(0, 90);
+    const round = new PlayerRound(0, 90, 5);
     play(round, 'tapes', answer); // T, A and P yellow; E and S absent
     expect(round.charges.filter((c) => c.yellow)).toHaveLength(3);
 
@@ -41,7 +41,7 @@ describe('pickHint', () => {
 
   it('still offers the second slot of a repeated letter', () => {
     const answer = 'llama'; // L L A M A
-    const round = new PlayerRound(0, 90);
+    const round = new PlayerRound(0, 90, 5);
     play(round, 'salto', answer); // one L yellow and one A yellow, one slot each
     expect(round.charges.filter((c) => c.yellow)).toHaveLength(2);
 
@@ -57,7 +57,7 @@ describe('pickHint', () => {
 
   it('falls back to a known letter when every non-green slot is known', () => {
     const answer = 'plato';
-    const round = new PlayerRound(0, 90);
+    const round = new PlayerRound(0, 90, 5);
     round.charges[0].green = true; // P placed
     for (let i = 1; i < round.charges.length; i++) round.charges[i].yellow = true;
 
@@ -69,7 +69,7 @@ describe('pickHint', () => {
 
   it('reports how many times the letter occurs in an answer with repeats', () => {
     const answer = 'llama'; // L L A M A
-    const round = new PlayerRound(0, 90);
+    const round = new PlayerRound(0, 90, 5);
 
     expect(possiblePicks(answer, round)).toEqual(
       new Map([
@@ -82,7 +82,7 @@ describe('pickHint', () => {
 
   it('reports a count of 1 on an answer with no repeated letter', () => {
     const answer = 'plato';
-    const round = new PlayerRound(0, 90);
+    const round = new PlayerRound(0, 90, 5);
 
     const counts = [...possiblePicks(answer, round).values()];
     expect(counts).toHaveLength(5);
@@ -98,7 +98,7 @@ describe('pickHint', () => {
 
   it('never reveals a green slot and returns null when all of them are green', () => {
     const answer = 'plato';
-    const round = new PlayerRound(0, 90);
+    const round = new PlayerRound(0, 90, 5);
     play(round, 'plata', answer); // P L A T green, last slot still unknown
     expect(round.greens).toBe(4);
 

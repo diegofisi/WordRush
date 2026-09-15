@@ -39,7 +39,14 @@ describe('EndRoundUseCase', () => {
 
     room = Room.create(
       'ABCD',
-      { language: 'es', initialSeconds: 60, rounds: 3, capacity: 8, hintEnabled: true },
+      {
+        language: 'es',
+        wordLength: 5,
+        initialSeconds: 60,
+        rounds: 3,
+        capacity: 8,
+        hintEnabled: true,
+      },
       T0,
     );
     room.status = 'playing';
@@ -54,7 +61,7 @@ describe('EndRoundUseCase', () => {
         isHost: id === 'a',
         joinedAt: T0,
       });
-      player.round = new PlayerRound(T0, 60);
+      player.round = new PlayerRound(T0, 60, 5);
       player.round.finish('timeout', T0);
       room.addPlayer(player);
     }

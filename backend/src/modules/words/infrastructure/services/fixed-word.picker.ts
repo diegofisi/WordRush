@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import type { Language } from '@shared/contract';
+import type { Language, WordLength } from '@shared/contract';
 import type { IWordList } from '../../domain/interfaces/word-list.interface';
 import type { IWordPicker } from '../../domain/interfaces/word-picker.interface';
 
@@ -17,11 +17,13 @@ export class FixedWordPicker implements IWordPicker {
     private readonly fallback: IWordPicker,
   ) {}
 
-  pick(language: Language, exclude: ReadonlySet<string>): string {
-    if (this.wordList.isAllowed(language, this.word)) return this.word;
+  pick(language: Language, length: WordLength, exclude: ReadonlySet<string>): string {
+    if (this.word.length === length && this.wordList.isAllowed(language, this.word)) {
+      return this.word;
+    }
     this.logger.warn(
-      `WORDRUSH_FIXED_WORD="${this.word}" is not a ${language} word; falling back to a random answer`,
+      `WORDRUSH_FIXED_WORD="${this.word}" is not a ${language} word of ${length} letters; falling back to a random answer`,
     );
-    return this.fallback.pick(language, exclude);
+    return this.fallback.pick(language, length, exclude);
   }
 }

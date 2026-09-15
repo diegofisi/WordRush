@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { MAX_ATTEMPTS, type PlayerProgress } from '@/shared/contract';
+import { attemptsFor, type PlayerProgress } from '@/shared/contract';
+
+const MAX_ATTEMPTS = attemptsFor(5);
 
 import { toRivalViewModel, type RosterEntry } from './game.model';
 
@@ -80,8 +82,9 @@ describe('toRivalViewModel · status', () => {
 
 describe('toRivalViewModel · derived fields', () => {
   it('reports the time left as a percentage only once solved', () => {
-    expect(toRivalViewModel(progress({ solved: true, secondsLeft: 45 }), roster, 90).timePercent)
-      .toBe(50);
+    expect(
+      toRivalViewModel(progress({ solved: true, secondsLeft: 45 }), roster, 90).timePercent,
+    ).toBe(50);
     expect(toRivalViewModel(progress({ secondsLeft: 45 }), roster, 90).timePercent).toBeNull();
   });
 

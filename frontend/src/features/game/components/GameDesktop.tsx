@@ -19,6 +19,7 @@ export const GameDesktop = (props: GameViewProps) => {
     <div className="grid min-h-0 flex-1 grid-cols-[300px_minmax(0,1fr)_320px] grid-rows-[minmax(0,1fr)] gap-6 px-7 py-5">
       <RivalsPanel
         t={t}
+        wordLength={props.round.wordLength}
         rivals={props.rivals}
         rivalClocks={props.rivalClocks}
         solvedCount={props.solvedCount}
@@ -35,6 +36,8 @@ export const GameDesktop = (props: GameViewProps) => {
           }
         />
         <Board
+          wordLength={props.round.wordLength}
+          maxAttempts={props.round.maxAttempts}
           rows={props.rows}
           draft={props.draft}
           revealRow={props.revealRow}

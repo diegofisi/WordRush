@@ -9,6 +9,7 @@ import { MiniBoard } from './MiniBoard';
 
 interface RivalsPanelProps {
   t: Dictionary;
+  wordLength: number;
   rivals: RivalViewModel[];
   rivalClocks: Record<string, number>;
   solvedCount: number;
@@ -37,6 +38,7 @@ const statusLine = (t: Dictionary, rival: RivalViewModel) => {
 
 export const RivalsPanel = ({
   t,
+  wordLength,
   rivals,
   rivalClocks,
   solvedCount,
@@ -85,7 +87,7 @@ export const RivalsPanel = ({
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-17 shrink-0">
-                  <MiniBoard rows={rival.rows} />
+                  <MiniBoard wordLength={wordLength} rows={rival.rows} />
                 </div>
                 <span
                   className={cn(

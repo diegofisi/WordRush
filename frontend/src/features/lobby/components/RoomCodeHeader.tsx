@@ -87,6 +87,12 @@ export const RoomCodeHeader = ({
             title={isHost ? t.lobby.changeRules : undefined}
           />
           <Chip
+            value={String(settings.wordLength)}
+            caption={t.lobby.lettersChip}
+            onClick={edit}
+            title={isHost ? t.lobby.changeRules : undefined}
+          />
+          <Chip
             value={t.common.seconds(settings.initialSeconds)}
             caption={t.common.perRound}
             onClick={edit}

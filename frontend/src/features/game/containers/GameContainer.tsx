@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { PageLoading } from '@/shared/components/ui/PageState';
-import { MAX_ATTEMPTS, WORD_LENGTH, type Emote } from '@/shared/contract';
+import type { Emote } from '@/shared/contract';
 import { useIsDesktopGame } from '@/shared/hooks/useMediaQuery';
 import { useNow } from '@/shared/hooks/useNow';
 import { useToastSafeBottom } from '@/shared/hooks/useToastSafeBottom';
@@ -82,6 +82,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
             roster[player.playerId],
             round?.initialSeconds ?? 0,
             player.playerId in left,
+            round?.maxAttempts ?? 8,
           ),
         )
         .sort((first, second) => {
@@ -95,7 +96,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
           if (second.status === 'left') return -1;
           return 0;
         }),
-    [players, myId, roster, left, round?.initialSeconds],
+    [players, myId, roster, left, round?.initialSeconds, round?.maxAttempts],
   );
 
   const rivalClocks = useMemo(() => {
@@ -125,7 +126,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     if (current.status !== 'playing' || !current.me || current.me.finished) return;
     // Guess errors are printed under the row being typed, where the player is
     // looking; a toast there would cover the clock.
-    if (current.draft.length < WORD_LENGTH) {
+    if (current.draft.length < (current.round?.wordLength ?? 5)) {
       noticeGuess(t.game.tooShort);
       return;
     }
@@ -180,7 +181,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const outcome: MyOutcome = me.solved
     ? 'solved'
     : me.finished
-      ? me.rows.length >= MAX_ATTEMPTS
+      ? me.rows.length >= round.maxAttempts
         ? 'out-of-attempts'
         : 'out-of-time'
       : 'playing';

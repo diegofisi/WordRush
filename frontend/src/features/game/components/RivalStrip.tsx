@@ -8,13 +8,20 @@ import { MiniBoard } from './MiniBoard';
 
 interface RivalStripProps {
   t: Dictionary;
+  wordLength: number;
   rivals: RivalViewModel[];
   rivalClocks: Record<string, number>;
   lowTimeThreshold: number;
 }
 
 /** Phone layout: one column per rival (avatar, latest row, clock/position). */
-export const RivalStrip = ({ t, rivals, rivalClocks, lowTimeThreshold }: RivalStripProps) => (
+export const RivalStrip = ({
+  t,
+  wordLength,
+  rivals,
+  rivalClocks,
+  lowTimeThreshold,
+}: RivalStripProps) => (
   <ul className="m-0 flex list-none justify-between gap-1 overflow-x-auto rounded-xl border border-line bg-surface px-1.5 py-2.5">
     {rivals.map((rival) => {
       const seconds = rivalClocks[rival.id] ?? rival.secondsLeft;
@@ -26,7 +33,7 @@ export const RivalStrip = ({ t, rivals, rivalClocks, lowTimeThreshold }: RivalSt
           title={rival.name}
         >
           <Avatar name={rival.name} tone={rival.status === 'solved' ? 'green' : 'neutral'} />
-          <MiniBoard rows={rival.rows} size="xs" lastRowOnly />
+          <MiniBoard wordLength={wordLength} rows={rival.rows} size="xs" lastRowOnly />
           <span
             className={cn(
               'font-mono text-[10px] tabular-nums',

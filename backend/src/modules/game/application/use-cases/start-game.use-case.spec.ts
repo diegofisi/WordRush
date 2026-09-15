@@ -36,7 +36,14 @@ describe('StartGameUseCase', () => {
     // Capacity 8: the host may start well below it.
     room = Room.create(
       'ABCD',
-      { language: 'es', initialSeconds: 60, rounds: 3, capacity: 8, hintEnabled: true },
+      {
+        language: 'es',
+        wordLength: 5,
+        initialSeconds: 60,
+        rounds: 3,
+        capacity: 8,
+        hintEnabled: true,
+      },
       T0,
     );
     rooms.save(room);

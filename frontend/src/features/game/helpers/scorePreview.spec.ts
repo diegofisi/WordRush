@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { SCORING, WORD_LENGTH } from '@/shared/contract';
+import { DEFAULT_WORD_LENGTH, SCORING } from '@/shared/contract';
 
 import { computeScorePreview, type ScorePreviewInput } from './scorePreview';
 
@@ -131,7 +131,7 @@ describe('the rule the two branches have to keep between them', () => {
     // (docs/context/04, 2026-09-12). Five greens would be a solve, so the best
     // a failure can reach is four greens and a yellow.
     const bestFailure =
-      (WORD_LENGTH - 1) * SCORING.pointsPerGreenUnsolved + SCORING.pointsPerYellowUnsolved;
+      (DEFAULT_WORD_LENGTH - 1) * SCORING.pointsPerGreenUnsolved + SCORING.pointsPerYellowUnsolved;
     expect(bestFailure).toBeLessThan(SCORING.solveBonus);
   });
 });

@@ -5,9 +5,7 @@ import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { getT } from '@/shared/i18n';
 import { playSound } from '@/shared/lib/sound';
 import {
-  MAX_ATTEMPTS,
   ROOM_LIMITS,
-  WORD_LENGTH,
   type FullState,
   type GuessAck,
   type HintAck,
@@ -104,6 +102,8 @@ const roundInfoOf = (round: RoundState): RoundInfo => ({
   initialSeconds: round.initialSeconds,
   startedAt: round.startedAt,
   hintAvailable: round.hintAvailable,
+  wordLength: round.wordLength,
+  maxAttempts: round.maxAttempts,
 });
 
 /** Roster entries rebuilt from the players who left, so their names survive. */
@@ -234,7 +234,10 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
         },
       }));
       pushFeed({
-        kind: progress.rows.length >= MAX_ATTEMPTS ? 'out-of-attempts' : 'out-of-time',
+        kind:
+          progress.rows.length >= (get().round?.maxAttempts ?? 8)
+            ? 'out-of-attempts'
+            : 'out-of-time',
         playerId: progress.playerId,
       });
     }
@@ -349,9 +352,9 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
     reset: () => set({ ...initialState, announced: emptyAnnounced() }),
 
     typeLetter: (letter) => {
-      const { status, me, draft } = get();
-      if (status !== 'playing' || !me || me.finished) return;
-      if (draft.length >= WORD_LENGTH) return;
+      const { status, me, draft, round } = get();
+      if (status !== 'playing' || !me || me.finished || !round) return;
+      if (draft.length >= round.wordLength) return;
       set({ draft: draft + letter.toUpperCase() });
     },
 

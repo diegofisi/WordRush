@@ -1,7 +1,7 @@
 import { type Clock } from '@shared/domain/clock';
 import { DomainException } from '@shared/domain/domain.exception';
 import { InMemoryRoomRepository } from '../../infrastructure/repositories/in-memory-room.repository';
-import { CreateRoomDto } from '../dtos/create-room.dto';
+import type { CreateRoomDto } from '../dtos/create-room.dto';
 import { CreateRoomUseCase } from './create-room.use-case';
 
 const T0 = 1_000_000;
@@ -15,7 +15,14 @@ class FakeClock implements Clock {
 
 const dto: CreateRoomDto = {
   name: 'ana',
-  settings: { language: 'es', initialSeconds: 60, rounds: 3, capacity: 8, hintEnabled: true },
+  settings: {
+    language: 'es',
+    wordLength: 5,
+    initialSeconds: 60,
+    rounds: 3,
+    capacity: 8,
+    hintEnabled: true,
+  },
 };
 
 describe('CreateRoomUseCase', () => {

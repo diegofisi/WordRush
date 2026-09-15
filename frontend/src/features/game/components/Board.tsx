@@ -1,9 +1,12 @@
 import type { CSSProperties } from 'react';
 
-import { MAX_ATTEMPTS, WORD_LENGTH, type OwnRow, type TileColor } from '@/shared/contract';
+import type { OwnRow, TileColor } from '@/shared/contract';
 import { cn } from '@/shared/lib/cn';
 
 interface BoardProps {
+  /** Letters per word and rows on the board, from the round. */
+  wordLength: number;
+  maxAttempts: number;
   rows: OwnRow[];
   draft: string;
   revealRow: number | null;
@@ -18,16 +21,26 @@ interface BoardProps {
   size: 'lg' | 'sm';
 }
 
-const TILE_SIZE: Record<BoardProps['size'], string> = {
-  lg: 'clamp(40px, min(10vw, (100dvh - 420px) / 8.9), 56px)',
-  sm: 'clamp(36px, min(10.5vw, (100dvh - 470px) / 8.9), 44px)',
+/**
+ * Tile size from the viewport and the board's shape: `cols` tiles plus their
+ * gaps across the width, `rows` tiles plus their gaps down the free height.
+ * Seven letters on a phone is what the width term is for.
+ */
+const tileSize = (size: BoardProps['size'], cols: number, rows: number): string => {
+  const across = `(100vw - ${size === 'lg' ? 720 : 32}px) / ${(cols + (cols - 1) * 0.14).toFixed(2)}`;
+  const down = `(100dvh - ${size === 'lg' ? 420 : 470}px) / ${(rows + (rows - 1) * 0.14).toFixed(2)}`;
+  return size === 'lg'
+    ? `clamp(34px, min(${across}, ${down}), 56px)`
+    : `clamp(30px, min(${across}, ${down}), 44px)`;
 };
 
 const FLIP_STAGGER_MS = 110;
 
-/** 8×5 own board: revealed rows, the row being typed and empty rows. The hint
+/** The own board (attempts × letters): revealed rows, the row being typed and empty rows. The hint
  * never shows here: it only lights its letter on the keyboard. */
 export const Board = ({
+  wordLength,
+  maxAttempts,
   rows,
   draft,
   revealRow,
@@ -38,7 +51,7 @@ export const Board = ({
   size,
 }: BoardProps) => {
   const currentRow = finished ? -1 : rows.length;
-  const style = { '--tile-size': TILE_SIZE[size] } as CSSProperties;
+  const style = { '--tile-size': tileSize(size, wordLength, maxAttempts) } as CSSProperties;
   const rowGap = { gap: 'calc(var(--tile-size) * 0.14)' } as CSSProperties;
   const tileStyle = {
     width: 'var(--tile-size)',
@@ -55,8 +68,8 @@ export const Board = ({
 
   return (
     <div className="relative" style={style}>
-      <div className="flex flex-col" style={rowGap} role="grid" aria-rowcount={MAX_ATTEMPTS}>
-        {Array.from({ length: MAX_ATTEMPTS }, (_, rowIndex) => {
+      <div className="flex flex-col" style={rowGap} role="grid" aria-rowcount={maxAttempts}>
+        {Array.from({ length: maxAttempts }, (_, rowIndex) => {
           const revealed = rows[rowIndex];
           const isCurrent = rowIndex === currentRow;
           const isReveal = revealed && rowIndex === revealRow;
@@ -67,7 +80,7 @@ export const Board = ({
               className={cn('flex', isCurrent && shakeKey > 0 && 'animate-shake')}
               style={rowGap}
             >
-              {Array.from({ length: WORD_LENGTH }, (_, col) => {
+              {Array.from({ length: wordLength }, (_, col) => {
                 if (revealed) {
                   const letter = revealed.word[col]?.toUpperCase() ?? '';
                   const color = revealed.colors[col] ?? 'gray';

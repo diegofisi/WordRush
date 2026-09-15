@@ -16,7 +16,8 @@ export class StartRoundUseCase {
   ) {}
 
   execute(room: Room, now: number): void {
-    const word = this.picker.pick(room.settings.language, new Set(room.usedWords));
+    const { language, wordLength, initialSeconds } = room.settings;
+    const word = this.picker.pick(language, wordLength, new Set(room.usedWords));
     room.word = word;
     room.usedWords.push(word);
     room.currentRound += 1;
@@ -29,7 +30,7 @@ export class StartRoundUseCase {
 
     for (const player of room.players) {
       player.ready = false;
-      player.round = new PlayerRound(now, room.settings.initialSeconds);
+      player.round = new PlayerRound(now, initialSeconds, wordLength);
     }
 
     // `me` differs per player, so the payload is addressed socket by socket.

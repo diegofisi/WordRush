@@ -23,6 +23,7 @@ class FakeClock implements Clock {
 
 const settings = {
   language: 'es' as const,
+  wordLength: 5 as const,
   initialSeconds: 60,
   rounds: 3,
   capacity: 8,
@@ -45,7 +46,7 @@ describe('TickRoomsUseCase', () => {
       isHost: true,
       joinedAt: T0,
     });
-    player.round = new PlayerRound(T0, 60);
+    player.round = new PlayerRound(T0, 60, 5);
     room.addPlayer(player);
     room.status = status;
     room.word = ANSWER;

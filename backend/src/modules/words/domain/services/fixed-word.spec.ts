@@ -13,11 +13,12 @@ describe('resolveFixedWord', () => {
     expect(resolveFixedWord({ NODE_ENV: 'production', WORDRUSH_FIXED_WORD: 'ahora' })).toBeNull();
   });
 
-  it('returns null when unset or not a five-letter word', () => {
+  it('returns null when unset or not a 5-, 6- or 7-letter word', () => {
     expect(resolveFixedWord({})).toBeNull();
     expect(resolveFixedWord({ WORDRUSH_FIXED_WORD: '' })).toBeNull();
     expect(resolveFixedWord({ WORDRUSH_FIXED_WORD: 'sol' })).toBeNull();
-    expect(resolveFixedWord({ WORDRUSH_FIXED_WORD: 'solids' })).toBeNull();
+    expect(resolveFixedWord({ WORDRUSH_FIXED_WORD: 'solidify' })).toBeNull();
+    expect(resolveFixedWord({ WORDRUSH_FIXED_WORD: 'solids' })).toBe('solids');
     expect(resolveFixedWord({ WORDRUSH_FIXED_WORD: 'sol1d' })).toBeNull();
   });
 });

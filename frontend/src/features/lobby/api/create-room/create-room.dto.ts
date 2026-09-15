@@ -1,4 +1,4 @@
-import type { CreateRoomPayload, Language, SessionAck } from '@/shared/contract';
+import type { CreateRoomPayload, Language, SessionAck, WordLength } from '@/shared/contract';
 
 export type CreateRoomRequest = CreateRoomPayload;
 export type CreateRoomResponse = SessionAck;
@@ -7,6 +7,7 @@ export type CreateRoomResponse = SessionAck;
 export interface CreateRoomForm {
   name: string;
   language: Language;
+  wordLength: WordLength;
   initialSeconds: number;
   rounds: number;
   capacity: number;
@@ -17,6 +18,7 @@ export const toCreateRoomRequest = (form: CreateRoomForm): CreateRoomRequest => 
   name: form.name.trim(),
   settings: {
     language: form.language,
+    wordLength: form.wordLength,
     initialSeconds: form.initialSeconds,
     rounds: form.rounds,
     capacity: form.capacity,

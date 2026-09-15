@@ -1,4 +1,4 @@
-import { WORD_LENGTH } from '@shared/contract';
+import { DEFAULT_WORD_LENGTH } from '@shared/contract';
 import { isWordShaped, normalizeWord } from '../../domain/services/normalize-word';
 import { JsonWordListRepository } from './json-word-list.repository';
 
@@ -7,7 +7,7 @@ const repository = new JsonWordListRepository();
 /** Exactly what `SubmitGuessUseCase` does before touching the ledger. */
 const accepts = (language: 'es' | 'en', raw: string): boolean => {
   const word = normalizeWord(raw);
-  return isWordShaped(word, WORD_LENGTH) && repository.isAllowed(language, word);
+  return isWordShaped(word, DEFAULT_WORD_LENGTH) && repository.isAllowed(language, word);
 };
 
 describe('JsonWordListRepository', () => {
@@ -33,10 +33,10 @@ describe('JsonWordListRepository', () => {
 
   it('every answer is also an accepted guess', () => {
     for (const language of ['es', 'en'] as const) {
-      const answers = repository.answers(language);
+      const answers = repository.answers(language, 5);
       expect(answers.length).toBeGreaterThan(0);
       for (const answer of answers) {
-        expect(isWordShaped(answer, WORD_LENGTH)).toBe(true);
+        expect(isWordShaped(answer, DEFAULT_WORD_LENGTH)).toBe(true);
         expect(repository.isAllowed(language, answer)).toBe(true);
       }
     }

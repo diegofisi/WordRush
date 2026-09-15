@@ -20,6 +20,7 @@ class FakeClock implements Clock {
 
 const SETTINGS: RoomSettings = {
   language: 'en',
+  wordLength: 5,
   initialSeconds: 120,
   rounds: 3,
   capacity: 5,
@@ -62,7 +63,7 @@ describe('RestartRoomUseCase', () => {
       player.totalPoints = 120;
       player.totalAttempts = 9;
       player.hintsUsed = 2;
-      player.round = new PlayerRound(T0, SETTINGS.initialSeconds);
+      player.round = new PlayerRound(T0, SETTINGS.initialSeconds, 5);
     }
   };
 

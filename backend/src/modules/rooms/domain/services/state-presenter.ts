@@ -1,3 +1,4 @@
+import { attemptsFor } from '@shared/contract';
 import type {
   FullState,
   PlayerProgress,
@@ -48,6 +49,8 @@ export function toRoundState(room: Room, player: Player, now: number): RoundStat
   return {
     round: room.currentRound,
     totalRounds: room.settings.rounds,
+    wordLength: room.settings.wordLength,
+    maxAttempts: attemptsFor(room.settings.wordLength),
     initialSeconds: room.settings.initialSeconds,
     startedAt: room.roundStartedAt,
     hintAvailable: room.settings.hintEnabled,

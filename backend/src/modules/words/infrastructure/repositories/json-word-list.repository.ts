@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import type { Language } from '@shared/contract';
+import { WORD_LENGTHS, type Language, type WordLength } from '@shared/contract';
 import { IWordList } from '../../domain/interfaces/word-list.interface';
 import enData from '../../data/en.json';
+import en6Data from '../../data/en6.json';
+import en7Data from '../../data/en7.json';
 import esData from '../../data/es.json';
+import es6Data from '../../data/es6.json';
+import es7Data from '../../data/es7.json';
 
 interface WordData {
   language: string;
@@ -15,17 +19,25 @@ interface LoadedList {
   allowed: ReadonlySet<string>;
 }
 
-const SOURCES: Record<Language, WordData> = { es: esData, en: enData };
+/** One file per language and length; 5 letters keeps the original file name. */
+const SOURCES: Record<Language, Record<WordLength, WordData>> = {
+  es: { 5: esData, 6: es6Data, 7: es7Data },
+  en: { 5: enData, 6: en6Data, 7: en7Data },
+};
 
 @Injectable()
 export class JsonWordListRepository implements IWordList {
-  private readonly lists: Record<Language, LoadedList>;
+  private readonly lists: Record<Language, Record<WordLength, LoadedList>>;
 
   constructor() {
-    this.lists = {
-      es: JsonWordListRepository.load(SOURCES.es),
-      en: JsonWordListRepository.load(SOURCES.en),
-    };
+    const load = (language: Language) =>
+      Object.fromEntries(
+        WORD_LENGTHS.map((length) => [
+          length,
+          JsonWordListRepository.load(SOURCES[language][length]),
+        ]),
+      ) as Record<WordLength, LoadedList>;
+    this.lists = { es: load('es'), en: load('en') };
   }
 
   private static load(data: WordData): LoadedList {
@@ -35,10 +47,11 @@ export class JsonWordListRepository implements IWordList {
   }
 
   isAllowed(language: Language, word: string): boolean {
-    return this.lists[language].allowed.has(word);
+    const list = this.lists[language][word.length as WordLength];
+    return list ? list.allowed.has(word) : false;
   }
 
-  answers(language: Language): readonly string[] {
-    return this.lists[language].answers;
+  answers(language: Language, length: WordLength): readonly string[] {
+    return this.lists[language][length].answers;
   }
 }

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { Language } from '@shared/contract';
+import type { Language, WordLength } from '@shared/contract';
 import { IWordList, WORD_LIST } from '../../domain/interfaces/word-list.interface';
 import { IWordPicker } from '../../domain/interfaces/word-picker.interface';
 
@@ -20,8 +20,8 @@ export class RandomWordPicker implements IWordPicker {
     private readonly rng: () => number = Math.random,
   ) {}
 
-  pick(language: Language, exclude: ReadonlySet<string>): string {
-    const answers = this.wordList.answers(language);
+  pick(language: Language, length: WordLength, exclude: ReadonlySet<string>): string {
+    const answers = this.wordList.answers(language, length);
     const candidates = answers.filter((w) => !exclude.has(w));
     const pool = candidates.length > 0 ? candidates : answers;
     return pool[biasedIndex(this.rng(), pool.length)];

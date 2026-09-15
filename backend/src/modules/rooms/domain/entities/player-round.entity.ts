@@ -1,6 +1,6 @@
-import { WORD_LENGTH, type HintReveal, type OwnRow } from '@shared/contract';
+import type { HintReveal, OwnRow } from '@shared/contract';
 
-/** Time ledger entry for one position of the answer (0..4). */
+/** Time ledger entry for one position of the answer (0..wordLength-1). */
 export interface PositionCharge {
   yellow: boolean;
   green: boolean;
@@ -16,7 +16,7 @@ export type FinishReason = 'solved' | 'attempts' | 'timeout' | 'left';
 export interface HintPick {
   letter: string;
   position: number;
-  /** Occurrences of `letter` in the answer (1..WORD_LENGTH). */
+  /** Occurrences of `letter` in the answer (1..wordLength). */
   count: number;
 }
 
@@ -38,9 +38,13 @@ export class PlayerRound {
   penaltySeconds = 0;
   readonly charges: PositionCharge[];
 
-  constructor(startedAt: number, initialSeconds: number) {
+  constructor(
+    startedAt: number,
+    initialSeconds: number,
+    readonly wordLength: number,
+  ) {
     this.deadlineAt = startedAt + initialSeconds * 1000;
-    this.charges = Array.from({ length: WORD_LENGTH }, () => ({
+    this.charges = Array.from({ length: wordLength }, () => ({
       yellow: false,
       green: false,
       hinted: false,

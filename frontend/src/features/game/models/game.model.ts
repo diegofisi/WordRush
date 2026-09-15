@@ -1,10 +1,4 @@
-import {
-  MAX_ATTEMPTS,
-  type Emote,
-  type GainKind,
-  type PlayerProgress,
-  type TileColor,
-} from '@/shared/contract';
+import { type Emote, type GainKind, type PlayerProgress, type TileColor } from '@/shared/contract';
 import { percentOf } from '@/shared/lib/format';
 
 export interface RosterEntry {
@@ -83,13 +77,14 @@ export const toRivalViewModel = (
   initialSeconds: number,
   /** They gave up their seat (`room:leave`); the panel keeps them, greyed out. */
   hasLeft = false,
+  maxAttempts = 8,
 ): RivalViewModel => {
   const status: RivalStatus = hasLeft
     ? 'left'
     : progress.solved
       ? 'solved'
       : progress.finished
-        ? progress.rows.length >= MAX_ATTEMPTS
+        ? progress.rows.length >= maxAttempts
           ? 'out-of-attempts'
           : 'out-of-time'
         : 'playing';
@@ -99,7 +94,7 @@ export const toRivalViewModel = (
     connected: hasLeft ? false : (roster?.connected ?? true),
     // Defensive: the contract has no letters for rivals, and we never keep any.
     rows: progress.rows.map((row) => [...row]),
-    currentAttempt: Math.min(MAX_ATTEMPTS, progress.rows.length + 1),
+    currentAttempt: Math.min(maxAttempts, progress.rows.length + 1),
     secondsLeft: progress.secondsLeft,
     at: progress.at,
     status,

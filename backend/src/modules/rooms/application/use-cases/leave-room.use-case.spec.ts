@@ -17,6 +17,7 @@ class FakeClock implements Clock {
 
 const settings = {
   language: 'es' as const,
+  wordLength: 5 as const,
   initialSeconds: 60,
   rounds: 3,
   capacity: 8,
@@ -57,7 +58,7 @@ describe('LeaveRoomUseCase', () => {
     room.status = 'playing';
     room.currentRound = 1;
     room.roundStartedAt = T0;
-    for (const p of room.players) p.round = new PlayerRound(T0, settings.initialSeconds);
+    for (const p of room.players) p.round = new PlayerRound(T0, settings.initialSeconds, 5);
   };
 
   it('frees the seat and announces who left', () => {

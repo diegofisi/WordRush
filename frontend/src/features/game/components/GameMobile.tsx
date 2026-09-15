@@ -63,6 +63,7 @@ export const GameMobile = (props: GameViewProps) => {
       {props.rivals.length > 0 ? (
         <RivalStrip
           t={t}
+          wordLength={props.round.wordLength}
           rivals={props.rivals}
           rivalClocks={props.rivalClocks}
           lowTimeThreshold={LOW_TIME_THRESHOLD}
@@ -77,6 +78,8 @@ export const GameMobile = (props: GameViewProps) => {
 
       <div className="flex justify-center">
         <Board
+          wordLength={props.round.wordLength}
+          maxAttempts={props.round.maxAttempts}
           rows={props.rows}
           draft={props.draft}
           revealRow={props.revealRow}
