@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import type { Emote, HintReveal, Language, OwnRow, RoundInfo } from '@/shared/contract';
 import type { Dictionary } from '@/shared/i18n';
 
@@ -39,6 +41,23 @@ export interface TeamViewProps {
   preview: TeamScorePreview;
 }
 
+/** Present while I observe (docs/context/06-v1.1.md -> Observers). */
+export interface ObserverViewProps {
+  wantsSeat: boolean;
+  freeSeats: number;
+  pending: boolean;
+  onSit: (wants: boolean) => void;
+}
+
+/** The chat slice as the layouts place it; the container composes it. */
+export interface ChatViewProps {
+  panel: ReactNode;
+  /** Phone sheet state. */
+  open: boolean;
+  unread: number;
+  onToggle: () => void;
+}
+
 /** Everything the desktop and phone layouts need, already derived. */
 export interface GameViewProps {
   t: Dictionary;
@@ -70,6 +89,9 @@ export interface GameViewProps {
   preview: ScorePreview;
   /** Present in team mode only; the layouts swap the rivals panel and score card. */
   team: TeamViewProps | null;
+  /** Present while I observe: no board, no keyboard, a seat request instead. */
+  observer: ObserverViewProps | null;
+  chat: ChatViewProps;
   hintState: HintButtonState;
   hintPending: boolean;
   /** Seconds left of the emote burst pause; 0 while the player may react. */

@@ -4,6 +4,8 @@ import type { Dictionary } from '@/shared/i18n';
 
 interface LobbyActionsProps {
   t: Dictionary;
+  /** I watch: no ready, no start, only the way out. */
+  observer?: boolean;
   isHost: boolean;
   hostName: string;
   isReady: boolean;
@@ -24,6 +26,7 @@ interface LobbyActionsProps {
  */
 export const LobbyActions = ({
   t,
+  observer = false,
   isHost,
   hostName,
   isReady,
@@ -37,8 +40,9 @@ export const LobbyActions = ({
 }: LobbyActionsProps) => {
   const canStart = playerCount >= minPlayers;
   const reason = canStart ? null : t.lobby.needPlayers(minPlayers);
-  const status =
-    isHost && reason
+  const status = observer
+    ? t.lobby.youObserve
+    : isHost && reason
       ? reason
       : `${t.lobby.readyCount(readyCount, playerCount)} · ${
           isHost ? t.lobby.hostHint : t.lobby.guestHint(hostName)
@@ -53,15 +57,17 @@ export const LobbyActions = ({
         <Button variant="outline" size="lg" onClick={onLeave}>
           {t.common.leaveRoom}
         </Button>
-        <Button
-          variant="outline"
-          size="lg"
-          aria-pressed={isReady}
-          onClick={onToggleReady}
-          leading={isReady ? <CheckIcon size={16} /> : undefined}
-        >
-          {isReady ? t.lobby.notReady : t.lobby.imReady}
-        </Button>
+        {!observer ? (
+          <Button
+            variant="outline"
+            size="lg"
+            aria-pressed={isReady}
+            onClick={onToggleReady}
+            leading={isReady ? <CheckIcon size={16} /> : undefined}
+          >
+            {isReady ? t.lobby.notReady : t.lobby.imReady}
+          </Button>
+        ) : null}
         {isHost ? (
           <Button
             size="lg"

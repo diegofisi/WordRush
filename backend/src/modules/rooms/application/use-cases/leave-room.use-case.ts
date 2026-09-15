@@ -29,10 +29,28 @@ export class LeaveRoomUseCase {
 
   execute(roomCode: string, playerId: string): void {
     const room = this.rooms.findByCode(roomCode);
-    const player = room?.findPlayer(playerId);
-    if (!room || !player) return;
-
+    if (!room) return;
     const now = this.clock.now();
+
+    // An observer holds no seat and no round: they just stop being listed.
+    if (room.removeObserver(playerId)) {
+      if (room.isEmpty()) {
+        this.rooms.delete(room.code);
+        this.logger.log(`Room ${room.code} deleted (empty)`);
+        return;
+      }
+      room.touch(now);
+      this.bus.publish({
+        roomCode: room.code,
+        event: 'lobby:update',
+        payload: room.toLobbyState(),
+      });
+      return;
+    }
+
+    const player = room.findPlayer(playerId);
+    if (!player) return;
+
     const wasHost = player.isHost;
     // Freeze their clock so `isRoundOver` no longer waits for them.
     player.round?.finish('left', now);

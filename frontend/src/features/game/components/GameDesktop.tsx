@@ -5,6 +5,7 @@ import { Clock } from './Clock';
 import { EmotePicker } from './EmotePicker';
 import { Keyboard } from './Keyboard';
 import { LiveFeed } from './LiveFeed';
+import { ObserverCard } from './ObserverCard';
 import { RivalsPanel } from './RivalsPanel';
 import { ScorePreviewCard } from './ScorePreviewCard';
 import { TeamPanel } from './TeamPanel';
@@ -38,54 +39,63 @@ export const GameDesktop = (props: GameViewProps) => {
         />
       )}
 
-      <div className="flex min-h-0 flex-col items-center justify-between gap-4">
-        <Clock
-          clock={props.clock}
-          caption={t.game.timeLeftPct(props.clock.percent)}
-          gains={props.gains}
-          gainLabel={(chip) =>
-            chip.kind === 'yellow' ? t.game.gainYellow(chip.letter) : t.game.gainGreen(chip.letter)
-          }
-        />
-        <Board
-          wordLength={props.round.wordLength}
-          maxAttempts={props.round.maxAttempts}
-          rows={props.rows}
-          draft={props.draft}
-          revealRow={props.revealRow}
-          shakeKey={props.shakeKey}
-          notice={props.guessNotice}
-          finished={props.outcome !== 'playing'}
-          hint={props.hint}
-          colorLabels={props.tileLabels}
-          size="lg"
-        />
-        {props.outcome === 'playing' ? (
-          <Keyboard
-            language={props.wordLanguage}
-            keyStates={props.keyStates}
-            stateLabels={props.tileLabels}
-            disabled={false}
-            enterLabel={t.game.enter}
-            backspaceLabel={t.game.backspace}
-            onLetter={props.onLetter}
-            onEnter={props.onEnter}
-            onBackspace={props.onBackspace}
+      {props.observer ? (
+        <div className="flex min-h-0 flex-col items-center justify-center gap-4">
+          <ObserverCard t={t} observer={props.observer} />
+        </div>
+      ) : (
+        <div className="flex min-h-0 flex-col items-center justify-between gap-4">
+          <Clock
+            clock={props.clock}
+            caption={t.game.timeLeftPct(props.clock.percent)}
+            gains={props.gains}
+            gainLabel={(chip) =>
+              chip.kind === 'yellow'
+                ? t.game.gainYellow(chip.letter)
+                : t.game.gainGreen(chip.letter)
+            }
           />
-        ) : (
-          <WaitingCard
-            t={t}
-            outcome={props.outcome}
-            solvedPosition={props.solvedPosition}
-            timePercent={props.clock.percent}
-            solverName={props.team?.solverName}
+          <Board
+            wordLength={props.round.wordLength}
+            maxAttempts={props.round.maxAttempts}
+            rows={props.rows}
+            draft={props.draft}
+            revealRow={props.revealRow}
+            shakeKey={props.shakeKey}
+            notice={props.guessNotice}
+            finished={props.outcome !== 'playing'}
+            hint={props.hint}
+            colorLabels={props.tileLabels}
+            size="lg"
           />
-        )}
-      </div>
+          {props.outcome === 'playing' ? (
+            <Keyboard
+              language={props.wordLanguage}
+              keyStates={props.keyStates}
+              stateLabels={props.tileLabels}
+              disabled={false}
+              enterLabel={t.game.enter}
+              backspaceLabel={t.game.backspace}
+              onLetter={props.onLetter}
+              onEnter={props.onEnter}
+              onBackspace={props.onBackspace}
+            />
+          ) : (
+            <WaitingCard
+              t={t}
+              outcome={props.outcome}
+              solvedPosition={props.solvedPosition}
+              timePercent={props.clock.percent}
+              solverName={props.team?.solverName}
+            />
+          )}
+        </div>
+      )}
 
       <div className="flex min-h-0 flex-col gap-4">
         <LiveFeed t={t} feed={props.feed} />
-        {props.team ? (
+        {props.chat.panel}
+        {props.observer ? null : props.team ? (
           <TeamScoreCard t={t} preview={props.team.preview} outcome={props.outcome} />
         ) : (
           <ScorePreviewCard t={t} preview={props.preview} outcome={props.outcome} />

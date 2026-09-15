@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 12;
+export const CONTRACT_VERSION = 13;
 
 export type Language = 'es' | 'en';
 export type TileColor = 'green' | 'yellow' | 'gray';
@@ -93,6 +93,11 @@ export const ROOM_LIMITS = {
   emoteBurstLimit: 8,
   emoteBurstWindowSeconds: 3,
   emotePauseSeconds: 5,
+  /** docs/context/06-v1.1.md -> Observers: 8 players plus 2 observers at most. */
+  maxObservers: 2,
+  /** docs/context/06-v1.1.md -> Chat: 200 characters, one message per second. */
+  chatMaxLength: 200,
+  chatIntervalSeconds: 1,
 } as const;
 
 /** docs/context/02-game-rules.md and 03-scoring-system.md */
@@ -149,6 +154,17 @@ export interface TeamPublic {
   gamesWon: number;
 }
 
+/** Somebody who joined a running game (docs/context/06-v1.1.md -> Observers). */
+export type Role = 'player' | 'observer';
+
+export interface ObserverPublic {
+  id: string;
+  name: string;
+  connected: boolean;
+  /** They asked for a seat: they get one when the next round starts and a slot is free. */
+  wantsSeat: boolean;
+}
+
 export interface LobbyState {
   code: string;
   status: RoomStatus;
@@ -156,6 +172,8 @@ export interface LobbyState {
   players: PlayerPublic[];
   /** Both teams in team mode; empty otherwise. */
   teams: TeamPublic[];
+  /** At most `ROOM_LIMITS.maxObservers`; they see the boards and talk, never play. */
+  observers: ObserverPublic[];
 }
 
 /**
@@ -253,6 +271,8 @@ export interface RoundInfo {
 }
 
 export interface RoundState extends RoundInfo {
+  /** An observer gets a neutral, finished `me` and never a keyboard. */
+  role: Role;
   me: SelfState;
   players: PlayerProgress[];
   /** Team mode only; empty otherwise. */
@@ -345,6 +365,7 @@ export interface GameEndPayload {
 }
 
 export interface FullState {
+  role: Role;
   lobby: LobbyState;
   round: RoundState | null;
   lastRoundEnd: RoundEndPayload | null;
@@ -375,6 +396,10 @@ export type ErrorCode =
   | 'already_in_room'
   /** Team actions outside team mode, or on a team the player is not in. */
   | 'not_in_team'
+  /** Chat: that channel is closed to the sender right now (still playing the round). */
+  | 'chat_not_allowed'
+  /** Observer actions from somebody who is seated. */
+  | 'not_observer'
   | 'session_expired'
   | 'internal';
 
@@ -414,6 +439,49 @@ export interface GuessPayload {
 
 export interface ReactionPayload {
   emote: Emote;
+}
+
+// ---------------------------------------------------------------------------
+// Chat (docs/context/06-v1.1.md -> Chat)
+// ---------------------------------------------------------------------------
+
+/** `team` exists in team mode only; `all` is everybody who may read it right now. */
+export type ChatChannel = 'all' | 'team';
+
+export interface ChatMessage {
+  id: number;
+  /** Round the message belongs to; 0 in the lobby before the first round. */
+  round: number;
+  playerId: string;
+  name: string;
+  /** Sent by an observer: the client labels it. */
+  observer: boolean;
+  /** The sender's team at the time, team mode only. */
+  team: TeamId | null;
+  channel: ChatChannel;
+  text: string;
+  /** Epoch ms. */
+  at: number;
+  /**
+   * Sent on `all` while the round was in play: only those who had finished it
+   * (or were observing) could read it live; once the round ends everybody can.
+   */
+  duringPlay: boolean;
+}
+
+export interface ChatSendPayload {
+  channel: ChatChannel;
+  text: string;
+}
+
+export interface ChatHistoryAck {
+  /** Every message of the current game the caller may read, oldest first. */
+  messages: ChatMessage[];
+}
+
+/** An observer asks for (or gives up) a seat at the next round. */
+export interface ObserverSitPayload {
+  wants: boolean;
 }
 
 /** Host-only, lobby-only edit of the room settings. */
@@ -478,6 +546,10 @@ export interface ClientToServerEvents {
   'game:guess': (payload: GuessPayload, ack: (r: Ack<GuessAck>) => void) => void;
   'game:hint': (ack: (r: Ack<HintAck>) => void) => void;
   'reaction:send': (payload: ReactionPayload, ack?: (r: EmptyAck) => void) => void;
+  'chat:send': (payload: ChatSendPayload, ack?: (r: EmptyAck) => void) => void;
+  'chat:history': (ack: (r: Ack<ChatHistoryAck>) => void) => void;
+  /** Observers only. In the lobby with a free seat it seats them right away. */
+  'observer:sit': (payload: ObserverSitPayload, ack?: (r: EmptyAck) => void) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -534,6 +606,8 @@ export interface ServerToClientEvents {
   'round:end': (payload: RoundEndPayload) => void;
   'game:end': (payload: GameEndPayload) => void;
   'reaction:show': (payload: { playerId: string; emote: Emote }) => void;
+  /** Delivered only to the sockets that may read it (see `ChatMessage.duringPlay`). */
+  'chat:message': (payload: ChatMessage) => void;
   'session:replaced': (payload: SessionReplacedPayload) => void;
   error: (payload: ErrorPayload) => void;
 }

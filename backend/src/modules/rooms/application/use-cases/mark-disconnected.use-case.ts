@@ -20,7 +20,7 @@ export class MarkDisconnectedUseCase {
 
   execute(roomCode: string, playerId: string): void {
     const room = this.rooms.findByCode(roomCode);
-    const player = room?.findPlayer(playerId);
+    const player = room?.findAnyone(playerId);
     if (!room || !player) return;
     player.markDisconnected(this.clock.now());
     this.bus.publish({ roomCode: room.code, event: 'lobby:update', payload: room.toLobbyState() });

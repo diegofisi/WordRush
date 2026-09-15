@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { ChatContainer, useChatStore } from '@/features/chat';
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { PageLoading } from '@/shared/components/ui/PageState';
 import type { Emote } from '@/shared/contract';
@@ -13,6 +14,7 @@ import { otherTeam } from '@/shared/lib/teamColor';
 import { resultsPath } from '@/shared/routes/paths';
 import { toast } from '@/shared/stores/useToastStore';
 
+import { useSitObserver } from '../api/observer-sit/useSitObserver';
 import { useSendGuess } from '../api/send-guess/useSendGuess';
 import { useSendReaction } from '../api/send-reaction/useSendReaction';
 import { useUseHint } from '../api/use-hint/useUseHint';
@@ -46,6 +48,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
 
   const status = useGameStore((state) => state.status);
   const round = useGameStore((state) => state.round);
+  const role = useGameStore((state) => state.role);
   const settings = useGameStore((state) => state.settings);
   const roster = useGameStore((state) => state.roster);
   const myId = useGameStore((state) => state.myId);
@@ -53,6 +56,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const players = useGameStore((state) => state.players);
   const left = useGameStore((state) => state.left);
   const teamInfo = useGameStore((state) => state.teamInfo);
+  const observers = useGameStore((state) => state.observers);
   const teams = useGameStore((state) => state.teams);
   const myTeam = useGameStore((state) => state.myTeam);
   const teammateRows = useGameStore((state) => state.teammates);
@@ -70,14 +74,19 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const noticeGuess = useGameStore((state) => state.noticeGuess);
   const announceLowTime = useGameStore((state) => state.announceLowTime);
   const connection = useSessionStore((state) => state.connection);
+  const chatOpen = useChatStore((state) => state.open);
+  const chatUnread = useChatStore((state) => state.unread);
+  const setChatOpen = useChatStore((state) => state.setOpen);
 
   const { sendGuess } = useSendGuess();
   const { requestHint, pending: hintPending } = useUseHint();
   const { sendReaction } = useSendReaction();
+  const { sit, pending: sitting } = useSitObserver();
 
   const playing = status === 'playing' && Boolean(round && me);
   const now = useNow(100, playing || status === 'ended');
   const teamMode = round?.mode === 'teams';
+  const observing = role === 'observer';
 
   // The server decides when a round ends; we only follow it to the results screen.
   useEffect(() => {
@@ -158,7 +167,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const handleEnter = useCallback(() => void submit(), [submit]);
 
   usePhysicalKeyboard({
-    enabled: playing && !me?.finished,
+    enabled: playing && !me?.finished && !observing,
     language: settings?.language ?? 'es',
     onLetter: typeLetter,
     onEnter: handleEnter,
@@ -189,6 +198,14 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
       else toast.error(result.error.code);
     },
     [sendReaction],
+  );
+
+  const handleSit = useCallback(
+    async (wants: boolean) => {
+      const result = await sit(wants);
+      if (!result.ok) toast.error(result.error.code);
+    },
+    [sit],
   );
 
   if (!round || !me || !settings) {
@@ -296,6 +313,32 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     };
   }
 
+  // Team mode: "finished" is the team's; the team channel is always open.
+  const doneWithRound = observing || (teamMode ? (myTeamState?.finished ?? false) : me.finished);
+  const chat = {
+    panel: (
+      <ChatContainer
+        teamMode={teamMode}
+        myTeam={observing ? null : myTeam}
+        canWriteAll={doneWithRound || status !== 'playing'}
+        lockedReason={teamMode ? t.chat.lockedTeam : t.chat.locked}
+        bare={!isDesktop}
+        className="min-h-0 flex-1"
+      />
+    ),
+    open: chatOpen,
+    unread: chatUnread,
+    onToggle: () => setChatOpen(!chatOpen),
+  };
+  const observer = observing
+    ? {
+        wantsSeat: observers.find((entry) => entry.id === myId)?.wantsSeat ?? false,
+        freeSeats: Math.max(0, settings.capacity - Object.keys(players).length),
+        pending: sitting,
+        onSit: (wants: boolean) => void handleSit(wants),
+      }
+    : null;
+
   const view: GameViewProps = {
     t,
     roomCode,
@@ -331,6 +374,8 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     sticker,
     preview,
     team,
+    observer,
+    chat,
     hintState: !round.hintAvailable ? 'off' : me.hintUsed ? 'used' : 'available',
     hintPending,
     emoteCooldownSeconds: Math.max(0, Math.ceil((emotePausedUntil - now) / 1000)),

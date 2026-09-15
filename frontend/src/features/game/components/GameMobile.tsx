@@ -2,10 +2,12 @@ import { LOW_TIME_THRESHOLD } from '../stores/useGameStore';
 import { isTextFeedEvent } from '../models/game.model';
 import type { GameViewProps } from '../models/game-view.model';
 import { Board } from './Board';
+import { ChatSheet } from './ChatSheet';
 import { Clock } from './Clock';
 import { EmotePicker } from './EmotePicker';
 import { HintButton } from './HintButton';
 import { HintLetterChip } from './HintLetterChip';
+import { ObserverCard } from './ObserverCard';
 import { Keyboard } from './Keyboard';
 import { FeedRow } from './LiveFeed';
 import { PenaltyChip } from './PenaltyChip';
@@ -34,31 +36,39 @@ export const GameMobile = (props: GameViewProps) => {
               {t.common.language[props.wordLanguage]}
             </span>
           </span>
-          <Clock
-            compact
-            clock={props.clock}
-            caption=""
-            gains={props.gains}
-            gainLabel={(chip) => chip.letter}
-          />
+          {props.observer ? (
+            <span className="font-display text-xl font-bold tracking-[-0.02em]">
+              {t.game.observing}
+            </span>
+          ) : (
+            <Clock
+              compact
+              clock={props.clock}
+              caption=""
+              gains={props.gains}
+              gainLabel={(chip) => chip.letter}
+            />
+          )}
         </div>
         <div className="flex shrink-0 gap-2">
-          {props.penaltySeconds > 0 ? (
+          {props.observer ? null : props.penaltySeconds > 0 ? (
             <PenaltyChip
               compact
               seconds={props.penaltySeconds}
               label={t.game.penaltyTotal(props.penaltySeconds)}
             />
           ) : null}
-          <HintButton
-            compact
-            t={t}
-            team={props.team !== null}
-            state={props.hintState}
-            pending={props.hintPending}
-            disabled={props.outcome !== 'playing'}
-            onClick={props.onHint}
-          />
+          {props.observer ? null : (
+            <HintButton
+              compact
+              t={t}
+              team={props.team !== null}
+              state={props.hintState}
+              pending={props.hintPending}
+              disabled={props.outcome !== 'playing'}
+              onClick={props.onHint}
+            />
+          )}
         </div>
       </div>
 
@@ -93,24 +103,28 @@ export const GameMobile = (props: GameViewProps) => {
       ) : null}
 
       <div className="flex justify-center">
-        <Board
-          wordLength={props.round.wordLength}
-          maxAttempts={props.round.maxAttempts}
-          rows={props.rows}
-          draft={props.draft}
-          revealRow={props.revealRow}
-          shakeKey={props.shakeKey}
-          notice={props.guessNotice}
-          finished={props.outcome !== 'playing'}
-          hint={props.hint}
-          colorLabels={props.tileLabels}
-          size="sm"
-        />
+        {props.observer ? (
+          <ObserverCard t={t} observer={props.observer} />
+        ) : (
+          <Board
+            wordLength={props.round.wordLength}
+            maxAttempts={props.round.maxAttempts}
+            rows={props.rows}
+            draft={props.draft}
+            revealRow={props.revealRow}
+            shakeKey={props.shakeKey}
+            notice={props.guessNotice}
+            finished={props.outcome !== 'playing'}
+            hint={props.hint}
+            colorLabels={props.tileLabels}
+            size="sm"
+          />
+        )}
       </div>
 
       <div className="relative mt-auto flex flex-col gap-2.5">
         <StickerOverlay t={t} sticker={props.sticker} />
-        {props.outcome === 'playing' ? (
+        {props.observer ? null : props.outcome === 'playing' ? (
           <Keyboard
             language={props.wordLanguage}
             keyStates={props.keyStates}
@@ -138,7 +152,15 @@ export const GameMobile = (props: GameViewProps) => {
             )}
           </>
         )}
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between gap-2">
+          <ChatSheet
+            t={t}
+            open={props.chat.open}
+            unread={props.chat.unread}
+            onToggle={props.chat.onToggle}
+          >
+            {props.chat.panel}
+          </ChatSheet>
           <EmotePicker
             t={t}
             variant="row"

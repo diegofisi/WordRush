@@ -28,7 +28,7 @@ export class RejoinRoomUseCase {
   execute(dto: RejoinRoomDto): RoomSession {
     const room = this.rooms.findByCode(dto.roomCode);
     if (!room) throw new DomainException('room_not_found');
-    const player = room.findPlayer(dto.playerId);
+    const player = room.findAnyone(dto.playerId);
     if (!player || !tokenMatches(player.token, dto.token)) {
       throw new DomainException('session_expired');
     }

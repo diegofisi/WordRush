@@ -1,5 +1,8 @@
 import {
+  ROOM_LIMITS,
   TEAM_IDS,
+  type ChatChannel,
+  type ChatMessage,
   type LobbyState,
   type RoomSettings,
   type RoomStatus,
@@ -31,6 +34,11 @@ export class Room {
   emptiedAt: number | null = null;
   /** Both teams in team mode; empty in the normal mode. */
   readonly teams: Team[] = [];
+  /** Joined a running game; they watch and talk (docs/context/06-v1.1.md -> Observers). */
+  readonly observers: Player[] = [];
+  /** The whole game's chat, oldest first; a new game starts it afresh. */
+  readonly chat: ChatMessage[] = [];
+  private nextChatId = 1;
 
   private constructor(
     readonly code: string,
@@ -86,13 +94,28 @@ export class Room {
     return this.players.find((p) => p.isHost);
   }
 
+  /** A seated player; observers are found with `findAnyone`. */
   findPlayer(id: string): Player | undefined {
     return this.players.find((p) => p.id === id);
   }
 
+  findObserver(id: string): Player | undefined {
+    return this.observers.find((p) => p.id === id);
+  }
+
+  /** Seated or observing: whoever holds a session in this room. */
+  findAnyone(id: string): Player | undefined {
+    return this.findPlayer(id) ?? this.findObserver(id);
+  }
+
+  /** Everybody in the room, seated first. */
+  get everyone(): Player[] {
+    return [...this.players, ...this.observers];
+  }
+
   hasName(name: string): boolean {
     const wanted = name.toLowerCase();
-    return this.players.some((p) => p.name.toLowerCase() === wanted);
+    return this.everyone.some((p) => p.name.toLowerCase() === wanted);
   }
 
   connectedPlayers(): Player[] {
@@ -103,6 +126,11 @@ export class Room {
     return this.players.length >= this.settings.capacity;
   }
 
+  hasObserverRoom(): boolean {
+    return this.observers.length < ROOM_LIMITS.maxObservers;
+  }
+
+  /** No seated player left: observers alone cannot keep a room alive. */
   isEmpty(): boolean {
     return this.players.length === 0;
   }
@@ -110,6 +138,62 @@ export class Room {
   addPlayer(player: Player): void {
     this.players.push(player);
     if (this.settings.mode === 'teams') this.autoAssign(player);
+  }
+
+  addObserver(observer: Player): void {
+    this.observers.push(observer);
+  }
+
+  removeObserver(id: string): Player | undefined {
+    const index = this.observers.findIndex((p) => p.id === id);
+    if (index === -1) return undefined;
+    return this.observers.splice(index, 1)[0];
+  }
+
+  /** Moves an observer into a free seat; false when there is none. */
+  seat(observer: Player): boolean {
+    if (this.isFull()) return false;
+    const removed = this.removeObserver(observer.id);
+    if (!removed) return false;
+    removed.takeSeat();
+    this.addPlayer(removed);
+    return true;
+  }
+
+  /**
+   * Seats the observers who asked for it, oldest first, while seats last;
+   * nobody is moved who did not ask. Returns whoever got a seat.
+   */
+  seatWaitingObservers(): Player[] {
+    const seated: Player[] = [];
+    const waiting = this.observers
+      .filter((p) => p.wantsSeat)
+      .sort((a, b) => a.joinedAt - b.joinedAt);
+    for (const observer of waiting) {
+      if (!this.seat(observer)) break;
+      seated.push(observer);
+    }
+    return seated;
+  }
+
+  // -------------------------------------------------------------- chat
+
+  /** Appends a message to the game's chat and returns it. */
+  addChatMessage(sender: Player, channel: ChatChannel, text: string, now: number): ChatMessage {
+    const message: ChatMessage = {
+      id: this.nextChatId++,
+      round: this.currentRound,
+      playerId: sender.id,
+      name: sender.name,
+      observer: sender.isObserver,
+      team: sender.team,
+      channel,
+      text,
+      at: now,
+      duringPlay: this.status === 'playing',
+    };
+    this.chat.push(message);
+    return message;
   }
 
   /**
@@ -154,6 +238,9 @@ export class Room {
     this.emptiedAt = null;
     for (const player of this.players) player.resetForNewGame(now);
     for (const team of this.teams) team.resetForNewGame();
+    // A new game starts a new chat; observers who asked for a seat take one now.
+    this.chat.length = 0;
+    this.seatWaitingObservers();
     this.touch(now);
   }
 
@@ -174,9 +261,10 @@ export class Room {
    * does not restart when its last player is removed.
    */
   lastDisconnectionAt(): number | null {
-    if (this.players.some((p) => p.connected)) return null;
-    if (this.players.length === 0) return this.emptiedAt ?? this.lastActivityAt;
-    return Math.max(...this.players.map((p) => p.disconnectedAt ?? this.createdAt));
+    const everyone = this.everyone;
+    if (everyone.some((p) => p.connected)) return null;
+    if (everyone.length === 0) return this.emptiedAt ?? this.lastActivityAt;
+    return Math.max(...everyone.map((p) => p.disconnectedAt ?? this.createdAt));
   }
 
   toLobbyState(): LobbyState {
@@ -186,6 +274,7 @@ export class Room {
       settings: { ...this.settings },
       players: this.players.map((p) => p.toPublic()),
       teams: this.teams.map((t) => t.toPublic()),
+      observers: this.observers.map((p) => p.toObserverPublic()),
     };
   }
 }

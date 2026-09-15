@@ -1,4 +1,4 @@
-import type { PlayerPublic, TeamId } from '@shared/contract';
+import type { ObserverPublic, PlayerPublic, Role, TeamId } from '@shared/contract';
 import type { PlayerRound } from './player-round.entity';
 
 export interface PlayerProps {
@@ -7,6 +7,8 @@ export interface PlayerProps {
   name: string;
   isHost: boolean;
   joinedAt: number;
+  /** Defaults to a seated player; observers join a running game. */
+  role?: Role;
 }
 
 export class Player {
@@ -16,6 +18,10 @@ export class Player {
   readonly name: string;
   readonly joinedAt: number;
   isHost: boolean;
+  /** Seated player or observer (docs/context/06-v1.1.md -> Observers). */
+  role: Role;
+  /** Observer only: asked for a seat at the next round. */
+  wantsSeat = false;
   /** Team mode: which of the two teams; null in the normal mode. */
   team: TeamId | null = null;
   ready = false;
@@ -31,6 +37,8 @@ export class Player {
   reactionTimes: number[] = [];
   /** Epoch ms until which emotes are refused after a burst; 0 when free. */
   reactionPausedUntil = 0;
+  /** Epoch ms of the last chat message; one per second at most. */
+  lastChatAt = 0;
 
   private constructor(props: PlayerProps) {
     this.id = props.id;
@@ -38,10 +46,15 @@ export class Player {
     this.name = props.name;
     this.isHost = props.isHost;
     this.joinedAt = props.joinedAt;
+    this.role = props.role ?? 'player';
   }
 
   static create(props: PlayerProps): Player {
     return new Player(props);
+  }
+
+  get isObserver(): boolean {
+    return this.role === 'observer';
   }
 
   markConnected(): void {
@@ -69,6 +82,17 @@ export class Player {
     if (!this.connected) this.disconnectedAt = now;
   }
 
+  /** An observer takes a seat: a fresh player whose score starts now. */
+  takeSeat(): void {
+    this.role = 'player';
+    this.wantsSeat = false;
+    this.ready = false;
+    this.totalPoints = 0;
+    this.totalAttempts = 0;
+    this.hintsUsed = 0;
+    this.round = null;
+  }
+
   toPublic(): PlayerPublic {
     return {
       id: this.id,
@@ -77,6 +101,15 @@ export class Player {
       ready: this.ready,
       connected: this.connected,
       team: this.team,
+    };
+  }
+
+  toObserverPublic(): ObserverPublic {
+    return {
+      id: this.id,
+      name: this.name,
+      connected: this.connected,
+      wantsSeat: this.wantsSeat,
     };
   }
 }

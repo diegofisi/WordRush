@@ -68,7 +68,7 @@ export class RoomJanitorService implements OnModuleInit, OnModuleDestroy {
    * they dropped, so the empty room is deleted on the same schedule.
    */
   private removeStaleLobbyPlayers(room: Room, now: number): void {
-    const stale = room.players.filter(
+    const stale = room.everyone.filter(
       (p) =>
         !p.connected &&
         p.disconnectedAt !== null &&
@@ -77,7 +77,10 @@ export class RoomJanitorService implements OnModuleInit, OnModuleDestroy {
     if (stale.length === 0) return;
 
     const lastDropAt = Math.max(...stale.map((p) => p.disconnectedAt ?? now));
-    for (const p of stale) room.removePlayer(p.id);
+    for (const p of stale) {
+      if (p.isObserver) room.removeObserver(p.id);
+      else room.removePlayer(p.id);
+    }
     if (room.isEmpty()) {
       room.emptiedAt = lastDropAt;
       return;

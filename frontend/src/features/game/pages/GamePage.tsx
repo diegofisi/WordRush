@@ -21,9 +21,10 @@ const GameTopBarActions = () => {
   const t = useT();
   const me = useGameStore((state) => state.me);
   const round = useGameStore((state) => state.round);
+  const role = useGameStore((state) => state.role);
   const status = useGameStore((state) => state.status);
   const { requestHint, pending } = useUseHint();
-  if (!me || !round) return null;
+  if (!me || !round || role === 'observer') return null;
   const hintState = !round.hintAvailable ? 'off' : me.hintUsed ? 'used' : 'available';
   const onHint = async () => {
     const result = await requestHint();
@@ -56,6 +57,7 @@ export const GamePage = () => {
   const connection = useSessionStore((state) => state.connection);
   const round = useGameStore((state) => state.round);
   const settings = useGameStore((state) => state.settings);
+  const role = useGameStore((state) => state.role);
   const teamInfo = useGameStore((state) => state.teamInfo);
   const [teamA, teamB] = teamInfo;
 
@@ -75,6 +77,11 @@ export const GamePage = () => {
               code={session.roomCode}
               parts={[
                 round ? t.common.roundOf(round.round, round.totalRounds) : null,
+                role === 'observer' ? (
+                  <span className="rounded-full bg-surface-2 px-3 py-1 text-xs font-bold text-ink-2">
+                    {t.game.observing}
+                  </span>
+                ) : null,
                 // Team mode: the rounds won so far, by team name.
                 round?.mode === 'teams' && teamA && teamB ? (
                   <span className="font-semibold text-ink">

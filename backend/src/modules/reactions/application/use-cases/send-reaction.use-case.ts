@@ -30,7 +30,7 @@ export class SendReactionUseCase {
 
   execute(roomCode: string, playerId: string, emote: Emote): void {
     const room = this.rooms.findByCode(roomCode);
-    const player = room?.findPlayer(playerId);
+    const player = room?.findAnyone(playerId);
     if (!room || !player) throw new DomainException('not_in_room');
 
     const now = this.clock.now();

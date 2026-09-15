@@ -73,9 +73,23 @@ export function toTeammateRows(player: Player): TeammateRows {
   };
 }
 
+/** What an observer gets as `me`: nothing to type, nothing running. */
+function observerSelf(room: Room, now: number): SelfState {
+  return {
+    rows: [],
+    secondsLeft: 0,
+    at: now,
+    solved: false,
+    finished: true,
+    hintUsed: false,
+    hint: null,
+    penaltySeconds: 0,
+  };
+}
+
 export function toRoundState(room: Room, player: Player, now: number): RoundState {
   const teammates =
-    player.team === null
+    player.team === null || player.isObserver
       ? []
       : room
           .members(player.team)
@@ -90,10 +104,11 @@ export function toRoundState(room: Room, player: Player, now: number): RoundStat
     initialSeconds: room.settings.initialSeconds,
     startedAt: room.roundStartedAt,
     hintAvailable: room.settings.hintEnabled,
-    me: toSelfState(player, now),
+    role: player.role,
+    me: player.isObserver ? observerSelf(room, now) : toSelfState(player, now),
     players: room.players.map((p) => toPlayerProgress(p, now)),
     teams: room.teams.map((team) => toTeamRoundState(team, now)),
-    myTeam: player.team,
+    myTeam: player.isObserver ? null : player.team,
     teammates,
   };
 }
@@ -119,8 +134,9 @@ export function toFullState(room: Room, player: Player, now: number): FullState 
   const lastRoundEnd =
     showLastEnd && room.lastRoundEnd ? withRemainingCountdown(room.lastRoundEnd, room, now) : null;
   return {
+    role: player.role,
     lobby: room.toLobbyState(),
-    round: hasRound && player.round ? toRoundState(room, player, now) : null,
+    round: hasRound && (player.round || player.isObserver) ? toRoundState(room, player, now) : null,
     lastRoundEnd,
   };
 }

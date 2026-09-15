@@ -19,11 +19,17 @@ export class JoinRoomUseCase {
     private readonly bus: RoomEventsBus,
   ) {}
 
+  /**
+   * A lobby hands out a seat; a running game hands out an observer's place
+   * instead (docs/context/06-v1.1.md -> Observers), two at most.
+   */
   execute(dto: JoinRoomDto): RoomSession {
     const room = this.rooms.findByCode(dto.roomCode);
     if (!room) throw new DomainException('room_not_found');
-    if (room.status !== 'lobby') throw new DomainException('game_in_progress');
-    if (room.isFull()) throw new DomainException('room_full');
+    const observing = room.status !== 'lobby';
+    if (observing ? !room.hasObserverRoom() : room.isFull()) {
+      throw new DomainException('room_full');
+    }
     if (room.hasName(dto.name)) throw new DomainException('name_taken');
 
     const now = this.clock.now();
@@ -33,8 +39,10 @@ export class JoinRoomUseCase {
       name: dto.name,
       isHost: false,
       joinedAt: now,
+      role: observing ? 'observer' : 'player',
     });
-    room.addPlayer(player);
+    if (observing) room.addObserver(player);
+    else room.addPlayer(player);
     room.touch(now);
     this.bus.publish({ roomCode: room.code, event: 'lobby:update', payload: room.toLobbyState() });
     return { room, player };

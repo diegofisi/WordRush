@@ -6,6 +6,7 @@ import { EnsureNotInRoomUseCase } from './application/use-cases/ensure-not-in-ro
 import { JoinRoomUseCase } from './application/use-cases/join-room.use-case';
 import { LeaveRoomUseCase } from './application/use-cases/leave-room.use-case';
 import { MarkDisconnectedUseCase } from './application/use-cases/mark-disconnected.use-case';
+import { SitObserverUseCase } from './application/use-cases/observer.use-cases';
 import { RejoinRoomUseCase } from './application/use-cases/rejoin-room.use-case';
 import { RestartRoomUseCase } from './application/use-cases/restart-room.use-case';
 import { SetReadyUseCase } from './application/use-cases/set-ready.use-case';
@@ -32,6 +33,7 @@ import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-
     AssignTeamUseCase,
     CustomizeTeamUseCase,
     ResetTeamGamesUseCase,
+    SitObserverUseCase,
     UpdateRoomSettingsUseCase,
     RestartRoomUseCase,
     LeaveRoomUseCase,
@@ -53,6 +55,7 @@ import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-
     AssignTeamUseCase,
     CustomizeTeamUseCase,
     ResetTeamGamesUseCase,
+    SitObserverUseCase,
   ],
 })
 export class RoomsModule {}

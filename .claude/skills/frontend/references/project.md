@@ -70,7 +70,7 @@ chapter for its principles, not for its API.
 | Kind | Path | Slices |
 |---|---|---|
 | **core** | `src/core/` | `session` — player identity (name, playerId, roomCode, token in `localStorage` under `wordrush.session`), the socket connection and its lifecycle |
-| **features** | `src/features/` | `lobby` (create room form, join by code, waiting room, team slots in team mode), `game` (clock, board, keyboard with Ñ, rivals panel or team panel, live feed, hint, emotes, score preview), `results` (round breakdown or team cards, accumulated table, final table) |
+| **features** | `src/features/` | `lobby` (create room form, join by code, waiting room, team slots in team mode), `game` (clock, board, keyboard with Ñ, rivals panel or team panel, live feed, hint, emotes, score preview), `results` (round breakdown or team cards, accumulated table, final table), `chat` (messages, channel switch, phone sheet; embedded by game and results) |
 
 `src/shared/`:
 
@@ -92,6 +92,8 @@ chapter for its principles, not for its API.
 - `@/shared/i18n` (`useT`), `@/shared/stores/useUiStore` (theme + UI language),
   `@/shared/stores/useToastStore`.
 - `@/shared/**` — always.
+- `@/features/chat` — `ChatContainer` and `useChatStore`: the chat is one slice that the
+  game and results screens embed (docs/context/06-v1.1.md -> Chat).
 
 Anything else from another slice: duplicate a minimal local hook/model.
 
@@ -110,6 +112,8 @@ endpoint** and never gets a React Query hook:
   `game:end`, `lobby:update`; team mode adds `teammate:progress` (a teammate's
   rows with letters), `team:hint` (the team's reveal) and `team:clocks`.
 - `useResultsStore` — `round:end`, `game:end`, `round:start`, `lobby:update`.
+- `useChatStore` — `chat:message`; refetches `chat:history` on `round:end`, on my own
+  finishing `player:progress` and on `team:clocks` (what was hidden while I guessed).
 
 Each store's `bind()` is guarded by a module-level flag so the listeners attach
 once despite StrictMode's double-invoke, and they are never removed: these are

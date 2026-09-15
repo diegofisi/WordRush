@@ -10,7 +10,9 @@ import {
   type GuessAck,
   type HintAck,
   type LobbyState,
+  type ObserverPublic,
   type OwnRow,
+  type Role,
   type PlayerProgress,
   type RoomSettings,
   type RoundInfo,
@@ -48,6 +50,8 @@ interface Announced {
 interface GameState {
   status: GameStatus;
   round: RoundInfo | null;
+  /** Seated or observing this round. */
+  role: Role;
   settings: RoomSettings | null;
   roster: Record<string, RosterEntry>;
   myId: string | null;
@@ -58,6 +62,8 @@ interface GameState {
   left: Record<string, string>;
   /** Team mode: both teams' names, colours and rounds won (from the lobby). */
   teamInfo: TeamPublic[];
+  /** Who watches the room (from the lobby); my own seat wish lives here too. */
+  observers: ObserverPublic[];
   /** Team mode: the shared clocks and solves this round, keyed by team id. */
   teams: Partial<Record<TeamId, TeamRoundState>>;
   myTeam: TeamId | null;
@@ -138,6 +144,7 @@ const teamsOf = (teams: TeamRoundState[]): Partial<Record<TeamId, TeamRoundState
 const initialState: GameState = {
   status: 'idle',
   round: null,
+  role: 'player',
   settings: null,
   roster: {},
   myId: null,
@@ -145,6 +152,7 @@ const initialState: GameState = {
   players: {},
   left: {},
   teamInfo: [],
+  observers: [],
   teams: {},
   myTeam: null,
   teammates: {},
@@ -184,6 +192,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
     set({
       status,
       round: roundInfoOf(round),
+      role: round.role,
       me: round.me,
       players: Object.fromEntries(round.players.map((player) => [player.playerId, player])),
       left: {},
@@ -206,6 +215,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       settings: snapshot.lobby.settings,
       roster: rosterOf(snapshot.lobby),
       teamInfo: snapshot.lobby.teams,
+      observers: snapshot.lobby.observers,
       myId: useSessionStore.getState().session?.playerId ?? null,
     });
     if (snapshot.round) {
@@ -399,6 +409,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
           roster: { ...leftRoster(state.left), ...rosterOf(lobby) },
           settings: lobby.settings,
           teamInfo: lobby.teams,
+          observers: lobby.observers,
         })),
       );
       socket.on('player:left', (payload) => {

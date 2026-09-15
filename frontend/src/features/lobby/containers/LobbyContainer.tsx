@@ -9,11 +9,13 @@ import { homeWithCode, PATHS, pathForStatus } from '@/shared/routes/paths';
 import { toast } from '@/shared/stores/useToastStore';
 
 import { useLeaveRoom } from '../api/leave-room/useLeaveRoom';
+import { useSitObserver } from '../api/observer-sit/useSitObserver';
 import { useSetReady } from '../api/set-ready/useSetReady';
 import { useStartGame } from '../api/start-game/useStartGame';
 import { useTeamActions } from '../api/team/useTeamActions';
 import { useUpdateSettings } from '../api/update-settings/useUpdateSettings';
 import { LobbyActions } from '../components/LobbyActions';
+import { ObserverArea } from '../components/ObserverArea';
 import { PlayerSlots } from '../components/PlayerSlots';
 import { RoomCodeHeader } from '../components/RoomCodeHeader';
 import { RoomSettingsDialog } from '../components/RoomSettingsDialog';
@@ -31,6 +33,7 @@ export const LobbyContainer = () => {
   const { leaveRoom } = useLeaveRoom();
   const { updateSettings, pending: saving } = useUpdateSettings();
   const teamActions = useTeamActions();
+  const { sit, pending: sitting } = useSitObserver();
   const [rulesOpen, setRulesOpen] = useState(false);
 
   // Pushed transitions (round:start, or a lobby:update with a new status) move everyone along.
@@ -111,8 +114,16 @@ export const LobbyContainer = () => {
         ) : (
           <PlayerSlots t={t} players={lobby.players} capacity={lobby.settings.capacity} />
         )}
+        <ObserverArea
+          t={t}
+          observers={lobby.observers}
+          freeSeats={lobby.freeSeats}
+          pending={sitting}
+          onSit={(wants) => void sit(wants).then(report)}
+        />
         <LobbyActions
           t={t}
+          observer={lobby.role === 'observer'}
           isHost={lobby.isHost}
           hostName={lobby.hostName}
           isReady={lobby.me?.ready ?? false}

@@ -18,6 +18,15 @@ export class StartRoundUseCase {
 
   execute(room: Room, now: number): void {
     const { language, wordLength, initialSeconds } = room.settings;
+    // Observers who asked for a seat get one now, while seats last; the
+    // roster everybody holds must know before the boards appear.
+    if (room.seatWaitingObservers().length > 0) {
+      this.bus.publish({
+        roomCode: room.code,
+        event: 'lobby:update',
+        payload: room.toLobbyState(),
+      });
+    }
     const word = this.picker.pick(language, wordLength, new Set(room.usedWords));
     room.word = word;
     room.usedWords.push(word);
@@ -38,7 +47,8 @@ export class StartRoundUseCase {
     }
 
     // `me` differs per player, so the payload is addressed socket by socket.
-    for (const player of room.players) {
+    // Observers get the same boards with a neutral `me`.
+    for (const player of room.everyone) {
       if (!player.connected) continue;
       this.bus.publish({
         roomCode: room.code,

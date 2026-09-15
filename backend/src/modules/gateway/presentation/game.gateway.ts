@@ -9,10 +9,19 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { type Ack, type GuessAck, type HintAck, type SessionAck } from '@shared/contract';
+import {
+  type Ack,
+  type ChatHistoryAck,
+  type GuessAck,
+  type HintAck,
+  type SessionAck,
+} from '@shared/contract';
 import { CLOCK, type Clock } from '@shared/domain/clock';
 import { DomainException } from '@shared/domain/domain.exception';
 import { OutboundEvent, RoomEventsBus } from '@shared/events/room-events.bus';
+import { ChatSendDto } from '@modules/chat/application/dtos/chat.dto';
+import { ChatHistoryUseCase } from '@modules/chat/application/use-cases/chat-history.use-case';
+import { SendChatUseCase } from '@modules/chat/application/use-cases/send-chat.use-case';
 import { GuessDto } from '@modules/game/application/dtos/guess.dto';
 import { SettleRoundUseCase } from '@modules/game/application/use-cases/settle-round.use-case';
 import { StartGameUseCase } from '@modules/game/application/use-cases/start-game.use-case';
@@ -22,6 +31,7 @@ import { ReactionDto } from '@modules/reactions/application/dtos/reaction.dto';
 import { SendReactionUseCase } from '@modules/reactions/application/use-cases/send-reaction.use-case';
 import { CreateRoomDto } from '@modules/rooms/application/dtos/create-room.dto';
 import { JoinRoomDto } from '@modules/rooms/application/dtos/join-room.dto';
+import { ObserverSitDto } from '@modules/rooms/application/dtos/observer.dto';
 import { RejoinRoomDto } from '@modules/rooms/application/dtos/rejoin-room.dto';
 import { SetReadyDto } from '@modules/rooms/application/dtos/set-ready.dto';
 import {
@@ -38,6 +48,7 @@ import { EnsureNotInRoomUseCase } from '@modules/rooms/application/use-cases/ens
 import { JoinRoomUseCase } from '@modules/rooms/application/use-cases/join-room.use-case';
 import { LeaveRoomUseCase } from '@modules/rooms/application/use-cases/leave-room.use-case';
 import { MarkDisconnectedUseCase } from '@modules/rooms/application/use-cases/mark-disconnected.use-case';
+import { SitObserverUseCase } from '@modules/rooms/application/use-cases/observer.use-cases';
 import { RejoinRoomUseCase } from '@modules/rooms/application/use-cases/rejoin-room.use-case';
 import { RestartRoomUseCase } from '@modules/rooms/application/use-cases/restart-room.use-case';
 import { SetReadyUseCase } from '@modules/rooms/application/use-cases/set-ready.use-case';
@@ -98,6 +109,9 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     private readonly submitGuess: SubmitGuessUseCase,
     private readonly useHint: UseHintUseCase,
     private readonly sendReaction: SendReactionUseCase,
+    private readonly sendChat: SendChatUseCase,
+    private readonly chatHistory: ChatHistoryUseCase,
+    private readonly sitObserver: SitObserverUseCase,
   ) {}
 
   afterInit(): void {
@@ -250,6 +264,34 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     // No limiter here: the burst rule lives in the use case, which owns the
     // per-player window (a socket is not a player; rejoining must not reset it).
     this.sendReaction.execute(roomCode, playerId, dto.emote);
+    return OK_EMPTY;
+  }
+
+  // ----------------------------------------------------------------- chat
+
+  @SubscribeMessage('chat:send')
+  onChatSend(@ConnectedSocket() client: GameSocket, @MessageBody() dto: ChatSendDto): EmptyAck {
+    const { roomCode, playerId } = this.requireSession(client);
+    // The one-per-second rule lives in the use case, keyed by person.
+    this.sendChat.execute(roomCode, playerId, dto.channel, dto.text);
+    return OK_EMPTY;
+  }
+
+  @SubscribeMessage('chat:history')
+  onChatHistory(@ConnectedSocket() client: GameSocket): Ack<ChatHistoryAck> {
+    const { roomCode, playerId } = this.requireSession(client);
+    return { ok: true, ...this.chatHistory.execute(roomCode, playerId) };
+  }
+
+  // ------------------------------------------------------------ observers
+
+  @SubscribeMessage('observer:sit')
+  onObserverSit(
+    @ConnectedSocket() client: GameSocket,
+    @MessageBody() dto: ObserverSitDto,
+  ): EmptyAck {
+    const { roomCode, playerId } = this.requireSession(client);
+    this.sitObserver.execute(roomCode, playerId, dto.wants);
     return OK_EMPTY;
   }
 

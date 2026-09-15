@@ -27,7 +27,7 @@ export class EnsureNotInRoomUseCase {
     if (!roomCode || !playerId) return;
     const room = this.rooms.findByCode(roomCode);
     if (!room || room.status === 'finished') return;
-    if (!room.findPlayer(playerId)) return;
+    if (!room.findAnyone(playerId)) return;
     throw new DomainException('already_in_room');
   }
 }

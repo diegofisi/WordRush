@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { ChatContainer } from '@/features/chat';
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { PageLoading } from '@/shared/components/ui/PageState';
 import { useT } from '@/shared/i18n';
@@ -125,22 +126,31 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
           <p className="m-0 text-[13px] text-ink-3">{t.results.timeNote(initialSeconds)}</p>
         ) : null}
       </div>
-      {teamMode ? (
-        <TeamStandingsList
-          t={t}
-          standings={results.teamStandings}
-          title={results.isFinal ? t.results.finalTable : t.results.accumulated}
-          subtitle={t.results.afterRounds(results.round, results.totalRounds)}
+      <div className="flex min-w-0 flex-col gap-4">
+        {teamMode ? (
+          <TeamStandingsList
+            t={t}
+            standings={results.teamStandings}
+            title={results.isFinal ? t.results.finalTable : t.results.accumulated}
+            subtitle={t.results.afterRounds(results.round, results.totalRounds)}
+          />
+        ) : (
+          <StandingsList
+            t={t}
+            standings={results.standings}
+            title={results.isFinal ? t.results.finalTable : t.results.accumulated}
+            subtitle={t.results.afterRounds(results.round, results.totalRounds)}
+            showDetails={results.isFinal}
+          />
+        )}
+        {/* Between rounds everybody talks; the round's talk is kept here. */}
+        <ChatContainer
+          teamMode={teamMode}
+          myTeam={myTeam}
+          canWriteAll
+          className="h-90 max-h-[60vh]"
         />
-      ) : (
-        <StandingsList
-          t={t}
-          standings={results.standings}
-          title={results.isFinal ? t.results.finalTable : t.results.accumulated}
-          subtitle={t.results.afterRounds(results.round, results.totalRounds)}
-          showDetails={results.isFinal}
-        />
-      )}
+      </div>
     </div>
   );
 };

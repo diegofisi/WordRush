@@ -25,6 +25,7 @@ const lobby = (over: Partial<LobbyState> = {}): LobbyState => ({
     { id: 'a', name: '', color: 'violet', roundsWon: 1, gamesWon: 0 },
     { id: 'b', name: 'Lobos', color: 'green', roundsWon: 0, gamesWon: 2 },
   ],
+  observers: [{ id: 'o1', name: 'Olga', connected: true, wantsSeat: true }],
   ...over,
 });
 
@@ -39,6 +40,20 @@ describe('toLobbyViewModel · teams', () => {
     expect(vm.teams.map((team) => team.isMine)).toEqual([true, false]);
     expect(vm.teams[1]?.name).toBe('Lobos');
     expect(vm.teams[1]?.gamesWon).toBe(2);
+  });
+
+  it('knows whether I sit or observe', () => {
+    expect(toLobbyViewModel(lobby(), 'o1')).toMatchObject({
+      role: 'observer',
+      me: null,
+      freeSeats: 5,
+    });
+    expect(toLobbyViewModel(lobby(), 'p1').role).toBe('player');
+    expect(toLobbyViewModel(lobby(), 'p1').observers[0]).toMatchObject({
+      name: 'Olga',
+      wantsSeat: true,
+      isMe: false,
+    });
   });
 
   it('has no teams in the normal mode', () => {

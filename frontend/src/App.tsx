@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import { RequireSession } from '@/core/session/components/RequireSession';
 import { SessionReplacedOverlay } from '@/core/session/components/SessionReplacedOverlay';
+import { useChatStore } from '@/features/chat';
 import { useSessionBootstrap } from '@/core/session/hooks/useSessionBootstrap';
 import { useGameStore } from '@/features/game/stores/useGameStore';
 import { GamePage } from '@/features/game/pages/GamePage';
@@ -46,6 +47,7 @@ const Bootstrap = () => {
     useLobbyStore.getState().bind();
     useGameStore.getState().bind();
     useResultsStore.getState().bind();
+    useChatStore.getState().bind();
   }, []);
   useSessionBootstrap();
   return null;

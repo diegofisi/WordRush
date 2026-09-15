@@ -1,6 +1,7 @@
 import type {
   GameMode,
   LobbyState,
+  Role,
   RoomSettings,
   RoomStatus,
   TeamColor,
@@ -29,6 +30,14 @@ export interface LobbyTeamViewModel {
   isMine: boolean;
 }
 
+export interface LobbyObserverViewModel {
+  id: string;
+  name: string;
+  connected: boolean;
+  wantsSeat: boolean;
+  isMe: boolean;
+}
+
 export interface LobbyViewModel {
   code: string;
   status: RoomStatus;
@@ -37,11 +46,17 @@ export interface LobbyViewModel {
   players: LobbyPlayerViewModel[];
   /** Both teams in team mode; empty otherwise. */
   teams: LobbyTeamViewModel[];
+  /** Joined a running game (docs/context/06-v1.1.md -> Observers). */
+  observers: LobbyObserverViewModel[];
+  /** Whether I hold a seat or watch. */
+  role: Role;
   hostName: string;
   isHost: boolean;
+  /** Null while I observe. */
   me: LobbyPlayerViewModel | null;
   readyCount: number;
   playerCount: number;
+  freeSeats: number;
 }
 
 export const toLobbyViewModel = (dto: LobbyState, myId: string | null): LobbyViewModel => {
@@ -64,6 +79,13 @@ export const toLobbyViewModel = (dto: LobbyState, myId: string | null): LobbyVie
     members: players.filter((player) => player.team === team.id),
     isMine: me?.team === team.id,
   }));
+  const observers = (dto.observers ?? []).map((observer) => ({
+    id: observer.id,
+    name: observer.name,
+    connected: observer.connected,
+    wantsSeat: observer.wantsSeat,
+    isMe: observer.id === myId,
+  }));
   return {
     code: dto.code,
     status: dto.status,
@@ -71,10 +93,13 @@ export const toLobbyViewModel = (dto: LobbyState, myId: string | null): LobbyVie
     mode: dto.settings.mode,
     players,
     teams,
+    observers,
+    role: observers.some((observer) => observer.isMe) ? 'observer' : 'player',
     hostName: players.find((player) => player.isHost)?.name ?? '',
     isHost: me?.isHost ?? false,
     me,
     readyCount: players.filter((player) => player.ready).length,
     playerCount: players.length,
+    freeSeats: Math.max(0, dto.settings.capacity - players.length),
   };
 };
