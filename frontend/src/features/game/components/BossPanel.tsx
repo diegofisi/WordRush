@@ -1,3 +1,4 @@
+import { BOSS } from '@/shared/contract';
 import type { Dictionary } from '@/shared/i18n';
 import { cn } from '@/shared/lib/cn';
 import { formatClock } from '@/shared/lib/format';
@@ -27,7 +28,7 @@ const statusOf = (t: Dictionary, boss: BossViewModel) => {
   if (boss.solved) return t.game.bossSolvedIt;
   if (boss.defeated) return t.game.bossDown;
   if (boss.decision) return t.game.bossAction[boss.decision.action];
-  return t.game.bossAttempt(boss.attempt + 1);
+  return t.game.bossAttempt(boss.attempt + 1, BOSS.maxAttempts);
 };
 
 /**
@@ -133,7 +134,8 @@ export const BossPanel = ({ t, boss, roomCode, compact = false }: BossPanelProps
         <div className="flex flex-col gap-1 border-t border-line pt-2">
           <span className="label text-ink-3">{t.game.bossThinking}</span>
           <span className="text-[13px] font-semibold text-ink">
-            {t.game.bossAttempt(boss.attempt + 1)} · {t.game.bossAction[boss.decision.action]}
+            {t.game.bossAttempt(boss.attempt + 1, BOSS.maxAttempts)} ·{' '}
+            {t.game.bossAction[boss.decision.action]}
           </span>
           <div className="flex flex-wrap gap-x-3 font-mono text-[10px] text-ink-3">
             <span>{t.game.bossConfidence(boss.decision.confidence)}</span>

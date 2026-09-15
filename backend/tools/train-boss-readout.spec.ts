@@ -64,11 +64,11 @@ it('trains the boss readout', async () => {
   }
 
   /*
-   * Half the cores by default: this runs on somebody's desktop while they are
-   * using it, and collection is long enough that taking the whole machine is
-   * rude. `BOSS_WORKERS` overrides it.
+   * Seven in ten cores by default: this runs on somebody's desktop while they
+   * are using it, and collection is long enough that taking the whole machine
+   * is rude. `BOSS_WORKERS` overrides it.
    */
-  const workers = Math.max(1, Number(process.env.BOSS_WORKERS ?? Math.floor(cpus().length / 2)));
+  const workers = Math.max(1, Number(process.env.BOSS_WORKERS ?? Math.floor(cpus().length * 0.7)));
   if (X.length === 0) console.log(`Collecting ${SAMPLES} boards on ${workers} workers...`);
   const startedAt = Date.now();
   const per = Math.ceil(SAMPLES / workers);

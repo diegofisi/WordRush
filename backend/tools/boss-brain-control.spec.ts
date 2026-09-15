@@ -1,129 +1,122 @@
 /**
- * The control experiment: does the connectome actually do anything?
+ * The control experiment: does the fly do anything?
  *
  *   npx jest --roots tools --testTimeout 3600000 -t "control"
  *
- * The same readout, the same stimulus, the same word list. The only change is
- * that every synapse is cut, so the readout sees a brain that cannot propagate
- * anything. If she played the same way silenced, the brain would be decoration
- * and this file would say so.
+ * Three flies play the same rounds — same words, same seeds, same eight
+ * candidates offered each turn:
  *
- * Measured on 2026-09-13, before the solver was taken out of her play: intact
- * 3.55 attempts, silenced 3.45, both solving 40/40. The connectome changed what
- * she played in 21 of 40 rounds and made her no better at the game, because the
- * candidate filter was doing the playing. That measurement is why the filter is
- * gone and why this file now plays her the way the game does.
+ *   brain intact   her readout chooses among the eight, as the game does
+ *   synapses cut   every weight zeroed; the readout sees silence
+ *   random choice  a coin picks among the same eight, no brain at all
+ *
+ * The comparison that matters is the first against the third. The game's
+ * filter (docs/context/06-boss-mode.md) does the deduction on her behalf, and
+ * a fly choosing at random after that filter already solves most rounds. If
+ * her brain does not beat the coin on the same candidates, it is decorating a
+ * game the filter is winning. The silenced fly is kept because it was the
+ * original control and because it shows what "no brain" looks like on the
+ * panel: with zero input the readout always says the same thing.
+ *
+ * Measured history, all in docs/context/07-what-the-fly-can-do.md:
+ *   2026-09-13, filter + policy, 8 attempts: intact 3.55, cut 3.45 attempts,
+ *     40/40 both — the brain contributed nothing.
+ *   2026-09-13, no filter at all: 0/30 solved, 0/30 rounds differed.
+ *   2026-09-14, the game as shipped now (filter, 8 candidates, 4 attempts),
+ *     120 rounds, seeds mixed: intact 43/120, cut 41/120, coin 49/120;
+ *     intact and cut differed in 119/120. Her choice is real and it does not
+ *     beat a coin.
+ *
+ * Rounds are independent, so they run on 70 % of the cores.
  */
 import { existsSync, readFileSync } from 'node:fs';
+import { cpus } from 'node:os';
 import { join } from 'node:path';
+import { Worker } from 'node:worker_threads';
 import esWords from '@modules/words/data/es.json';
 import { computeFeedback } from '@modules/game/domain/services/color-feedback';
-import { loadConnectome } from '../src/modules/boss/domain/services/connectome';
-import { LifNetwork, makeRandom } from '../src/modules/boss/domain/services/lif-network';
-import {
-  applyBoard,
-  buildWiring,
-  type LetterState,
-  type SlotState,
-} from '../src/modules/boss/domain/services/boss-wiring';
-import {
-  LetterReadout,
-  scoreWord,
-  type ReadoutWeights,
-} from '../src/modules/boss/domain/services/letter-readout';
+import { BOSS } from '@shared/contract';
+import { candidatesFrom, drawCandidates } from '../src/modules/boss/domain/services/boss-solver';
 
 jest.setTimeout(60 * 60 * 1000);
 
-const ROUNDS = Number(process.env.BOSS_CONTROL_ROUNDS ?? 24);
-// The same numbers the game plays with.
-const WINDOW_MS = 900;
-const SETTLE_MS = 60;
+const ROUNDS = Number(process.env.BOSS_CONTROL_ROUNDS ?? 30);
+const WORKERS = Math.max(1, Number(process.env.BOSS_WORKERS ?? Math.floor(cpus().length * 0.7)));
 
-it('control: silencing the connectome changes how she plays', () => {
+interface RoundOutcome {
+  /** Attempts to solve, or maxAttempts + 1 when she did not. */
+  intact: number;
+  cut: number;
+  coin: number;
+  /** Whether the intact and cut flies ever played a different word. */
+  differed: boolean;
+  intactWords: string[];
+  cutWords: string[];
+  coinWords: string[];
+}
+
+it('control: her brain against a coin on the same candidates', async () => {
   const file = join(__dirname, '..', 'src', 'modules', 'boss', 'data', 'readout.json');
   if (!existsSync(file)) throw new Error('train the readout first');
-  const readout = new LetterReadout(JSON.parse(readFileSync(file, 'utf8')) as ReadoutWeights);
+  expect(JSON.parse(readFileSync(file, 'utf8')).inputs).toBeGreaterThan(0);
 
-  const live = loadConnectome();
-  const wiring = buildWiring(live);
-  const rates = new Float32Array(wiring.readout.length);
+  const per = Math.ceil(ROUNDS / WORKERS);
+  const parts = await Promise.all(
+    Array.from({ length: WORKERS }, (_, k) => {
+      const from = k * per;
+      const to = Math.min(ROUNDS, from + per);
+      return new Promise<RoundOutcome[]>((resolve, reject) => {
+        if (from >= to) return resolve([]);
+        const worker = new Worker(join(__dirname, 'boss-control.worker.js'), {
+          workerData: { from, to, maxAttempts: BOSS.maxAttempts, candidates: BOSS.candidates },
+        });
+        worker.on('message', resolve);
+        worker.on('error', reject);
+      });
+    }),
+  );
+  const outcomes = parts.flat();
+  expect(outcomes).toHaveLength(ROUNDS);
 
-  // The silenced brain is the same object with every weight zeroed.
-  const cut = new Float32Array(live.weights.length);
-  const silenced = { ...live, weights: cut };
+  const max = BOSS.maxAttempts;
+  const solved = (pick: (o: RoundOutcome) => number) =>
+    outcomes.filter((o) => pick(o) <= max).length;
+  const mean = (pick: (o: RoundOutcome) => number) =>
+    outcomes.reduce((a, o) => a + pick(o), 0) / outcomes.length;
+  const pct = (n: number) => ((n / ROUNDS) * 100).toFixed(1);
 
-  // She types from the whole dictionary, exactly as a human does.
-  const guessable = [...new Set([...esWords.allowed, ...esWords.answers])];
-
-  const play = (brain: typeof live, seed: number) => {
-    const answers = esWords.answers;
-    const rnd = makeRandom(seed);
-    const answer = answers[(rnd() * answers.length) | 0];
-    const played = new Set<string>();
-    const letters = new Map<string, LetterState>();
-    const slots: SlotState[] = ['unknown', 'unknown', 'unknown', 'unknown', 'unknown'];
-
-    for (let attempt = 1; attempt <= 8; attempt += 1) {
-      const net = new LifNetwork(brain, makeRandom(seed * 31 + attempt));
-      applyBoard(wiring, slots, letters);
-      net.reset();
-      net.run(wiring.channels, SETTLE_MS);
-      net.resetCounts();
-      net.run(wiring.channels, WINDOW_MS);
-      net.ratesOf(wiring.readout, WINDOW_MS, rates);
-      readout.run(rates);
-
-      // Exactly what the game does: every unplayed word is legal, and her
-      // readout alone picks between them.
-      let word = guessable[0];
-      let best = -Infinity;
-      for (const option of guessable) {
-        if (played.has(option)) continue;
-        const score = scoreWord(option, readout.wanted);
-        if (score > best) {
-          best = score;
-          word = option;
-        }
-      }
-      played.add(word);
-
-      const feedback = computeFeedback(word, answer);
-      if (word === answer) return attempt;
-      for (let i = 0; i < feedback.colors.length; i += 1) {
-        const colour = feedback.colors[i];
-        if (colour === 'green') slots[i] = 'green';
-        else if (slots[i] !== 'green') slots[i] = colour === 'yellow' ? 'yellow' : 'gray';
-        if (colour === 'gray') {
-          if (!letters.has(word[i])) letters.set(word[i], 'absent');
-        } else {
-          letters.set(word[i], 'present');
-        }
-      }
-    }
-    return 9;
-  };
-
-  const real: number[] = [];
-  const dead: number[] = [];
-  for (let r = 0; r < ROUNDS; r += 1) {
-    const seed = 5000 + r;
-    real.push(play(live, seed));
-    dead.push(play(silenced, seed));
+  console.log(
+    `  ${ROUNDS} rounds, ${max} attempts, ${BOSS.candidates} candidates a turn, same words and seeds for all three:`,
+  );
+  console.log(
+    `    brain intact  : solved ${solved((o) => o.intact)}/${ROUNDS} (${pct(solved((o) => o.intact))}%), ${mean((o) => o.intact).toFixed(2)} attempts`,
+  );
+  console.log(
+    `    synapses cut  : solved ${solved((o) => o.cut)}/${ROUNDS} (${pct(solved((o) => o.cut))}%), ${mean((o) => o.cut).toFixed(2)} attempts`,
+  );
+  console.log(
+    `    coin toss     : solved ${solved((o) => o.coin)}/${ROUNDS} (${pct(solved((o) => o.coin))}%), ${mean((o) => o.coin).toFixed(2)} attempts`,
+  );
+  console.log(
+    `    rounds where intact and cut played different words: ${outcomes.filter((o) => o.differed).length}/${ROUNDS}`,
+  );
+  // Every round, so a suspicious total can be checked against its parts.
+  const show = (o: RoundOutcome, k: keyof RoundOutcome, ws: string[]) =>
+    `${String(o[k]).padStart(2)} ${ws.join(' ').padEnd(30)}`;
+  for (const [i, o] of outcomes.entries()) {
+    console.log(
+      `    r${String(i).padStart(2, '0')}  intact ${show(o, 'intact', o.intactWords)} cut ${show(o, 'cut', o.cutWords)} coin ${show(o, 'coin', o.coinWords)}`,
+    );
   }
 
-  const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
-  const solved = (xs: number[]) => xs.filter((x) => x <= 8).length;
-
-  console.log(`  ${ROUNDS} rounds, same words and same seeds for both:`);
-  console.log(
-    `    brain intact  : solved ${solved(real)}/${ROUNDS}, ${mean(real).toFixed(2)} attempts`,
-  );
-  console.log(
-    `    synapses cut  : solved ${solved(dead)}/${ROUNDS}, ${mean(dead).toFixed(2)} attempts`,
-  );
-  const differed = real.filter((value, index) => value !== dead[index]).length;
-  console.log(`    rounds that played out differently: ${differed}/${ROUNDS}`);
-
-  // The claim is dependence, not superiority of biology: the brain has to matter.
-  expect(differed).toBeGreaterThan(0);
+  // The claim is that she does *something*: her choice must at least differ
+  // from a dead brain's. Whether it beats the coin is reported, not asserted —
+  // that number is the honest measure of her, and it goes on her page.
+  expect(outcomes.filter((o) => o.differed).length).toBeGreaterThan(0);
 });
+
+// Keep the word-list types honest for the worker's sake.
+void computeFeedback;
+void candidatesFrom;
+void drawCandidates;
+void esWords;

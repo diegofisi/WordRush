@@ -58,7 +58,9 @@ export class EndRoundUseCase {
         },
         initialSeconds,
         hintEnabled,
-        teamBonus,
+        // The bonus is the team's for beating her; she never collects it.
+        player.isBot ? 0 : teamBonus,
+        !player.isBot,
       );
       player.totalPoints += result.roundPoints;
       player.totalAttempts += result.attempt;

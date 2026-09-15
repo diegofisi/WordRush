@@ -135,7 +135,7 @@ export const es = {
     bossStart: (n: number) => `inicio ${n} s`,
     bossDamage: (n: number) => `equipo −${n} s`,
     bossForfeited: (n: number) => `letras +${n} s`,
-    bossAttempt: (n: number) => `intento ${n} de 8`,
+    bossAttempt: (n: number, of: number) => `intento ${n} de ${of}`,
     bossSolvedIt: 'resolvió',
     bossDown: 'derrotada',
     bossHit: (n: number) => `−${n} s a la mosca`,
@@ -166,7 +166,8 @@ export const es = {
       `Malla real "Shy fly" (Maf'j Alvarez, CC-BY 3.0), recoloreada como Drosophila. Teclea la palabra que de verdad envía, al ritmo de su población motora: ${hz} Hz.`,
     bossStimulus: 'Estímulo · fila anterior',
     bossStimulusNote: 'Poisson inyectado en cada canal, en Hz. Es toda la entrada que recibe.',
-    bossWantsNote: 'Se juega la candidata legal que mejor gasta estas letras.',
+    bossWantsNote:
+      'El juego descarta las palabras incompatibles con sus colores y le enseña 8 al azar. Ella elige entre esas 8 con estas letras. La deducción es del juego; la elección es suya. Medido en 120 rondas sobre las mismas 8: con el cerebro intacto resolvió 43, con las sinapsis cortadas 41, una moneda 49. Su elección es real (jugó distinto que un cerebro muerto en 119 rondas) y no es mejor que el azar.',
     bossCloud: 'Nube de neuronas',
     bossMode: {
       transmitter: 'Modo · neurotransmisor',
@@ -179,7 +180,7 @@ export const es = {
       atlas: () =>
         'Gris: el atlas sin simular. Verde: excitadoras (acetilcolina y demás). Naranja: inhibidoras (GABA y glutamato). Solo se colorea lo que dispara.',
       circuit: (synapses: number) =>
-        `Las 64 células descendentes que lee el readout, en su sitio real dentro del cerebro, y las ${synapses} sinapsis que hay entre ellas en el conectoma. El brillo de cada nodo es su frecuencia medida; una línea se enciende cuando su célula de origen dispara.`,
+        `64 de las 1.299 células descendentes que lee el readout, en su sitio real dentro del cerebro, y las ${synapses} sinapsis que hay entre ellas en el conectoma. El brillo de cada nodo es su frecuencia medida; una línea se enciende cuando su célula de origen dispara.`,
     },
     bossOrbitOn: 'Órbita activa',
     bossOrbitOff: 'Órbita detenida',
@@ -209,7 +210,7 @@ export const es = {
     bossConfidenceUnit: 'margen de la decisión',
     bossTraining: 'Cómo se entrenó',
     bossTrainShape: 'Readout',
-    bossTrainShapeUnit: 'entradas · ocultas · salidas',
+    bossTrainShapeUnit: 'entradas · salidas, una sola matriz',
     bossTrainSamples: 'Muestras',
     bossTrainSamplesUnit: 'tableros simulados en el conectoma',
     bossTrainError: 'Error fuera de muestra',
@@ -222,8 +223,8 @@ export const es = {
       'La salida 28 es su pista: aprendió en qué tableros vale la pena gastarla. Ningún umbral escrito a mano decide eso. Si la sala no tiene pistas, la pide y las reglas le dicen que no, igual que a un humano.',
     bossTrainFixed:
       'Lo único ajustado es este readout. Las 138.639 neuronas y los 2.700.513 sinapsis de antes son anatomía de FlyWire y no se tocaron nunca.',
-    bossTrainWhen: (date: string, epochs: number) =>
-      `Entrenado el ${date}, época ${epochs} (la mejor fuera de muestra).`,
+    bossTrainWhen: (date: string, lambda: number) =>
+      `Entrenado el ${date} por regresión de cresta, penalización ${lambda} (la mejor fuera de muestra).`,
     bossProvenance:
       'Todo lo de arriba está medido sobre el modelo en marcha: la traza son sus tiempos de disparo, el histograma es el voltaje de cada neurona, las tasas son disparos contados. Nada se genera para el dibujo.',
     bossSimulated: (bio: number, wall: number) => `${bio} ms de cerebro simulados en ${wall} ms`,

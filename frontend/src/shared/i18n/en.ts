@@ -150,7 +150,7 @@ export const en: Dictionary = {
     bossStart: (n) => `start ${n} s`,
     bossDamage: (n) => `team −${n} s`,
     bossForfeited: (n) => `letters +${n} s`,
-    bossAttempt: (n) => `attempt ${n} of 8`,
+    bossAttempt: (n, of) => `attempt ${n} of ${of}`,
     bossSolvedIt: 'solved it',
     bossDown: 'beaten',
     bossHit: (n) => `−${n} s off the fly`,
@@ -181,7 +181,8 @@ export const en: Dictionary = {
       `The real "Shy fly" mesh (Maf'j Alvarez, CC-BY 3.0), recoloured as Drosophila. She types the word she is actually sending, at the pace of her motor population: ${hz} Hz.`,
     bossStimulus: 'Stimulus · previous row',
     bossStimulusNote: 'Poisson injected into each channel, in Hz. It is all the input she gets.',
-    bossWantsNote: 'The legal candidate that best spends these letters is the one played.',
+    bossWantsNote:
+      "The game strikes out the words that contradict her colours and shows her 8 at random. She chooses among those 8 with these letters. The deduction is the game's; the choice is hers. Measured over 120 rounds on the same 8: brain intact solved 43, every synapse cut 41, a coin 49. Her choice is real (she played differently from a dead brain in 119 rounds) and it is no better than chance.",
     bossCloud: 'Neuron cloud',
     bossMode: {
       transmitter: 'Mode · transmitter',
@@ -194,7 +195,7 @@ export const en: Dictionary = {
       atlas: () =>
         'Grey: the unsimulated atlas. Green: excitatory (acetylcholine and friends). Orange: inhibitory (GABA and glutamate). Only what fires is coloured.',
       circuit: (synapses: number) =>
-        `The 64 descending cells the readout reads, in their real places in the brain, and the ${synapses} synapses between them in the connectome. Each node's brightness is its measured rate; a line lights when its source cell fires.`,
+        `64 of the 1,299 descending cells the readout reads, in their real places in the brain, and the ${synapses} synapses between them in the connectome. Each node's brightness is its measured rate; a line lights when its source cell fires.`,
     },
     bossOrbitOn: 'Orbit on',
     bossOrbitOff: 'Orbit off',
@@ -223,7 +224,7 @@ export const en: Dictionary = {
     bossConfidenceUnit: 'margin of the decision',
     bossTraining: 'How she was trained',
     bossTrainShape: 'Readout',
-    bossTrainShapeUnit: 'inputs · hidden · outputs',
+    bossTrainShapeUnit: 'inputs · outputs, one matrix',
     bossTrainSamples: 'Samples',
     bossTrainSamplesUnit: 'boards simulated on the connectome',
     bossTrainError: 'Held-out error',
@@ -236,8 +237,8 @@ export const en: Dictionary = {
       'Output 28 is her hint: she learnt which boards are worth spending it on. No hand-written threshold decides that. If the room has hints off she asks and the rules say no, exactly as for a human.',
     bossTrainFixed:
       'The readout is the only thing ever fitted. The 138,639 neurons and 2,700,513 synapses upstream of it are FlyWire anatomy and were never touched.',
-    bossTrainWhen: (date: string, epochs: number) =>
-      `Trained ${date}, epoch ${epochs} (the best held-out).`,
+    bossTrainWhen: (date: string, lambda: number) =>
+      `Trained ${date} by ridge regression, penalty ${lambda} (the best held-out).`,
     bossProvenance:
       "Everything above is measured on the running model: the raster is her spike times, the histogram is every neuron's membrane voltage, the rates are counted spikes. None of it is generated for the picture.",
     bossSimulated: (bio, wall) => `${bio} ms of brain simulated in ${wall} ms`,

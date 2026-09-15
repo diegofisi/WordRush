@@ -327,6 +327,57 @@ An empty list now logs a warning instead of silently widening.
 This makes her meaningfully stronger: she no longer spends attempts on words
 that cannot win. The regression is covered in `test/boss-mode.spec.ts`.
 
+## 2026-09-14 — what she is now
+
+The full investigation is in `07-what-the-fly-can-do.md`. The short version: a
+fly brain cannot deduce, and deduction is the game. So the game does that one
+part for her, says so, and everything else is hers.
+
+Each of her turns:
+
+1. The game strikes out every word that contradicts the colours on her board
+   (`candidatesFrom`). This is the **declared prosthesis** — the deduction a
+   human does in their head. Her panel says it in those words.
+2. From what survives it draws **8 words uniformly at random** (`BOSS.candidates`).
+   Uniform, so nothing prefers a word for her.
+3. Her readout — a ridge fit over all 1,299 descending cells, trained against
+   ground truth — scores the 8 by how much more than usual it wants each letter.
+   **She plays the highest.** This is the only decision in the turn that is hers.
+4. She has **4 attempts** (`BOSS.maxAttempts`), not a human's 8. Measured: with
+   the filter, a coin toss among the survivors already solves 98.6 % of rounds
+   in 8 attempts and 47.7 % in 4. Four is where her choice can still matter.
+
+What is honest to say about her, and what her page says: she is a real brain
+choosing among words the game has already narrowed; her choice is real and
+board-dependent; it does not make her a strong player. The control experiment
+(`tools/boss-brain-control.spec.ts`) plays every round three times on the same
+eight candidates. Measured on 2026-09-14, 120 rounds:
+
+| chooser | solved |
+|---|---|
+| her brain, intact | 43 / 120 (35.8 %) |
+| her brain, every synapse cut | 41 / 120 (34.2 %) |
+| a coin | 49 / 120 (40.8 %) |
+
+Intact and cut played different words in 119 rounds of 120: the choice is hers.
+It is also no better than the coin's. That is the number on her page, and the
+reason this design lives on the `fly-boss` branch and not on `master`
+(`07-what-the-fly-can-do.md`, section 9).
+
+Nothing removed on 2026-09-13 came back: no policy, no cerco channel, no
+discount, no answer-list shortcut. Her hint is still the readout's 28th output.
+
+Two smaller rules, both found by the end-to-end suite on 2026-09-14:
+
+- **She does not play in a room with nobody connected.** A room outlives its
+  last human for the reconnection grace, and there is one brain thread for
+  every room; a fly still thinking in an abandoned room starved the fly in a
+  room with people in it (her requests time out at 8 s). The ticker skips
+  those rooms; she resumes when someone comes back.
+- **She never collects the team bonus.** `BOSS.defeatedBonus` was reaching her
+  row of the breakdown as well; it is 0 for her now, as this document always
+  said it was.
+
 ## 2026-09-13 — the algorithm comes out
 
 An audit of what the panel shows and what actually decides her moves found that

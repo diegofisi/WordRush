@@ -31,6 +31,12 @@ export function scoreRound(
   initialSeconds: number,
   hintEnabled: boolean,
   bossBonus = 0,
+  /**
+   * The fly is not charged per attempt. She gets 4 where a human gets 8, and
+   * her attempts are the only lever her brain has; charging her for using
+   * them would be charging her for playing (docs/context/06-boss-mode.md).
+   */
+  chargeAttempts = true,
 ): RoundBreakdown {
   const base: RoundBreakdown = {
     playerId: result.playerId,
@@ -63,7 +69,9 @@ export function scoreRound(
   base.timeLeftPercent = percent;
   base.timePoints = percent;
   base.solveBonus = SCORING.solveBonus;
-  base.attemptPenalty = -SCORING.attemptPenalty * Math.max(0, result.attempt - 1);
+  base.attemptPenalty = chargeAttempts
+    ? -SCORING.attemptPenalty * Math.max(0, result.attempt - 1)
+    : 0;
   const position = result.position ?? 0;
   base.positionBonus =
     position >= 1 && position <= SCORING.positionBonus.length

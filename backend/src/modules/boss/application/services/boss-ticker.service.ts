@@ -99,6 +99,11 @@ export class BossTickerService implements OnModuleInit, OnModuleDestroy {
         if (!room.settings.bossMode || room.status !== 'playing') continue;
         const bot = room.bot;
         if (!bot) continue;
+        // Nobody to play against, nobody to play for. A room outlives its last
+        // human for the reconnection grace, and there is one brain thread for
+        // every room: a fly still thinking in an abandoned room starves the
+        // fly in a room with people in it.
+        if (room.connectedPlayers().length === 0) continue;
         void this.playTurn.execute(room, bot, now).catch((error: unknown) => {
           this.logger.error(
             `Boss turn failed in room ${room.code}`,

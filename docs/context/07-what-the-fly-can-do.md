@@ -165,6 +165,47 @@ without the dictionary:
 Ten to twelve points of room, and reaching it means computing which candidate
 best splits the surviving set — deduction again.
 
+### 9. What shipped, measured against a coin (2026-09-14)
+
+The honest intermediate in `06-boss-mode.md`: the game strikes out the
+contradicted words and shows her **8 uniformly random survivors**; her readout
+picks one; she has **4 attempts**. `tools/boss-brain-control.spec.ts` plays each
+round three times on identical candidates — intact brain, every synapse cut,
+and a coin — so the only thing that differs is who chooses.
+
+The first run tied all three at 11/30 with the same 136 attempts. The rounds
+were not identical (intact and cut differed in 30/30), but the answers came in
+triplets — `video` three rounds running, then `acaso`, then `brazo` — because
+consecutive seeds into the LCG give first draws 0.0004 apart. The worker now
+scatters every seed through the murmur3 finaliser before it reaches the
+generator. With that fixed, 30 rounds:
+
+| chooser | solved | mean attempts |
+|---|---|---|
+| brain intact | 17 / 30 (56.7 %) | 4.13 |
+| synapses cut | 11 / 30 (36.7 %) | 4.50 |
+| coin | 14 / 30 (46.7 %) | 4.23 |
+
+Three rounds over the coin is inside what 30 rounds can tell apart from luck,
+so the number went to 120 rounds before it was written on her page:
+
+| chooser | solved | mean attempts |
+|---|---|---|
+| brain intact | 43 / 120 (35.8 %) | 4.50 |
+| synapses cut | 41 / 120 (34.2 %) | 4.52 |
+| coin | 49 / 120 (40.8 %) | 4.45 |
+
+Intact and cut played different words in 119 of 120 rounds. The 17/30 was the
+top of the noise: over the 90 rounds that followed she solved 26 to the coin's
+35.
+
+So this is what she is, measured: **her choice is real** — cut the synapses and
+she plays a different game in 119 rounds out of 120 — **and it is worth
+nothing**: on the same eight candidates a coin solves as many rounds as she
+does, and a little more. She is a brain choosing, and choosing no better than
+chance. That sentence is on her page, with these numbers, and it is the reason
+this branch is not on `master`.
+
 ---
 
 ## The conclusion

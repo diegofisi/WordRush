@@ -116,7 +116,6 @@ export const BossInstrument = ({ t, boss }: BossInstrumentProps) => {
               voltage: frame.voltage,
               raster: frame.raster,
               descending: frame.descending,
-              hidden: frame.hidden.length > 0 ? frame.hidden : snapshot.hidden,
               letterPreference:
                 frame.letters.length > 0 ? frame.letters : snapshot.letterPreference,
               excitatory: frame.excitatory,
@@ -274,14 +273,8 @@ export const BossInstrument = ({ t, boss }: BossInstrumentProps) => {
               </Box>
               <div className="flex flex-wrap justify-between gap-2">
                 <Note>
-                  {edges.inputs} → {edges.hidden} → {edges.letters} ·{' '}
-                  {t.game.bossParams(
-                    edges.inputs * edges.hidden +
-                      edges.hidden +
-                      edges.letters * edges.hidden +
-                      edges.letters,
-                    edges.samples,
-                  )}
+                  {edges.inputs} → {edges.outputs} ·{' '}
+                  {t.game.bossParams(edges.inputs * edges.outputs + edges.outputs, edges.samples)}
                 </Note>
                 <Note>
                   <span style={{ color: SCOPE.neural }}>●</span> {t.game.bossExcites}{' '}
@@ -388,7 +381,7 @@ export const BossInstrument = ({ t, boss }: BossInstrumentProps) => {
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <Stat
                 label={t.game.bossTrainShape}
-                value={`${edges.inputs}·${edges.hidden}·${edges.outputs}`}
+                value={`${edges.inputs}·${edges.outputs}`}
                 unit={t.game.bossTrainShapeUnit}
               />
               <Stat
@@ -410,7 +403,7 @@ export const BossInstrument = ({ t, boss }: BossInstrumentProps) => {
             <Note>{t.game.bossTrainTeacher}</Note>
             <Note>{t.game.bossTrainHint}</Note>
             <Note>{t.game.bossTrainFixed}</Note>
-            <Note>{t.game.bossTrainWhen(edges.trainedAt, edges.epochs)}</Note>
+            <Note>{t.game.bossTrainWhen(edges.trainedAt, edges.lambda)}</Note>
           </div>
 
           <p

@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 17;
+export const CONTRACT_VERSION = 18;
 
 export type Language = 'es' | 'en';
 export type TileColor = 'green' | 'yellow' | 'gray';
@@ -116,6 +116,22 @@ export const BOSS = {
   defeatedBonus: 25,
   /** Boss mode allows a solo run; the normal game needs two humans. */
   minHumans: 1,
+  /**
+   * Her attempts per round. Fewer than a human's 8, and that is what makes her
+   * brain matter: measured on 2026-09-14, a fly choosing at random among the
+   * words still compatible with her colours solves 98.6% of rounds in 8
+   * attempts — no room left for a brain to add anything — and 47.7% in 4,
+   * against 74.5% for the best achievable choice. Four is where her choice
+   * decides the round (docs/context/07-what-the-fly-can-do.md).
+   */
+  maxAttempts: 4,
+  /**
+   * How many compatible words she is shown each turn, drawn at random. Her
+   * output pathway carries about two independent quantities on the boards a
+   * game produces; choosing one of eight is a decision that fits through it,
+   * choosing one of ten thousand is not.
+   */
+  candidates: 8,
 } as const;
 
 /** What the fly can do with a turn. */

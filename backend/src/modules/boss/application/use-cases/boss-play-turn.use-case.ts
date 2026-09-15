@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { BOSS, MAX_ATTEMPTS } from '@shared/contract';
+import { BOSS } from '@shared/contract';
 import { RoomEventsBus } from '@shared/events/room-events.bus';
 import {
   HINT_PORT,
@@ -16,6 +16,7 @@ import {
   type BossSituation,
   type IBossBrain,
 } from '../../domain/interfaces/boss-brain.interface';
+import { candidatesFrom, drawCandidates } from '../../domain/services/boss-solver';
 import { ALPHABET, scoreWord } from '../../domain/services/letter-readout';
 import type { LetterState, SlotState } from '../../domain/services/boss-wiring';
 import { BossMemoryService, type BossMemory } from '../services/boss-memory.service';
@@ -117,6 +118,7 @@ export class BossPlayTurnUseCase {
       const reveal = this.hints.reveal(room.code, bot.id);
       if (reveal) {
         memory.hintLetter = reveal.letter;
+        memory.hintCount = reveal.count;
         hintSpent = true;
       }
     }
@@ -142,20 +144,42 @@ export class BossPlayTurnUseCase {
       });
 
     /*
-     * The whole of her move, and all of it hers.
+     * Her move, and the one thing the game does for her.
      *
-     * Every real word is legal — the list is the keyboard, not a filter, and it
-     * is the same restriction a human plays under. What she may not do is send
-     * a word she has already sent, which is memory of her own acts rather than
-     * deduction about the answer.
+     * The game strikes out every word that contradicts the colours on her board
+     * (`candidatesFrom`), because deduction is what a fly brain cannot do and
+     * what a human does in their head. From what survives it draws
+     * BOSS.candidates at random — uniformly, so nothing here prefers one word
+     * over another — and her readout chooses among those. That choice is hers,
+     * and it is the only part of the turn that is.
      *
-     * What used to stand here instead: the answer list narrowed to what her
-     * colours allowed, a policy choosing between probing and committing, and a
-     * hand-tuned discount on letters she already knew. All three were the
-     * algorithm playing (docs/context/06-boss-mode.md, 2026-09-13).
+     * Measured on 2026-09-14 and recorded in docs/context/07-what-the-fly-can-do.md:
+     * without the filter she cannot converge at all (0 of 30 rounds), and with
+     * it at 8 attempts a random choice already wins 98.6% — which is why she
+     * gets BOSS.maxAttempts and not a human's 8. The filter is declared on her
+     * panel in as many words.
      */
-    const legal = pool.filter((candidate) => !memory.played.has(candidate));
-    const word = bestMatch(legal.length > 0 ? legal : pool, decision.letterPreference);
+    const compatible = candidatesFrom(
+      pool,
+      round.rows,
+      memory.hintLetter ? { letter: memory.hintLetter, count: memory.hintCount } : null,
+    ).filter((candidate) => !memory.played.has(candidate));
+    const shown =
+      compatible.length > 0
+        ? drawCandidates(compatible, BOSS.candidates, memory.random)
+        : // Nothing agrees with her board, which means a row contradicts the
+          // answer and something upstream is broken. She still moves.
+          drawCandidates(
+            pool.filter((w) => !memory.played.has(w)),
+            BOSS.candidates,
+            memory.random,
+          );
+    if (compatible.length === 0) {
+      this.logger.warn(
+        `Room ${room.code}: no word matches the fly's own rows; drawing from the pool`,
+      );
+    }
+    const word = bestMatch(shown, decision.letterPreference);
 
     announce(word);
     this.guess(room, bot, word, answer, memory, now);
@@ -198,7 +222,7 @@ export class BossPlayTurnUseCase {
     if (solved) {
       room.solvedCount += 1;
       round.markSolved(room.solvedCount, now);
-    } else if (round.attempt >= MAX_ATTEMPTS) {
+    } else if (round.attempt >= BOSS.maxAttempts) {
       round.finish('attempts', now);
     }
 

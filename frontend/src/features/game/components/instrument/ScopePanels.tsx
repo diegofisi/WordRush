@@ -109,9 +109,10 @@ export const VoltageHistogram = ({ telemetry }: { telemetry: BossTelemetry }) =>
 };
 
 /**
- * The trained readout, drawn with its own weights: 64 descending rates in,
- * 12 hidden units, 27 letters out. Teal edges excite, coral ones inhibit, and
- * the brightness of every node is its real activation this turn.
+ * The trained readout, drawn with its own weights: descending rates in, 27
+ * letters out, one linear matrix and nothing between. Teal edges excite, coral
+ * ones inhibit, and the brightness of every node is its real activation this
+ * turn.
  */
 export const DecisionNetwork = ({ telemetry }: { telemetry: BossTelemetry }) => {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -119,24 +120,22 @@ export const DecisionNetwork = ({ telemetry }: { telemetry: BossTelemetry }) => 
     const prepared = prepare(ref.current);
     if (!prepared) return;
     const { ctx, w, h } = prepared;
-    // The panel has room to label 16 of the 64 inputs. Drawing all of them
-    // would be six pixels a row and unreadable, so it draws the first 16 and
-    // says so rather than letting the picture imply the readout has 16 inputs.
+    // The panel has room to label 16 inputs. The readout reads all 1,299
+    // descending cells; drawing them all would be a pixel a row, so it draws
+    // the first 16 and says so rather than letting the picture imply otherwise.
     const rows = 16;
-    const hidden = telemetry.hidden;
     const letters = telemetry.letterPreference;
     const descending = telemetry.descending;
-    if (hidden.length === 0 || letters.length === 0) return;
+    if (letters.length === 0) return;
 
+    // Two columns, because the readout is one matrix: there is no hidden layer
+    // any more, and drawing one would be drawing something that is not there.
     const xName = 6;
     const xValue = w * 0.2;
-    const xIn = w * 0.25;
-    const xHid = w * 0.56;
+    const xIn = w * 0.26;
     const xOut = w * 0.82;
     const topIn = 26;
     const gapIn = (h - 42) / (rows - 1);
-    const topHid = 34;
-    const gapHid = (h - 62) / (hidden.length - 1);
     const topOut = 22;
     const gapOut = (h - 34) / (letters.length - 1);
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÑ';
@@ -147,38 +146,20 @@ export const DecisionNetwork = ({ telemetry }: { telemetry: BossTelemetry }) => 
     ctx.textAlign = 'left';
     ctx.fillText(`DESCENDENTES Hz · ${rows} de ${edges.inputs}`, xName, 12);
     ctx.textAlign = 'center';
-    ctx.fillText('OCULTA', xHid, 12);
-    ctx.textAlign = 'center';
     ctx.fillText('LETRAS', xOut, 12);
 
+    // Every line is one real weight of the fitted matrix, input to letter.
     for (let i = 0; i < rows; i += 1) {
       const y = topIn + i * gapIn;
       const strength = Math.min(1, (descending[i] ?? 0) / 160);
-      for (let j = 0; j < hidden.length; j += 1) {
-        const weight = edges.w1[j * edges.shownInputs + i] ?? 0;
-        ctx.strokeStyle =
-          weight > 0
-            ? `rgba(${NEURAL_RGB},${(0.01 + strength * Math.abs(weight) * 0.5).toFixed(3)})`
-            : `rgba(${INHIB_RGB},${(0.01 + strength * Math.abs(weight) * 0.5).toFixed(3)})`;
-        ctx.lineWidth = 0.6;
-        ctx.beginPath();
-        ctx.moveTo(xIn + 4, y);
-        ctx.lineTo(xHid - 4, topHid + j * gapHid);
-        ctx.stroke();
-      }
-    }
-    for (let j = 0; j < hidden.length; j += 1) {
-      const y = topHid + j * gapHid;
-      const strength = Math.min(1, Math.abs(hidden[j] ?? 0));
       for (let l = 0; l < letters.length; l += 1) {
-        const weight = edges.w2[l * edges.hidden + j] ?? 0;
+        const weight = edges.w[l * edges.shownInputs + i] ?? 0;
+        const alpha = (0.01 + strength * Math.min(1, Math.abs(weight) * 12)).toFixed(3);
         ctx.strokeStyle =
-          weight > 0
-            ? `rgba(${NEURAL_RGB},${(0.01 + strength * Math.abs(weight) * 0.12).toFixed(3)})`
-            : `rgba(${INHIB_RGB},${(0.01 + strength * Math.abs(weight) * 0.12).toFixed(3)})`;
+          weight > 0 ? `rgba(${NEURAL_RGB},${alpha})` : `rgba(${INHIB_RGB},${alpha})`;
         ctx.lineWidth = 0.5;
         ctx.beginPath();
-        ctx.moveTo(xHid + 4, y);
+        ctx.moveTo(xIn + 4, y);
         ctx.lineTo(xOut - 8, topOut + l * gapOut);
         ctx.stroke();
       }
@@ -196,16 +177,6 @@ export const DecisionNetwork = ({ telemetry }: { telemetry: BossTelemetry }) => 
       ctx.beginPath();
       ctx.arc(xIn, y, 2.6, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(${NEURAL_RGB},${(0.24 + Math.min(1, (descending[i] ?? 0) / 160) * 0.76).toFixed(2)})`;
-      ctx.fill();
-    }
-    for (let j = 0; j < hidden.length; j += 1) {
-      const value = hidden[j] ?? 0;
-      ctx.beginPath();
-      ctx.arc(xHid, topHid + j * gapHid, 3.2, 0, Math.PI * 2);
-      ctx.fillStyle =
-        value >= 0
-          ? `rgba(${NEURAL_RGB},${(0.2 + Math.min(1, Math.abs(value)) * 0.8).toFixed(2)})`
-          : `rgba(${INHIB_RGB},${(0.2 + Math.min(1, Math.abs(value)) * 0.8).toFixed(2)})`;
       ctx.fill();
     }
     const best = letters.indexOf(Math.max(...letters));

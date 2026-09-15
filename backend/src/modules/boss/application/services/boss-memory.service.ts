@@ -14,8 +14,11 @@ export interface BossMemory {
   round: number;
   /** Whole words she has already sent. She never sends one twice. */
   played: Set<string>;
-  /** The letter her hint named, once she has chosen to spend it. */
+  /** The letter her hint named, and how often it occurs, once she spent it. */
   hintLetter: string | null;
+  hintCount: number;
+  /** Her own draw of candidates each turn. Seeded per round so a replay matches. */
+  random: () => number;
   /** Epoch ms before which she is still thinking or typing. */
   nextMoveAt: number;
   /** True while the brain is mid-simulation on its own thread. */
@@ -35,6 +38,8 @@ export class BossMemoryService {
       round,
       played: new Set<string>(),
       hintLetter: null,
+      hintCount: 0,
+      random: seededRandom((round * 1_000_003 + hashCode(roomCode)) >>> 0),
       // A beat before her first move, so a round does not open with her already typing.
       nextMoveAt: now + 1200,
       thinking: false,
@@ -58,4 +63,19 @@ export class BossMemoryService {
       if (!liveRoomCodes.has(code)) this.byRoom.delete(code);
     }
   }
+}
+
+/** A small deterministic generator: the same room and round always draw the same words. */
+function seededRandom(seed: number): () => number {
+  let state = seed || 1;
+  return () => {
+    state = (state * 1103515245 + 12345) & 0x7fffffff;
+    return state / 0x7fffffff;
+  };
+}
+
+function hashCode(text: string): number {
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) hash = (hash * 31 + text.charCodeAt(i)) | 0;
+  return hash >>> 0;
 }
