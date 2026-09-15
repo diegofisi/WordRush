@@ -17,6 +17,8 @@ interface KeyboardProps {
   onLetter: (letter: string) => void;
   onEnter: () => void;
   onBackspace: () => void;
+  /** Phrase game: the purple FRASE key at the end of the last row. */
+  phraseKey?: { label: string; disabled: boolean; onClick: () => void } | null;
 }
 
 const stateClass: Record<KeyState, string> = {
@@ -36,6 +38,7 @@ export const Keyboard = ({
   onLetter,
   onEnter,
   onBackspace,
+  phraseKey = null,
 }: KeyboardProps) => {
   const rows = keyboardRows(language);
   const letterKey = (letter: string) => {
@@ -88,6 +91,16 @@ export const Keyboard = ({
                 className="key min-w-0 flex-[1.4] sm:flex-none sm:min-w-15 disabled:opacity-60"
               >
                 <BackspaceIcon size={22} />
+              </button>
+            ) : null}
+            {isLast && phraseKey ? (
+              <button
+                type="button"
+                disabled={phraseKey.disabled}
+                onClick={phraseKey.onClick}
+                className="key key-phrase min-w-0 flex-[1.6] sm:flex-none sm:min-w-19 disabled:opacity-60"
+              >
+                {phraseKey.label}
               </button>
             ) : null}
           </div>

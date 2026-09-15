@@ -9,6 +9,7 @@ import { paintFor, teamLabel } from '@/shared/lib/teamColor';
 import type { RivalViewModel } from '../models/game.model';
 import type { TeamViewProps } from '../models/game-view.model';
 import { MiniBoard } from './MiniBoard';
+import { PhraseSlots } from './PhraseSlots';
 import { TeammateBoard } from './TeammateBoard';
 
 interface TeamPanelProps {
@@ -17,6 +18,8 @@ interface TeamPanelProps {
   team: TeamViewProps;
   lowTimeThreshold: number;
   colorLabels: Record<TileColor, string>;
+  /** Phrase game: the rival team's phrase as slots; members show letters tried. */
+  phraseGame?: boolean;
 }
 
 const rivalStatus = (t: Dictionary, rival: RivalViewModel) => {
@@ -38,6 +41,7 @@ export const TeamPanel = ({
   team,
   lowTimeThreshold,
   colorLabels,
+  phraseGame = false,
 }: TeamPanelProps) => {
   const mine = paintFor(team.mine.color);
   const rival = team.rival;
@@ -118,6 +122,21 @@ export const TeamPanel = ({
             <p className="m-0 px-4 pb-2 text-xs font-semibold text-green-ink">
               {t.game.teamSolvedBy(rival.solverName)}
             </p>
+          ) : null}
+          {phraseGame && rival.phrase ? (
+            <div className="flex flex-col gap-1 px-4 pb-2">
+              <PhraseSlots
+                mask={rival.phrase.mask}
+                size="xs"
+                labels={{ found: t.game.tileCorrect, unknown: t.game.phraseUnknown }}
+              />
+              <span className="text-xs text-ink-3">
+                {t.game
+                  .rivalPhraseProgress(rival.phrase.found, rival.phrase.total, 0)
+                  .replace(/ · .*$/, '')}{' '}
+                · {t.game.rivalsPhraseHint}
+              </span>
+            </div>
           ) : null}
           <ul className="m-0 flex min-h-0 list-none flex-col gap-1 overflow-y-auto p-0 px-2 pb-2">
             {rival.members.map((member) => (

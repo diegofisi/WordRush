@@ -12,6 +12,7 @@ import {
   type LobbyState,
   type ObserverPublic,
   type OwnRow,
+  type PhraseAck,
   type Role,
   type PlayerProgress,
   type RoomSettings,
@@ -86,6 +87,9 @@ interface GameState {
   /** Epoch ms until which emotes are refused after a burst; 0 when free. */
   emotePausedUntil: number;
   announced: Announced;
+  /** Phrase game: the modal is open; the last miss's wrong letters. */
+  phraseOpen: boolean;
+  phraseWrong: boolean[][] | null;
 }
 
 interface GameActions {
@@ -97,6 +101,9 @@ interface GameActions {
   noticeGuess: (text: string) => void;
   applyGuessAck: (ack: GuessAck, word: string) => void;
   applyHintAck: (ack: HintAck) => void;
+  /** Phrase game: the answer to a send; a miss keeps the modal open. */
+  applyPhraseAck: (ack: PhraseAck) => void;
+  setPhraseOpen: (open: boolean) => void;
   /** Applies the burst rule locally; false means "do not send this one". */
   tryEmote: () => boolean;
   /** Starts the 5 s pause and toasts once, never on every blocked click. */
@@ -117,6 +124,8 @@ const roundInfoOf = (round: RoundState): RoundInfo => ({
   round: round.round,
   totalRounds: round.totalRounds,
   mode: round.mode,
+  game: round.game,
+  phraseWords: round.phraseWords,
   initialSeconds: round.initialSeconds,
   startedAt: round.startedAt,
   hintAvailable: round.hintAvailable,
@@ -167,6 +176,8 @@ const initialState: GameState = {
   emoteSends: [],
   emotePausedUntil: 0,
   announced: emptyAnnounced(),
+  phraseOpen: false,
+  phraseWrong: null,
 };
 
 export const useGameStore = create<GameState & GameActions>((set, get) => {
@@ -208,6 +219,8 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       shakeKey: 0,
       guessNotice: null,
       announced: emptyAnnounced(),
+      phraseOpen: false,
+      phraseWrong: null,
     });
 
   const hydrate = (snapshot: FullState) => {
@@ -343,7 +356,15 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       });
       socket.on('player:solved', (payload) => {
         set((state) => ({ solvedCount: Math.max(state.solvedCount, payload.position) }));
-        pushFeed({ kind: 'solved', playerId: payload.playerId, position: payload.position });
+        pushFeed({
+          kind: get().round?.game === 'phrase' ? 'phrase-completed' : 'solved',
+          playerId: payload.playerId,
+          position: payload.position,
+        });
+      });
+      // Phrase game: a hit already arrived as `player:solved`; only the misses are news.
+      socket.on('phrase:attempt', (payload) => {
+        if (!payload.correct) pushFeed({ kind: 'phrase-missed', playerId: payload.playerId });
       });
       // Anonymous: the feed says a hint was spent, never by whom.
       socket.on('player:hint', () => pushFeed({ kind: 'hint', playerId: '' }));
@@ -478,6 +499,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
             at: ack.at,
             solved: ack.solved,
             finished: ack.finished,
+            phrase: ack.phrase ?? state.me.phrase,
           },
           gains: ack.gains.map((gain) => ({
             id: nextId++,
@@ -510,6 +532,35 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
             }
           : {},
       ),
+
+    applyPhraseAck: (ack) =>
+      set((state) => {
+        if (!state.me) return {};
+        const phrase = state.me.phrase
+          ? { ...state.me.phrase, sendsUsed: ack.sendsUsed, completed: ack.correct }
+          : null;
+        return {
+          me: {
+            ...state.me,
+            phrase:
+              phrase && ack.correct
+                ? { ...phrase, letters: phrase.letters, found: phrase.total }
+                : phrase,
+            secondsLeft: ack.secondsLeft,
+            at: ack.at,
+            solved: ack.correct,
+            finished: ack.finished,
+          },
+          phraseWrong: ack.wrong,
+          // A hit or the last miss closes the modal; any other miss keeps it open.
+          phraseOpen: !ack.correct && !ack.finished,
+          solvedCount: ack.correct
+            ? Math.max(state.solvedCount, ack.solvedPosition ?? state.solvedCount + 1)
+            : state.solvedCount,
+        };
+      }),
+
+    setPhraseOpen: (open) => set({ phraseOpen: open, ...(open ? {} : { phraseWrong: null }) }),
 
     // Same rule as the server (docs/context/02-game-rules.md -> Emotes), run
     // locally so most of the spam never leaves the browser.

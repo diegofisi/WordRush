@@ -62,6 +62,11 @@ export const es = {
     namePlaceholder: 'Cómo te verán los demás',
     wordLanguage: 'Idioma de las palabras',
     wordLength: 'Letras por palabra',
+    game: 'Juego',
+    gameWordle: 'Palabra',
+    gamePhrase: 'Adivina la frase',
+    gamePhraseHint:
+      'Sin pista: cada verde ya revela una letra. Seis palabras y cinco envíos por ronda.',
     initialTime: 'Tiempo inicial por ronda',
     minimumTime: (n: number) => `mínimo ${n} s`,
     rounds: 'Rondas',
@@ -106,6 +111,7 @@ export const es = {
     needPlayers: (min: number) => `Hacen falta al menos ${min} jugadores.`,
     playersChip: (count: number, capacity: number) => `${count} / ${capacity}`,
     lettersChip: 'letras',
+    phraseChip: 'frase',
     mode: 'Modo',
     modeNormal: 'Todos contra todos',
     modeTeams: 'Equipos',
@@ -241,6 +247,48 @@ export const es = {
     tooShort: 'Faltan letras.',
     roundStarting: 'Preparando la ronda…',
     lastEvent: 'Último evento',
+    phraseTitle: 'La frase',
+    phraseShared: 'compartida',
+    phraseLetters: (found: number, total: number) => `${found} de ${total} letras`,
+    phraseCaption: (words: number) => `${words} palabras · todo se descubre con lo que escribes`,
+    phraseUnknown: 'letra sin descubrir',
+    phraseKnow: '¡Sé la frase!',
+    phraseKey: 'FRASE',
+    phraseModalTitle: 'Completar la frase',
+    phraseModalBody: (penalty: number, left: number) =>
+      `Completa la frase. Recuerda: cada intento te resta ${penalty} puntos. Te quedan ${
+        left === 1 ? '1 intento' : `${left} intentos`
+      }.`,
+    phraseModalFooter: (pct: number, clock: string) =>
+      `${pct} % de la frase completada · ${clock} restantes`,
+    phraseSlot: (word: number, letter: number) => `Palabra ${word}, letra ${letter}`,
+    phraseClose: 'Cerrar',
+    phraseSend: 'Enviar',
+    phraseMissed: 'No es la frase. Las letras en rojo no van ahí.',
+    phraseClockCaption: (pct: number, word: number, total: number) =>
+      `${pct} % de la frase completada · palabra ${word} de ${total}`,
+    yourClock: 'Tu reloj',
+    teamClock: 'Reloj del equipo',
+    timePct: (pct: number) => `${pct} % del tiempo`,
+    rivalsPhraseHint: 'ves cuánto llevan, no qué',
+    rivalPhraseProgress: (found: number, total: number, word: number) =>
+      `${found} de ${total} letras · palabra ${word}`,
+    rivalPhraseComplete: (words: number) =>
+      `Frase completa · ${words === 1 ? '1 palabra' : `${words} palabras`}`,
+    outOfSends: 'Sin envíos',
+    waitingOutOfSends: 'Se acabaron los envíos. La frase se revela al final de la ronda.',
+    waitingPhraseSolved: (pos: number, pct: number) =>
+      `Completaste la frase en ${pos}.º lugar con el ${pct} % del tiempo.`,
+    feedPhraseCompleted: 'completó la frase',
+    feedPhraseMissed: 'intentó la frase y falló',
+    ifYouCompleteNow: 'Si completas ahora',
+    ifTeamCompletesNow: 'Si el equipo completa ahora',
+    phraseCompleteRow: 'Frase completa',
+    wordsRow: (n: number) => `Palabras · ${n}`,
+    teamWordsRow: (n: number) => `Palabras del equipo · ${n}`,
+    missesRow: (n: number, max: number) => `Frases falladas · ${n} de ${max}`,
+    completeOrderRow: (n: number) => `${n}.º en completar`,
+    uncoveredRow: (pct: number) => `Frase descubierta · ${pct} %`,
     teamHint: 'Pista del equipo',
     teammatesCount: (n: number) => (n === 1 ? '1 compañero' : `${n} compañeros`),
     noTeammates: 'Juegas solo en tu equipo.',
@@ -263,7 +311,9 @@ export const es = {
     observingTitle: 'Estás observando',
     observingBody: 'Ves los tableros en vivo. La palabra se revela al final de la ronda.',
     freeSeatsNext: (n: number) =>
-      n === 1 ? 'Hay 1 hueco libre para la siguiente ronda.' : `Hay ${n} huecos libres para la siguiente ronda.`,
+      n === 1
+        ? 'Hay 1 hueco libre para la siguiente ronda.'
+        : `Hay ${n} huecos libres para la siguiente ronda.`,
     noFreeSeats: 'La sala está llena; podrás sentarte cuando se libere un hueco.',
     sitNextRound: 'Jugar la siguiente ronda',
     stayObserving: 'Seguir observando',
@@ -326,8 +376,21 @@ export const es = {
     waitingForHost: 'Esperando a que el anfitrión inicie otra partida…',
     waitingForRound: 'Esperando los resultados de la ronda…',
     backToGame: 'Volver al juego',
+    thePhrase: 'La frase',
+    phraseCompletedCount: (n: number, total: number) => `${n} de ${total} completaron la frase`,
+    nobodyCompleted: 'Nadie completó la frase',
+    colWords: 'Palabras',
+    colSends: 'Envíos',
+    colUncovered: 'Descubierto',
+    colPhrase: 'Frase',
+    rowWords: (n: number) => (n === 1 ? '1 palabra' : `${n} palabras`),
+    rowSends: (n: number) => (n === 1 ? '1 envío fallado' : `${n} envíos fallados`),
+    rowUncovered: (pct: number) => `Descubierto · ${pct} %`,
+    rowPhrase: 'Frase completa',
     teamsSolvedCount: (solved: number, total: number) =>
-      solved === total ? 'Los dos equipos la resolvieron' : `${solved} de ${total} equipos la resolvió`,
+      solved === total
+        ? 'Los dos equipos la resolvieron'
+        : `${solved} de ${total} equipos la resolvió`,
     noTeamSolved: 'Ningún equipo la resolvió',
     teamFirstWas: (name: string, pct: number) =>
       `${name} llegó primero con el ${pct} % del tiempo.`,
@@ -364,6 +427,8 @@ export const es = {
     chat_not_allowed: 'Todavía no puedes escribir en ese canal.',
     not_observer: 'Solo un observador puede hacer eso.',
     kicked: 'El anfitrión te expulsó de la sala. Podrás volver en 30 segundos.',
+    phrase_shape: 'El texto no encaja con las palabras de la frase.',
+    no_sends_left: 'Ya no te quedan envíos en esta ronda.',
     already_finished: 'Ya terminaste esta ronda.',
     word_length: 'La palabra no tiene la longitud de la ronda.',
     word_not_in_list: 'Esa palabra no está en la lista.',

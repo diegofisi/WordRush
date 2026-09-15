@@ -119,14 +119,22 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
         ) : null}
         <RoundHeader t={t} results={results} />
         {teamMode ? (
-          <TeamBreakdownCards t={t} teams={results.teamRows} />
+          <TeamBreakdownCards
+            t={t}
+            teams={results.teamRows}
+            phraseGame={results.game === 'phrase'}
+          />
         ) : (
-          <BreakdownTable t={t} rows={results.rows} />
+          <BreakdownTable t={t} rows={results.rows} phraseGame={results.game === 'phrase'} />
         )}
         {initialSeconds !== null ? (
           <p className="m-0 text-[13px] text-ink-3">{t.results.timeNote(initialSeconds)}</p>
         ) : null}
-        <RoundBoards t={t} wordLength={results.wordLength} boards={results.boards} />
+        <RoundBoards
+          t={t}
+          wordLength={results.boards[0]?.rows[0]?.word.length ?? results.wordLength}
+          boards={results.boards}
+        />
       </div>
       <div className="flex min-w-0 flex-col gap-4">
         {teamMode ? (

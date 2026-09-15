@@ -6,6 +6,7 @@ import { formatClock } from '@/shared/lib/format';
 
 import type { RivalViewModel } from '../models/game.model';
 import { MiniBoard } from './MiniBoard';
+import { PhraseSlots } from './PhraseSlots';
 
 interface RivalsPanelProps {
   t: Dictionary;
@@ -14,21 +15,33 @@ interface RivalsPanelProps {
   rivalClocks: Record<string, number>;
   solvedCount: number;
   lowTimeThreshold: number;
+  /** Phrase game: slots instead of boards, letters counted instead of attempts. */
+  phraseGame?: boolean;
 }
 
-const statusLine = (t: Dictionary, rival: RivalViewModel) => {
+const statusLine = (t: Dictionary, rival: RivalViewModel, phraseGame: boolean) => {
   switch (rival.status) {
     case 'solved':
-      return t.game.solved;
+      return phraseGame ? t.game.rivalPhraseComplete(rival.rows.length) : t.game.solved;
     case 'out-of-attempts':
-      return t.game.outOfAttempts;
+      return phraseGame ? t.game.outOfSends : t.game.outOfAttempts;
     case 'out-of-time':
       return t.game.outOfTime;
     case 'left':
       return t.game.left;
     default: {
-      const parts = [t.game.attempt(rival.currentAttempt)];
-      if (rival.greens >= 4) parts.push(t.game.greens(rival.greens));
+      const parts = phraseGame
+        ? [
+            rival.phrase
+              ? t.game.rivalPhraseProgress(
+                  rival.phrase.found,
+                  rival.phrase.total,
+                  rival.currentAttempt,
+                )
+              : t.game.attempt(rival.currentAttempt),
+          ]
+        : [t.game.attempt(rival.currentAttempt)];
+      if (!phraseGame && rival.greens >= 4) parts.push(t.game.greens(rival.greens));
       if (!rival.connected) parts.push(t.game.disconnected);
       return parts.join(' · ');
     }
@@ -42,13 +55,16 @@ export const RivalsPanel = ({
   rivalClocks,
   solvedCount,
   lowTimeThreshold,
+  phraseGame = false,
 }: RivalsPanelProps) => (
   <Card className="flex min-h-0 flex-col overflow-hidden">
     <div className="flex items-center justify-between px-4 pt-3.5 pb-2.5">
       <span className="label">
         {t.game.rivals} · {rivals.length}
       </span>
-      {solvedCount > 0 ? (
+      {phraseGame ? (
+        <span className="text-xs text-ink-3">{t.game.rivalsPhraseHint}</span>
+      ) : solvedCount > 0 ? (
         <span className="text-xs text-ink-3">{t.game.alreadySolved(solvedCount)}</span>
       ) : null}
     </div>
@@ -84,19 +100,37 @@ export const RivalsPanel = ({
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-17 shrink-0">
-                  <MiniBoard wordLength={wordLength} rows={rival.rows} />
+              {phraseGame && rival.phrase ? (
+                <div className="flex flex-col gap-1">
+                  <PhraseSlots
+                    mask={rival.phrase.mask}
+                    size="xs"
+                    labels={{ found: t.game.tileCorrect, unknown: t.game.phraseUnknown }}
+                  />
+                  <span
+                    className={cn(
+                      'truncate text-xs',
+                      rival.status === 'solved' ? 'font-semibold text-green-ink' : 'text-ink-3',
+                    )}
+                  >
+                    {statusLine(t, rival, true)}
+                  </span>
                 </div>
-                <span
-                  className={cn(
-                    'truncate text-xs',
-                    rival.status === 'solved' ? 'font-semibold text-green-ink' : 'text-ink-3',
-                  )}
-                >
-                  {statusLine(t, rival)}
-                </span>
-              </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <div className="w-17 shrink-0">
+                    <MiniBoard wordLength={wordLength} rows={rival.rows} />
+                  </div>
+                  <span
+                    className={cn(
+                      'truncate text-xs',
+                      rival.status === 'solved' ? 'font-semibold text-green-ink' : 'text-ink-3',
+                    )}
+                  >
+                    {statusLine(t, rival, false)}
+                  </span>
+                </div>
+              )}
             </div>
           </li>
         );

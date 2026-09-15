@@ -9,6 +9,7 @@ const lobby = (over: Partial<LobbyState> = {}): LobbyState => ({
   status: 'lobby',
   settings: {
     language: 'es',
+    game: 'wordle',
     mode: 'teams',
     wordLength: 5,
     initialSeconds: 90,

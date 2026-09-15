@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 
-import type { Emote, HintReveal, Language, OwnRow, RoundInfo } from '@/shared/contract';
+import type { Emote, HintReveal, Language, OwnRow, PhraseSelf, RoundInfo } from '@/shared/contract';
 import type { Dictionary } from '@/shared/i18n';
 
+import type { PhraseScorePreview } from '../helpers/phraseScorePreview';
 import type { ScorePreview } from '../helpers/scorePreview';
 import type { TeamScorePreview } from '../helpers/teamScorePreview';
 import type {
@@ -26,7 +27,14 @@ export interface ClockViewModel {
 }
 
 /** `team-solved`: a teammate found the word, so I am done too. */
-export type MyOutcome = 'playing' | 'solved' | 'out-of-attempts' | 'out-of-time' | 'team-solved';
+export type MyOutcome =
+  | 'playing'
+  | 'solved'
+  | 'out-of-attempts'
+  | 'out-of-time'
+  | 'team-solved'
+  /** Phrase game: the five sends are spent. */
+  | 'out-of-sends';
 
 /** Team mode only (docs/context/06-v1.1.md -> Teams): my team and the rival one. */
 export interface TeamViewProps {
@@ -39,6 +47,22 @@ export interface TeamViewProps {
   /** Derived seconds left of the rival team's clock at the current tick. */
   rivalClock: number;
   preview: TeamScorePreview;
+}
+
+/** Phrase game only (docs/context/06-v1.1.md -> Guess the phrase). */
+export interface PhraseViewProps {
+  self: PhraseSelf;
+  wordCount: number;
+  modalOpen: boolean;
+  /** The last miss, for the red letters; null before any. */
+  wrong: boolean[][] | null;
+  pending: boolean;
+  /** No sends left, or the round is over for me. */
+  locked: boolean;
+  preview: PhraseScorePreview;
+  onOpen: () => void;
+  onClose: () => void;
+  onSend: (text: string) => void;
 }
 
 /** Present while I observe (docs/context/06-v1.1.md -> Observers). */
@@ -91,6 +115,8 @@ export interface GameViewProps {
   team: TeamViewProps | null;
   /** Present while I observe: no board, no keyboard, a seat request instead. */
   observer: ObserverViewProps | null;
+  /** Present in the phrase game. */
+  phrase: PhraseViewProps | null;
   chat: ChatViewProps;
   hintState: HintButtonState;
   hintPending: boolean;

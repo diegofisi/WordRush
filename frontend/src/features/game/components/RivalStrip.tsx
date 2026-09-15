@@ -5,6 +5,7 @@ import { formatClock } from '@/shared/lib/format';
 
 import type { RivalViewModel } from '../models/game.model';
 import { MiniBoard } from './MiniBoard';
+import { PhraseSlots } from './PhraseSlots';
 
 interface RivalStripProps {
   t: Dictionary;
@@ -12,6 +13,8 @@ interface RivalStripProps {
   rivals: RivalViewModel[];
   rivalClocks: Record<string, number>;
   lowTimeThreshold: number;
+  /** Phrase game: the phrase as slots instead of the latest row. */
+  phraseGame?: boolean;
 }
 
 /** Phone layout: one column per rival (avatar, latest row, clock/position). */
@@ -21,6 +24,7 @@ export const RivalStrip = ({
   rivals,
   rivalClocks,
   lowTimeThreshold,
+  phraseGame = false,
 }: RivalStripProps) => (
   <ul className="m-0 flex list-none justify-between gap-1 overflow-x-auto rounded-xl border border-line bg-surface px-1.5 py-2.5">
     {rivals.map((rival) => {
@@ -29,11 +33,19 @@ export const RivalStrip = ({
       return (
         <li
           key={rival.id}
-          className="flex w-11 shrink-0 flex-col items-center gap-1"
+          className={cn('flex shrink-0 flex-col items-center gap-1', phraseGame ? 'w-20' : 'w-11')}
           title={rival.name}
         >
           <Avatar name={rival.name} tone={rival.status === 'solved' ? 'green' : 'neutral'} />
-          <MiniBoard wordLength={wordLength} rows={rival.rows} size="xs" lastRowOnly />
+          {phraseGame && rival.phrase ? (
+            <PhraseSlots
+              mask={rival.phrase.mask}
+              size="xs"
+              labels={{ found: t.game.tileCorrect, unknown: t.game.phraseUnknown }}
+            />
+          ) : (
+            <MiniBoard wordLength={wordLength} rows={rival.rows} size="xs" lastRowOnly />
+          )}
           <span
             className={cn(
               'font-mono text-[10px] tabular-nums',

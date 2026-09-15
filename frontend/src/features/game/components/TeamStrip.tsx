@@ -7,6 +7,7 @@ import { paintFor, teamLabel } from '@/shared/lib/teamColor';
 
 import type { TeamViewProps } from '../models/game-view.model';
 import { MiniBoard } from './MiniBoard';
+import { PhraseSlots } from './PhraseSlots';
 import { TeammateBoard } from './TeammateBoard';
 
 interface TeamStripProps {
@@ -15,6 +16,7 @@ interface TeamStripProps {
   team: TeamViewProps;
   lowTimeThreshold: number;
   colorLabels: Record<TileColor, string>;
+  phraseGame?: boolean;
 }
 
 /**
@@ -27,6 +29,7 @@ export const TeamStrip = ({
   team,
   lowTimeThreshold,
   colorLabels,
+  phraseGame = false,
 }: TeamStripProps) => {
   const mine = paintFor(team.mine.color);
   const rival = team.rival;
@@ -101,6 +104,13 @@ export const TeamStrip = ({
                   : formatClock(team.rivalClock, false)}
             </span>
           </div>
+          {phraseGame && rival.phrase ? (
+            <PhraseSlots
+              mask={rival.phrase.mask}
+              size="xs"
+              labels={{ found: t.game.tileCorrect, unknown: t.game.phraseUnknown }}
+            />
+          ) : null}
           <ul className="m-0 flex list-none gap-2 p-0">
             {rival.members.map((member) => (
               <li

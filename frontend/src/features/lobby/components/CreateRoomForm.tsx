@@ -7,6 +7,7 @@ import { Toggle } from '@/shared/components/ui/Toggle';
 import {
   ROOM_LIMITS,
   WORD_LENGTHS,
+  type GameKind,
   type GameMode,
   type Language,
   type WordLength,
@@ -80,6 +81,21 @@ export const CreateRoomForm = ({
     </div>
 
     <div className="flex flex-col gap-2">
+      <span className="label">{t.home.game}</span>
+      <Segmented<GameKind>
+        label={t.home.game}
+        value={values.game}
+        onChange={(game) => onChange({ game })}
+        options={[
+          { value: 'wordle', label: t.home.gameWordle },
+          { value: 'phrase', label: t.home.gamePhrase },
+        ]}
+      />
+      {values.game === 'phrase' ? (
+        <span className="text-xs text-ink-3">{t.home.gamePhraseHint}</span>
+      ) : null}
+    </div>
+    <div className="flex flex-col gap-2">
       <span className="label">{t.lobby.mode}</span>
       <Segmented<GameMode>
         label={t.lobby.mode}
@@ -149,17 +165,19 @@ export const CreateRoomForm = ({
       </div>
     </div>
 
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-yellow-line bg-yellow-soft px-4 py-3.5">
-      <div className="flex items-center gap-2.5 text-yellow-deep">
-        <HintIcon size={18} />
-        <span className="text-sm font-semibold">{t.home.hintToggle}</span>
+    {values.game === 'wordle' ? (
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-yellow-line bg-yellow-soft px-4 py-3.5">
+        <div className="flex items-center gap-2.5 text-yellow-deep">
+          <HintIcon size={18} />
+          <span className="text-sm font-semibold">{t.home.hintToggle}</span>
+        </div>
+        <Toggle
+          checked={values.hintEnabled}
+          onChange={(hintEnabled) => onChange({ hintEnabled })}
+          label={t.home.hintToggle}
+        />
       </div>
-      <Toggle
-        checked={values.hintEnabled}
-        onChange={(hintEnabled) => onChange({ hintEnabled })}
-        label={t.home.hintToggle}
-      />
-    </div>
+    ) : null}
 
     <Button type="submit" size="lg" loading={pending} className="w-full">
       {pending ? t.home.creating : t.home.create}

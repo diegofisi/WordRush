@@ -1,5 +1,6 @@
 import type {
   CreateRoomPayload,
+  GameKind,
   GameMode,
   Language,
   SessionAck,
@@ -13,6 +14,7 @@ export type CreateRoomResponse = SessionAck;
 export interface CreateRoomForm {
   name: string;
   language: Language;
+  game: GameKind;
   mode: GameMode;
   wordLength: WordLength;
   initialSeconds: number;
@@ -25,6 +27,7 @@ export const toCreateRoomRequest = (form: CreateRoomForm): CreateRoomRequest => 
   name: form.name.trim(),
   settings: {
     language: form.language,
+    game: form.game,
     mode: form.mode,
     wordLength: form.wordLength,
     initialSeconds: form.initialSeconds,

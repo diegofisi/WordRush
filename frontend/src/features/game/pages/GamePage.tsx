@@ -24,7 +24,7 @@ const GameTopBarActions = () => {
   const role = useGameStore((state) => state.role);
   const status = useGameStore((state) => state.status);
   const { requestHint, pending } = useUseHint();
-  if (!me || !round || role === 'observer') return null;
+  if (!me || !round || role === 'observer' || round.game === 'phrase') return null;
   const hintState = !round.hintAvailable ? 'off' : me.hintUsed ? 'used' : 'available';
   const onHint = async () => {
     const result = await requestHint();
@@ -77,6 +77,11 @@ export const GamePage = () => {
               code={session.roomCode}
               parts={[
                 round ? t.common.roundOf(round.round, round.totalRounds) : null,
+                round?.game === 'phrase' ? (
+                  <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-bold text-accent">
+                    {t.home.gamePhrase}
+                  </span>
+                ) : null,
                 role === 'observer' ? (
                   <span className="rounded-full bg-surface-2 px-3 py-1 text-xs font-bold text-ink-2">
                     {t.game.observing}

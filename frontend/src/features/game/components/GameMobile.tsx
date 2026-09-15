@@ -7,10 +7,14 @@ import { Clock } from './Clock';
 import { EmotePicker } from './EmotePicker';
 import { HintButton } from './HintButton';
 import { HintLetterChip } from './HintLetterChip';
-import { ObserverCard } from './ObserverCard';
 import { Keyboard } from './Keyboard';
 import { FeedRow } from './LiveFeed';
+import { ObserverCard } from './ObserverCard';
 import { PenaltyChip } from './PenaltyChip';
+import { PhraseCard } from './PhraseCard';
+import { PhraseModal } from './PhraseModal';
+import { PhraseScoreCard } from './PhraseScoreCard';
+import { RivalCarousel } from './RivalCarousel';
 import { RivalStrip } from './RivalStrip';
 import { ScorePreviewCard } from './ScorePreviewCard';
 import { StickerOverlay } from './StickerOverlay';
@@ -21,6 +25,8 @@ import { WaitingCard } from './WaitingCard';
 /** Phone game (GameMobile.dc.html): clock + actions, rival strip, last event, board, keyboard, emotes. */
 export const GameMobile = (props: GameViewProps) => {
   const { t } = props;
+  const phrase = props.phrase;
+  const phraseGame = phrase !== null;
   // Stickers are not a line here: they fly over the keyboard (StickerOverlay).
   const lastEvent = [...props.feed].reverse().find(isTextFeedEvent);
   return (
@@ -58,7 +64,7 @@ export const GameMobile = (props: GameViewProps) => {
               label={t.game.penaltyTotal(props.penaltySeconds)}
             />
           ) : null}
-          {props.observer ? null : (
+          {props.observer || phraseGame ? null : (
             <HintButton
               compact
               t={t}
@@ -78,6 +84,17 @@ export const GameMobile = (props: GameViewProps) => {
         </div>
       ) : null}
 
+      {phrase && !props.observer ? (
+        <PhraseCard
+          t={t}
+          phrase={phrase.self}
+          wordCount={phrase.wordCount}
+          shared={props.team !== null}
+          onOpen={phrase.onOpen}
+          openDisabled={phrase.locked || props.outcome !== 'playing'}
+        />
+      ) : null}
+
       {props.team ? (
         <TeamStrip
           t={t}
@@ -85,7 +102,10 @@ export const GameMobile = (props: GameViewProps) => {
           team={props.team}
           lowTimeThreshold={LOW_TIME_THRESHOLD}
           colorLabels={props.tileLabels}
+          phraseGame={phraseGame}
         />
+      ) : phraseGame && props.rivals.length > 0 ? (
+        <RivalCarousel t={t} rivals={props.rivals} rivalClocks={props.rivalClocks} />
       ) : props.rivals.length > 0 ? (
         <RivalStrip
           t={t}
@@ -144,8 +164,16 @@ export const GameMobile = (props: GameViewProps) => {
               solvedPosition={props.solvedPosition}
               timePercent={props.clock.percent}
               solverName={props.team?.solverName}
+              phraseGame={phraseGame}
             />
-            {props.team ? (
+            {phrase ? (
+              <PhraseScoreCard
+                t={t}
+                preview={phrase.preview}
+                finished
+                teamMode={props.team !== null}
+              />
+            ) : props.team ? (
               <TeamScoreCard t={t} preview={props.team.preview} outcome={props.outcome} />
             ) : (
               <ScorePreviewCard t={t} preview={props.preview} outcome={props.outcome} />
@@ -169,6 +197,19 @@ export const GameMobile = (props: GameViewProps) => {
           />
         </div>
       </div>
+
+      {phrase ? (
+        <PhraseModal
+          t={t}
+          open={phrase.modalOpen}
+          phrase={phrase.self}
+          secondsLeft={props.clock.secondsLeft}
+          pending={phrase.pending}
+          wrong={phrase.wrong}
+          onClose={phrase.onClose}
+          onSend={phrase.onSend}
+        />
+      ) : null}
     </div>
   );
 };

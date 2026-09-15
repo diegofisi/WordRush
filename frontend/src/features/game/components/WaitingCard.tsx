@@ -10,6 +10,8 @@ interface WaitingCardProps {
   timePercent: number;
   /** Team mode: who solved it for us (`team-solved`). */
   solverName?: string | null;
+  /** Phrase game: the wording changes (phrase, sends). */
+  phraseGame?: boolean;
 }
 
 /** Calm state shown instead of the keyboard once I am done with the round. */
@@ -19,15 +21,20 @@ export const WaitingCard = ({
   solvedPosition,
   timePercent,
   solverName = null,
+  phraseGame = false,
 }: WaitingCardProps) => {
   const detail =
     outcome === 'solved'
-      ? t.game.waitingSolved(solvedPosition ?? 0, timePercent)
+      ? phraseGame
+        ? t.game.waitingPhraseSolved(solvedPosition ?? 0, timePercent)
+        : t.game.waitingSolved(solvedPosition ?? 0, timePercent)
       : outcome === 'team-solved'
         ? t.game.waitingTeamSolved(solverName ?? '?', timePercent)
-        : outcome === 'out-of-attempts'
-        ? t.game.waitingOutOfAttempts
-        : t.game.waitingOutOfTime;
+        : outcome === 'out-of-sends'
+          ? t.game.waitingOutOfSends
+          : outcome === 'out-of-attempts'
+            ? t.game.waitingOutOfAttempts
+            : t.game.waitingOutOfTime;
   return (
     <Card
       role="status"

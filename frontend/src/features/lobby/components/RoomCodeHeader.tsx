@@ -109,6 +109,14 @@ export const RoomCodeHeader = ({
             onClick={edit}
             title={isHost ? t.lobby.changeRules : undefined}
           />
+          {settings.game === 'phrase' ? (
+            <Chip
+              value={t.home.gamePhrase}
+              mono={false}
+              onClick={edit}
+              title={isHost ? t.lobby.changeRules : undefined}
+            />
+          ) : null}
           {settings.mode === 'teams' ? (
             <Chip
               value={t.lobby.modeTeams}
@@ -141,7 +149,7 @@ export const RoomCodeHeader = ({
             onClick={edit}
             title={isHost ? t.lobby.changeRules : undefined}
           />
-          {!settings.hintEnabled ? (
+          {!settings.hintEnabled && settings.game === 'wordle' ? (
             <Chip
               value={t.lobby.hintOff}
               muted

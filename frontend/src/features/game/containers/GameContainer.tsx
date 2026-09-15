@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChatContainer, useChatStore } from '@/features/chat';
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { PageLoading } from '@/shared/components/ui/PageState';
-import type { Emote } from '@/shared/contract';
+import { PHRASE_RULES, type Emote } from '@/shared/contract';
 import { useIsDesktopGame } from '@/shared/hooks/useMediaQuery';
 import { useNow } from '@/shared/hooks/useNow';
 import { useToastSafeBottom } from '@/shared/hooks/useToastSafeBottom';
@@ -16,11 +16,13 @@ import { toast } from '@/shared/stores/useToastStore';
 
 import { useSitObserver } from '../api/observer-sit/useSitObserver';
 import { useSendGuess } from '../api/send-guess/useSendGuess';
+import { useSendPhrase } from '../api/send-phrase/useSendPhrase';
 import { useSendReaction } from '../api/send-reaction/useSendReaction';
 import { useUseHint } from '../api/use-hint/useUseHint';
 import { GameDesktop } from '../components/GameDesktop';
 import { GameMobile } from '../components/GameMobile';
 import { countGreenPositions, deriveKeyStates } from '../helpers/keyboard';
+import { computePhraseScorePreview } from '../helpers/phraseScorePreview';
 import { computeScorePreview } from '../helpers/scorePreview';
 import { computeTeamScorePreview } from '../helpers/teamScorePreview';
 import { usePhysicalKeyboard } from '../hooks/usePhysicalKeyboard';
@@ -30,7 +32,12 @@ import {
   toTeammateViewModel,
   type RivalViewModel,
 } from '../models/game.model';
-import type { GameViewProps, MyOutcome, TeamViewProps } from '../models/game-view.model';
+import type {
+  GameViewProps,
+  MyOutcome,
+  PhraseViewProps,
+  TeamViewProps,
+} from '../models/game-view.model';
 import { LOW_TIME_THRESHOLD, useGameStore } from '../stores/useGameStore';
 
 /** Clears the phone keyboard block (3 rows + the emote row) for the toasts. */
@@ -69,6 +76,9 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const shakeKey = useGameStore((state) => state.shakeKey);
   const guessNotice = useGameStore((state) => state.guessNotice);
   const emotePausedUntil = useGameStore((state) => state.emotePausedUntil);
+  const phraseOpen = useGameStore((state) => state.phraseOpen);
+  const phraseWrong = useGameStore((state) => state.phraseWrong);
+  const setPhraseOpen = useGameStore((state) => state.setPhraseOpen);
   const typeLetter = useGameStore((state) => state.typeLetter);
   const backspace = useGameStore((state) => state.backspace);
   const noticeGuess = useGameStore((state) => state.noticeGuess);
@@ -79,6 +89,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const setChatOpen = useChatStore((state) => state.setOpen);
 
   const { sendGuess } = useSendGuess();
+  const { sendPhrase, pending: phrasePending } = useSendPhrase();
   const { requestHint, pending: hintPending } = useUseHint();
   const { sendReaction } = useSendReaction();
   const { sit, pending: sitting } = useSitObserver();
@@ -87,6 +98,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const now = useNow(100, playing || status === 'ended');
   const teamMode = round?.mode === 'teams';
   const observing = role === 'observer';
+  const phraseGame = round?.game === 'phrase';
 
   // The server decides when a round ends; we only follow it to the results screen.
   useEffect(() => {
@@ -200,6 +212,19 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     [sendReaction],
   );
 
+  const handlePhrase = useCallback(
+    async (text: string) => {
+      const result = await sendPhrase(text);
+      if (!result || result.ok) return;
+      if (result.error.code === 'no_sends_left' || result.error.code === 'phrase_shape') {
+        toast.error(result.error.code);
+      } else {
+        toast.error(result.error.message === 'timeout' ? 'timeout' : result.error.code);
+      }
+    },
+    [sendPhrase],
+  );
+
   const handleSit = useCallback(
     async (wants: boolean) => {
       const result = await sit(wants);
@@ -222,9 +247,13 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     : me.finished
       ? teamMode && myTeamState?.solved
         ? 'team-solved'
-        : me.rows.length >= round.maxAttempts
-          ? 'out-of-attempts'
-          : 'out-of-time'
+        : phraseGame
+          ? (me.phrase?.sendsUsed ?? 0) >= PHRASE_RULES.sends
+            ? 'out-of-sends'
+            : 'out-of-time'
+          : me.rows.length >= round.maxAttempts
+            ? 'out-of-attempts'
+            : 'out-of-time'
       : 'playing';
   const secondsLeft = me.finished ? me.secondsLeft : secondsLeftAt(me, now);
   const percent = percentOf(secondsLeft, round.initialSeconds);
@@ -339,6 +368,45 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
       }
     : null;
 
+  let phrase: PhraseViewProps | null = null;
+  if (phraseGame && me.phrase) {
+    const self = me.phrase;
+    const finishedForMe = teamMode ? (myTeamState?.finished ?? me.finished) : me.finished;
+    const completedCount = teamMode
+      ? Object.values(teams).filter((entry) => entry?.solved).length
+      : solvedCount;
+    const wordsSent = teamMode
+      ? myTeamState?.phrase?.sendsUsed !== undefined
+        ? Object.values(players)
+            .filter((p) => roster[p.playerId]?.team === myTeam)
+            .reduce((sum, p) => sum + p.rows.length, 0)
+        : me.rows.length
+      : me.rows.length;
+    phrase = {
+      self,
+      wordCount: round.phraseWords?.length ?? self.letters.length,
+      modalOpen: phraseOpen,
+      wrong: phraseWrong,
+      pending: phrasePending,
+      locked: finishedForMe || self.sendsUsed >= PHRASE_RULES.sends || self.completed,
+      preview: computePhraseScorePreview({
+        secondsLeft,
+        initialSeconds: round.initialSeconds,
+        wordsSent,
+        sendsFailed: self.sendsUsed,
+        completed: self.completed,
+        position: teamMode ? (myTeamState?.solvedPosition ?? null) : solvedPosition,
+        finished: finishedForMe,
+        completedCount,
+        percent: Math.round((self.found / Math.max(1, self.total)) * 100),
+        teamMode,
+      }),
+      onOpen: () => setPhraseOpen(true),
+      onClose: () => setPhraseOpen(false),
+      onSend: (text) => void handlePhrase(text),
+    };
+  }
+
   const view: GameViewProps = {
     t,
     roomCode,
@@ -375,6 +443,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     preview,
     team,
     observer,
+    phrase,
     chat,
     hintState: !round.hintAvailable ? 'off' : me.hintUsed ? 'used' : 'available',
     hintPending,

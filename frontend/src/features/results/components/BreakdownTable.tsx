@@ -11,6 +11,8 @@ import type { BreakdownRowViewModel } from '../models/results.model';
 interface BreakdownTableProps {
   t: Dictionary;
   rows: BreakdownRowViewModel[];
+  /** Phrase game: words, sends and the uncovered share instead of greens/yellows. */
+  phraseGame?: boolean;
 }
 
 const Num = ({
@@ -38,10 +40,12 @@ const Num = ({
 const Dot = () => <Num tone="mute">·</Num>;
 
 const gridCols = 'grid-cols-[28px_148px_68px_60px_68px_72px_60px_64px_74px_70px]';
+const phraseGridCols = 'grid-cols-[28px_148px_68px_60px_72px_72px_72px_84px_70px]';
 
 /** Per-round points table with the exact columns of Results.dc.html. */
-export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
+export const BreakdownTable = ({ t, rows, phraseGame = false }: BreakdownTableProps) => {
   const firstUnsolved = rows.findIndex((row) => !row.solved);
+  const cols = phraseGame ? phraseGridCols : gridCols;
   return (
     <Card className="overflow-x-auto">
       <div className="min-w-204" role="table">
@@ -49,18 +53,29 @@ export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
           role="row"
           className={cn(
             'grid h-9 items-center gap-2 px-4 text-[11px] font-bold tracking-[0.08em] text-ink-3 uppercase',
-            gridCols,
+            cols,
           )}
         >
           <span>#</span>
           <span>{t.results.colPlayer}</span>
           <span className="text-right">{t.results.colTime}</span>
-          <span className="text-right">{t.results.colSolve}</span>
-          <span className="text-right">{t.results.colAttempts}</span>
+          <span className="text-right">
+            {phraseGame ? t.results.colPhrase : t.results.colSolve}
+          </span>
+          <span className="text-right">
+            {phraseGame ? t.results.colWords : t.results.colAttempts}
+          </span>
+          {phraseGame ? <span className="text-right">{t.results.colSends}</span> : null}
           <span className="text-right">{t.results.colPosition}</span>
-          <span className="text-right">{t.results.colHint}</span>
-          <span className="text-right">{t.results.colGreens}</span>
-          <span className="text-right">{t.results.colYellows}</span>
+          {phraseGame ? (
+            <span className="text-right">{t.results.colUncovered}</span>
+          ) : (
+            <>
+              <span className="text-right">{t.results.colHint}</span>
+              <span className="text-right">{t.results.colGreens}</span>
+              <span className="text-right">{t.results.colYellows}</span>
+            </>
+          )}
           <span className="text-right">{t.results.colRound}</span>
         </div>
         <div className="h-px bg-line" />
@@ -71,7 +86,7 @@ export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
               role="row"
               className={cn(
                 'grid h-11.5 items-center gap-2 px-4 text-sm',
-                gridCols,
+                cols,
                 row.solved && row.position === 1 && 'bg-green-soft',
                 row.isMe && 'bg-accent-soft',
               )}
@@ -93,7 +108,37 @@ export const BreakdownTable = ({ t, rows }: BreakdownTableProps) => {
                   <span className="text-[11px] text-ink-3">{t.results.notSolved}</span>
                 ) : null}
               </span>
-              {row.solved ? (
+              {phraseGame ? (
+                row.solved ? (
+                  <>
+                    <Num>{row.timeLeftPercent ?? 0} %</Num>
+                    <Num tone="pos">+{row.solveBonus}</Num>
+                    {row.attemptPenalty !== 0 ? (
+                      <Num tone="neg">{row.attemptPenalty}</Num>
+                    ) : (
+                      <Dot />
+                    )}
+                    {row.sendPenalty !== 0 ? <Num tone="neg">{row.sendPenalty}</Num> : <Dot />}
+                    {row.positionBonus > 0 ? <Num tone="pos">+{row.positionBonus}</Num> : <Dot />}
+                    <Dot />
+                  </>
+                ) : (
+                  <>
+                    <Dot />
+                    <Dot />
+                    <Num tone="mute">{row.attempt}</Num>
+                    {row.sendPenalty !== 0 ? <Num tone="neg">{row.sendPenalty}</Num> : <Dot />}
+                    <Dot />
+                    {row.uncoveredPoints > 0 ? (
+                      <Num tone="pos">
+                        {row.phrasePercent} % · +{row.uncoveredPoints}
+                      </Num>
+                    ) : (
+                      <Num tone="mute">{row.phrasePercent} %</Num>
+                    )}
+                  </>
+                )
+              ) : row.solved ? (
                 <>
                   <Num>{row.timeLeftPercent ?? 0} %</Num>
                   <Num tone="pos">+{row.solveBonus}</Num>

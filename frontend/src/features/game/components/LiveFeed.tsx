@@ -67,6 +67,19 @@ const Body = ({ t, event }: { t: Dictionary; event: TextFeedEvent }) => {
           {name} {t.game.feedNewHost}
         </span>
       );
+    case 'phrase-completed':
+      return (
+        <span className="text-ink">
+          {name} {t.game.feedPhraseCompleted} ·{' '}
+          <strong className="text-red">{t.game.feedPenalty}</strong>
+        </span>
+      );
+    case 'phrase-missed':
+      return (
+        <span>
+          {name} {t.game.feedPhraseMissed}
+        </span>
+      );
     case 'team-finished':
       return (
         <span>
@@ -82,13 +95,13 @@ export const FeedRow = ({ t, event }: { t: Dictionary; event: TextFeedEvent }) =
   <li
     className={cn(
       'flex gap-2.5 rounded-[10px] p-2 text-[13px] leading-[1.4] text-ink-2',
-      event.kind === 'solved' && 'bg-red-soft',
+      (event.kind === 'solved' || event.kind === 'phrase-completed') && 'bg-red-soft',
     )}
   >
     <span
       className={cn(
         'shrink-0 pt-0.5 font-mono text-xs tabular-nums',
-        event.kind === 'solved' ? 'text-red' : 'text-ink-3',
+        event.kind === 'solved' || event.kind === 'phrase-completed' ? 'text-red' : 'text-ink-3',
       )}
     >
       {formatClock(event.atSeconds, false)}

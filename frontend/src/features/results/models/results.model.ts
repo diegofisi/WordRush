@@ -1,5 +1,6 @@
 import type {
   GameEndPayload,
+  GameKind,
   GameMode,
   OwnRow,
   RoundBreakdown,
@@ -45,6 +46,9 @@ export interface BoardViewModel {
 
 export interface RoundResultsViewModel {
   mode: GameMode;
+  game: GameKind;
+  /** Phrase game: the phrase, revealed. */
+  phrase: string | null;
   round: number;
   totalRounds: number;
   word: string;
@@ -138,6 +142,8 @@ export const toRoundResultsViewModel = (
     });
   return {
     mode: payload.mode,
+    game: payload.game,
+    phrase: payload.phrase,
     round: payload.round,
     totalRounds: payload.totalRounds,
     word: payload.word.toUpperCase(),

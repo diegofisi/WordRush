@@ -2,6 +2,7 @@ import {
   type Emote,
   type GainKind,
   type OwnRow,
+  type PhraseProgress,
   type PlayerProgress,
   type TeamColor,
   type TeamId,
@@ -34,6 +35,8 @@ export interface RivalViewModel {
   /** Percent of the initial time frozen at solve; null while playing. */
   timePercent: number | null;
   greens: number;
+  /** Phrase game: where they have letters, never which. */
+  phrase: PhraseProgress | null;
 }
 
 /** A teammate: letters included, they play the same word with me. */
@@ -64,6 +67,8 @@ export interface RivalTeamViewModel extends TeamHeaderViewModel {
   finished: boolean;
   timePercent: number | null;
   members: RivalViewModel[];
+  /** Phrase game: the rival team's shared phrase. */
+  phrase: PhraseProgress | null;
 }
 
 export type FeedEvent = {
@@ -84,6 +89,9 @@ export type FeedEvent = {
   | { kind: 'new-host' }
   /** Team mode: a whole team ran out of time or attempts. */
   | { kind: 'team-finished'; teamName: string; reason: 'attempts' | 'time' }
+  /** Phrase game: a send at the whole phrase. */
+  | { kind: 'phrase-completed'; position: number }
+  | { kind: 'phrase-missed' }
 );
 
 /** Everything the feed still renders as one line; stickers are their own block. */
@@ -143,6 +151,7 @@ export const toRivalViewModel = (
     solvedPosition: progress.solvedPosition,
     timePercent: progress.solved ? percentOf(progress.secondsLeft, initialSeconds) : null,
     greens: progress.greens,
+    phrase: progress.phrase,
   };
 };
 
@@ -177,4 +186,5 @@ export const toRivalTeamViewModel = (
   finished: state.finished,
   timePercent: state.solved ? percentOf(state.secondsLeft, initialSeconds) : null,
   members,
+  phrase: state.phrase,
 });

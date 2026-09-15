@@ -20,6 +20,7 @@ const progress = (over: Partial<PlayerProgress> = {}): PlayerProgress => ({
   greens: 0,
   yellows: 0,
   penaltySeconds: 0,
+  phrase: null,
   ...over,
 });
 

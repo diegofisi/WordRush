@@ -8,6 +8,7 @@ import type { TeamBreakdownViewModel } from '../models/results.model';
 interface TeamBreakdownCardsProps {
   t: Dictionary;
   teams: TeamBreakdownViewModel[];
+  phraseGame?: boolean;
 }
 
 const Row = ({ label, value }: { label: string; value: number | string }) => (
@@ -27,7 +28,7 @@ const Row = ({ label, value }: { label: string; value: number | string }) => (
 );
 
 /** One card per team with the team formula (docs/context/06-v1.1.md -> Team scoring). */
-export const TeamBreakdownCards = ({ t, teams }: TeamBreakdownCardsProps) => (
+export const TeamBreakdownCards = ({ t, teams, phraseGame = false }: TeamBreakdownCardsProps) => (
   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
     {teams.map((team) => {
       const paint = paintFor(team.color);
@@ -59,7 +60,30 @@ export const TeamBreakdownCards = ({ t, teams }: TeamBreakdownCardsProps) => (
               : t.results.teamNotSolved}
           </span>
           <div className="h-px bg-line" />
-          {team.solved ? (
+          {phraseGame ? (
+            <div className="flex flex-col gap-1.25">
+              {team.solved ? (
+                <>
+                  <Row
+                    label={`${t.results.rowTime} · ${team.timeLeftPercent ?? 0} %`}
+                    value={team.timePoints}
+                  />
+                  <Row label={t.results.rowPhrase} value={team.solveBonus} />
+                  <Row label={t.results.rowWords(team.wordsSent)} value={team.attemptPenalty} />
+                  <Row label={t.results.rowSends(team.sendsFailed)} value={team.sendPenalty} />
+                  <Row label={t.results.rowFirstTeam} value={team.positionBonus} />
+                </>
+              ) : (
+                <>
+                  <Row
+                    label={t.results.rowUncovered(team.phrasePercent)}
+                    value={team.uncoveredPoints}
+                  />
+                  <Row label={t.results.rowSends(team.sendsFailed)} value={team.sendPenalty} />
+                </>
+              )}
+            </div>
+          ) : team.solved ? (
             <div className="flex flex-col gap-1.25">
               <Row
                 label={`${t.results.rowTime} · ${team.timeLeftPercent ?? 0} %`}

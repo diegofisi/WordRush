@@ -8,6 +8,7 @@ export type RoomSettingsForm = RoomSettings;
 export const toUpdateSettingsRequest = (form: RoomSettingsForm): UpdateSettingsRequest => ({
   settings: {
     language: form.language,
+    game: form.game,
     mode: form.mode,
     wordLength: form.wordLength,
     initialSeconds: form.initialSeconds,

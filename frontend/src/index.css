@@ -316,6 +316,13 @@
     font-size: 13px;
     letter-spacing: 0.04em;
   }
+  /* Phrase game: "complete the phrase", purple, at the end of the last row. */
+  .key-phrase {
+    background: var(--accent);
+    color: #ffffff;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
 
   .mini {
     width: 12px;
