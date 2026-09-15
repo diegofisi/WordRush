@@ -1,8 +1,9 @@
 # WordRush · Multiplayer Wordle
 
-A game of guessing 5-letter words, multiplayer (up to 8), in Spanish and English,
-where the clock rules: you gain time from new letters and lose it when somebody else
-solves. "WordRush" is a working name.
+A game of guessing words of 5, 6 or 7 letters, multiplayer (up to 8, plus 2 observers),
+in Spanish and English, alone or in two teams, where the clock rules: you gain time from
+new letters and lose it when somebody else solves. Since v1.1 the same rooms can play
+"Adivina la frase" instead. "WordRush" is a working name.
 
 ## Source of truth
 The whole idea, the rules and the decisions live in `docs/context/`. Read it before
@@ -14,6 +15,7 @@ touching anything in the game or the design:
 - `docs/context/03-scoring-system.md` — the final formula with a step-by-step simulation.
 - `docs/context/04-decisions-and-pending.md` — what was decided, what was discarded, what is missing.
 - `docs/context/05-design.md` — visual direction, screens and the link to the Claude Design canvas.
+- `docs/context/06-v1.1.md` — v1.1: word length, the new hint, teams, chat, observers, kick, the phrase game.
 
 ## Repository structure
 ```

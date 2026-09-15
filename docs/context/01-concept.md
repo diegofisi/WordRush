@@ -5,13 +5,13 @@ A chaotic multiplayer Wordle where what counts most is the time you have left ov
 not how many attempts you used.
 
 ## The idea
-- Five-letter words, up to 8 attempts, in Spanish or English (chosen when the room is created).
-- Rooms of up to 8 people. Everyone gets the same word each round.
+- Words of 5, 6 or 7 letters (8 / 9 / 10 attempts), in Spanish or English, chosen when the room is created. Since v1.1 the room can also play in two teams, or a second game, "Adivina la frase" (`06-v1.1.md`).
+- Rooms of up to 8 people (plus 2 observers watching a running game). Everyone gets the same word each round.
 - Every player has their own clock. It starts at the time set by whoever created the room.
 - Uncovering new letters adds seconds. Another player solving takes seconds away from you.
 - As in classic Wordle you do not see the other players' letters, but you do see their
   colours and you know how they are doing.
-- There is one hint per player, emotes to express yourself, and a final table across rounds.
+- There is one hint per player (per team in team mode), emotes and a chat to express yourself, and a final table across rounds.
 
 ## What makes it different
 1. **The clock rules.** Points come from the percentage of time you have left when you solve.

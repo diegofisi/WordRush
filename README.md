@@ -1,9 +1,18 @@
 # WordRush · Multiplayer Wordle
 
-Guess the five-letter word before everyone else. Every new letter adds seconds to your
-clock, every rival solve takes seconds away, and whoever finishes with the most clock
-wins. Rooms of 2 to 8 players, words in Spanish or English, up to 8 attempts, one hint
-per round, emote reactions and an accumulated leaderboard across rounds.
+Guess the word before everyone else. Every new letter adds seconds to your clock, every
+rival solve takes seconds away, and whoever finishes with the most clock wins. Rooms of 2
+to 8 players (plus 2 observers), words of 5, 6 or 7 letters in Spanish or English, one
+hint per round, emote reactions, a chat, and an accumulated leaderboard across rounds.
+
+**v1.1** (2026-09-15) adds: word length 5 / 6 / 7 with 8 / 9 / 10 attempts, a hint that
+reveals a new letter or places a known one, **team mode** (one clock, one hint and one
+score per team, teammates' boards live), a **chat** (finished players only while a round
+runs, team channel, everybody between rounds), **observers** who join a running game and
+take a seat next round, host **kick**, a QR of the room link, every board on the results
+screen, four sound cues, and a second game on the same rooms: **Adivina la frase** (a
+hidden phrase revealed only by the letters of the words you type, five sends to complete
+it). Rules: [docs/context/06-v1.1.md](docs/context/06-v1.1.md).
 
 Game rules and the scoring formula live in [docs/context/](docs/context/).
 The approved design is in [docs/design/](docs/design/).
@@ -14,7 +23,7 @@ The approved design is in [docs/design/](docs/design/).
 backend/    NestJS 11 + Socket.IO. Rooms live in memory; the word, clocks and points live here.
 frontend/   React 19 + Vite + Tailwind. Web client, desktop and phone, light/dark, ES/EN UI.
 docs/       context (rules, decisions) and design (Claude Design canvas).
-scripts/    sync-contract.mjs (copies the event contract to the frontend), build-words.mjs.
+scripts/    sync-contract.mjs (copies the event contract to the frontend), build-words.mjs, build-phrases.mjs.
 ```
 
 The two services are independent packages, each with its own `package.json` and
@@ -131,6 +140,15 @@ of the language, sorted from most to least frequent. The picker favours the head
 list. The lists are deliberately far below Wordle's ~2300: no regionalisms, no profanity,
 no proper nouns, and none of the tail of rare words that appears past the ~900 most used.
 To widen them, change `EN_ANSWERS` / `ES_ANSWERS` in the script and regenerate.
+
+## Phrase bank
+
+"Adivina la frase" picks from `backend/src/modules/words/data/phrases.{es,en}.json`:
+sayings and everyday expressions, 4 to 8 words, curated by hand inside
+`scripts/build-phrases.mjs` (299 Spanish, 285 English on 2026-09-15). The script only
+validates the shape and writes the files; run `node scripts/build-phrases.mjs` after
+editing the lists. Accents are stripped at play time like the word lists, so "más" and
+"mas" are the same phrase.
 
 ## Changing rules
 

@@ -80,10 +80,11 @@ src/
   main.ts, app.module.ts
   shared/            contract (frozen), DomainException, Clock, RoomEventsBus, CORS adapter
   modules/
-    words/           word lists ES/EN (data/*.json), normalisation, random word picker
-    rooms/           Room / Player / PlayerRound aggregates, lobby use cases, janitor
-    game/            colour feedback, time ledger, scoring, round lifecycle, ticker
+    words/           word lists ES/EN per length and the phrase banks (data/*.json), normalisation, pickers
+    rooms/           Room / Player / Team / PlayerRound aggregates, lobby, teams, observers, kick, janitor
+    game/            colour feedback, time ledger, scoring, round lifecycle, ticker, the phrase game
     reactions/       emote broadcast with cooldown
+    chat/            chat messages with the visibility rules, slur masking, history
     gateway/         the Socket.IO gateway (presentation only), validation, error mapping
     health/          GET /health
 ```

@@ -65,6 +65,11 @@
 | Four sounds: room created, joined, game started, round ended; players cannot send sounds | Feedback without noise. |
 | Kick by host with a 30 s rejoin delay; no "ready" gate | Enough control for 8 people. |
 | Surviving a deploy with games in progress is **deferred** | Needs persistence (Redis/disk) and a restore path; too big for v1.1. |
+| "Adivina la frase": nothing given, letters only from typed words, every occurrence revealed, +2 s each, 6 words and 5 sends (−5 each), +80 for the phrase, −4 per **every** word typed, completion order 20/15/10 (+20 first team only), the completion bonus as the floor, the uncovered share (≤ 20) when not completed, no hint | The mockup's score card, made into a formula; the floor mirrors Wordle's 40 so a completed phrase always beats an open one. |
+| Phrase banks curated by hand in `scripts/build-phrases.mjs` (4–8 words, 16–42 letters) rather than scraped | Sayings must read well and carry no proper nouns; no public list met that. |
+| Team mode of the phrase game shares the phrase, the clock and the five sends | One team, one unit, as in Wordle's team mode. |
+| A room with only observers left is deleted; observers alone cannot keep it alive | Nothing can happen in it, and the seats would never free up. |
+| v1.1 built locally on 2026-09-15 (phases 0–8 of `06-v1.1.md`), tagged `v1.1`, **not deployed** | The user asked for a local build only. |
 
 ## Pending decisions
 - **Games surviving a deploy.** Rooms are in memory; every deploy ends every game. Deferred on 2026-09-15 (`06-v1.1.md`).

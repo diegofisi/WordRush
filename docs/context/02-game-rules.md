@@ -2,12 +2,15 @@
 
 ## Room
 - Whoever creates the room chooses: language (ES / EN), initial time per round, number of
-  rounds, and capacity (2 to 8 players). From v1.1 also the **word length** (5 / 6 / 7)
-  and **normal or teams** — see `06-v1.1.md`.
+  rounds, and capacity (2 to 8 players). From v1.1 also the **game** (word or phrase), the
+  **word length** (5 / 6 / 7) and **normal or teams** — see `06-v1.1.md`. A running room
+  admits up to 2 **observers** on top (`06-v1.1.md` -> Observers).
 - Recommended minimum initial time: 60 seconds. Below that, with 8 players, the last one
   is almost always knocked out by the −5 s penalties. See `03-scoring-system.md`.
-- You get in with a room code. There is a waiting room with the player list and a "Listo"
-  ("Ready") button.
+- You get in with a room code, or by scanning the QR of the invite link. There is a
+  waiting room with the player list, how many are connected, and a "Listo" ("Ready")
+  button that is only informational. The host can **kick** somebody; that name may not
+  come back for 30 s.
 - The invite link (`/?code=XXXX`) opens a reduced view that only asks for the name; it does not show the create-room form.
 - The host can start with fewer players than the capacity, as long as at least 2 are connected. Not everybody has to be "ready".
 - The host can change the settings while in the lobby ("Cambiar reglas" / "Change rules"):
@@ -16,11 +19,11 @@
   room. The chips update live for everybody and nobody's "ready" flag is reset.
 
 ## Round
-- Every player gets the same 5-letter word.
-- Up to 8 attempts per player.
+- Every player gets the same word of the room's length (5 / 6 / 7 letters).
+- Up to 8 / 9 / 10 attempts per player, by length.
 - Each player's clock resets to the initial time every round. A bad round does not knock
   you out of the rest of the game.
-- The round ends for a player when they solve it, use up the 8 attempts, or their clock reaches 0.
+- The round ends for a player when they solve it, use up the attempts, or their clock reaches 0.
 - The room's round ends when everybody has finished, or when the last clock reaches 0.
 - On solving, the player's clock freezes. That value is what scores.
 
@@ -52,9 +55,10 @@ Maximum possible per round: 50 seconds (5 letters × 10). With repeated letters 
 - The HUD shows how many seconds you have lost to this in the round.
 
 ## Hint
-> v1.1 replaces this hint with one that reveals a new letter, or places a known one when
-> every letter is known; in team mode it is one per team. See `06-v1.1.md`. What follows is
-> the v1.0 hint, still the one in the code until step 2 of v1.1 lands.
+> Since v1.1 (in the code from 2026-09-15) the hint reveals a new letter, or places a
+> known one when every letter is known; in team mode it is one per team, and it is off
+> in the phrase game. See `06-v1.1.md` -> Hint. What follows is the v1.0 hint, kept for
+> the record.
 
 - Every player gets **one hint per round**. If they do not use it, it is lost when the round ends; it does not carry over.
 - Using it reveals **one letter that is in the word, without saying in which position**. It is marked on the keyboard with the hint style (dotted yellow). Nothing is marked on the board.
