@@ -118,6 +118,15 @@ export class EndRoundUseCase {
     // into an empty room (docs/context/02-game-rules.md).
     const abandoned = room.connectedPlayers().length === 0;
     const isLast = room.currentRound >= rounds || abandoned;
+    // The game goes to the team with the most points; the counter outlives the
+    // game, and it must be right on this very payload.
+    if (isLast && teamStandings.length > 0) {
+      const [first, second] = teamStandings;
+      if (first && (!second || second.total < first.total)) {
+        room.team(first.team).gamesWon += 1;
+        first.gamesWon += 1;
+      }
+    }
     const payload: RoundEndPayload = {
       round: room.currentRound,
       totalRounds: rounds,
@@ -137,14 +146,6 @@ export class EndRoundUseCase {
     if (isLast) {
       room.status = 'finished';
       room.finishedAt = now;
-      // The game goes to the team with the most points; the counter outlives the game.
-      if (teamStandings.length > 0) {
-        const [first, second] = teamStandings;
-        if (first && (!second || second.total < first.total)) {
-          room.team(first.team).gamesWon += 1;
-          first.gamesWon += 1;
-        }
-      }
       this.bus.publish({
         roomCode: room.code,
         event: 'game:end',
