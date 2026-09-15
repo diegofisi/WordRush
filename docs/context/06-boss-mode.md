@@ -387,6 +387,15 @@ Each of her turns:
    third word, and put back on 2026-09-15 once that was measured to be luck
    (13.5 % of rounds; the typical solve is the 4th or 5th word).
 
+   **+25 %, 2026-09-15.** Her brain cannot be made stronger (it chooses like
+   a coin), so the buff is tempo: read-out window 900 → 675 ms and typing
+   600 → 450 ms per letter. A decision costs ~5 s of CPU instead of ~7 and a
+   word lands every **~5.5–7 s**; her typical solve moves from 30–45 s to
+   about 23–34 s. The readout stays the one fitted at 900 ms (rates are per
+   second, same scale) and the tools still simulate 900 ms; nothing else
+   changed. The other two levers considered and not pulled: damage per human
+   solve (8 s) and drawing part of her candidates from the answer list.
+
    The live stream has its own threads since the same day: a decision blocks
    its thread for those 7 s, and while decisions and stream shared one the
    panel froze for every decision.

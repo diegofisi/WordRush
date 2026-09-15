@@ -92,8 +92,15 @@ const SETTLE_MS = 60;
  * removes the peak and keeps improving to 32.3%, but that means departing from
  * Shiu et al., and 900 ms at the published strength is enough to play with
  * (docs/context/06-boss-mode.md).
+ *
+ * 675 since 2026-09-15, as a balance decision and not a calibration: the
+ * readout was fitted at 900 ms and her choice was measured to be no better
+ * than a coin at 900 and at 400 alike, so a quarter less window costs her
+ * nothing she had and makes her a quarter faster. The tools (training, the
+ * control) still simulate 900 ms; the runtime rates are per second, so the
+ * readout reads them on the same scale.
  */
-const WINDOW_MS = 900;
+const WINDOW_MS = 675;
 
 const started = Date.now();
 const silenced = (workerData as { silenced?: boolean } | undefined)?.silenced === true;

@@ -50,8 +50,12 @@ export const BOSS_CADENCE = {
    */
   thinkMinMs: 3000,
   thinkMaxMs: 6000,
-  /** She types the word out rather than submitting it instantly. */
-  typeMsPerLetter: 600,
+  /**
+   * She types the word out rather than submitting it instantly. 450 since
+   * 2026-09-15, a quarter less than the 600 it was, with the read-out window
+   * shortened by the same quarter: the "+25 %" balance pass.
+   */
+  typeMsPerLetter: 450,
   /** How soon to look again when the brain has not answered at all. */
   retryMs: 1500,
 } as const;
