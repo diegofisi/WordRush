@@ -37,48 +37,57 @@ This is the whole mode in one line.
 Humans are a team. They never damage each other. The only target is the fly, and the
 only attacker is the fly.
 
-### The fly's clock is the boss's health, and the boss does not heal
+### The fly's clock is the boss's health
 She has one clock, visible to the whole room as a bar, and it is the thing the team is
-trying to empty. She earns **no time from letters**. Her clock only ever goes down. This is the one place
-where she does not play by the human rules, and it is not decoration: without it the mode
-does not work.
-
-The arithmetic that forced it, found while prototyping on 2026-09-13. A player uncovering
-the whole word earns up to 50 s. Eight humans each dealing 5 s deal 40 s in total. So a
-fly who played well would out-earn the entire room's damage and could never be brought
-down, no matter how many people were in it. Letting the boss heal made the boss unkillable.
-
-So her clock has three components only:
+trying to empty. Since 2026-09-13 it is **the room's own clock** — the same
+`initialSeconds` as every human (`bossClockSeconds`) — and she earns time from new
+letters at the normal rates like anybody else (`earnsTimeFromLetters: true`). The one
+asymmetry left is the attack: a human solve takes **8 s** off her instead of the normal
+5 s off a rival, and nothing she does damages a human.
 
 | Component | Effect |
 |---|---|
-| Starting clock | **45 s, flat** — it does not grow with the room |
+| Starting clock | the room's, e.g. 90 s — same as every human |
+| New letters she uncovers | +time at the normal rates |
 | A human solving | **−8 s** each |
 | Time passing | −1 s per second, as for anybody |
 
-### Why the clock is flat
-The first design scaled it with the room. It read badly and played worse: in a full room a
-solve took 16 s off a 148 s bar, a scratch nobody could see, and the fight was decided by
-arithmetic rather than by anyone playing well. Flat, every solve is a visible fifth of her
-life and the rule fits in a sentence: *she has 40 seconds, and every one of you who solves
-takes 8 off her.* More players help, because more people can land a hit.
+### Why she is on the room's clock
+The first design gave her a short flat bar of her own (40 s, then 45 s) that earned no
+time from letters, so that a room's solves could drain it. It read badly — she looked
+permanently strangled — and it broke her scoring: the points formula pays for the
+percentage of *your* clock you had left, so a 45 s opponent measured against a 90 s
+room could never score fairly and had to be dropped from the table. On the room's clock
+she is measured by the same formula and sits in the same table (2026-09-13). What makes
+her beatable now is not a short bar but her attempts and her pace (below): with a word
+every 13–18 s she reaches five or six in a 90 s round, and every human solve costs her
+most of one — and at a word every 7–9 s, her fifth lands at about 40 s.
 
 ### What the numbers were tuned against
-Measured on 2026-09-13 with the connectome doing the choosing: she solves in 2 to 3
-attempts and needs 15 s at best, **29 s typically and 32 s at worst**, at 12 to 23 s of
-deliberation per turn. Her clock is 45 s, so untouched she wins; the earlier 40 s left her
-8 s of headroom in a bad round and played as permanent near-death.
+**2026-09-13, superseded.** With a hand-written policy choosing for her she solved in 2
+to 3 attempts, 29 s typically, on a 45 s bar: untouched she won, one solve rarely turned
+it, two or three made her the underdog. That fly and that bar are gone (`07`).
 
-| Humans who solve in time | Her budget | Outcome |
-|---|---|---|
-| 0 | 45 s | she wins |
-| 1 | 37 s | she usually wins |
-| 2 | 29 s | a coin flip on the word |
-| 3 | 21 s | the team usually wins |
-| 4 | 13 s | the team wins |
+**2026-09-15, as shipped.** Her brain chooses no better than a coin among the eight
+filtered survivors, so what decides a round is *when* the coin lands and how much clock
+she has. Measured over 3,000 rounds, she solves on attempt 4 or 5 most of the time
+(cumulative: 13.5 % by the 3rd, 43 % by the 4th, 70 % by the 5th, 86.5 % by the 6th);
+at a word every 7–9 s that is a solve between about **30 and 45 s** of a 90 s round;
+in 90 s she gets through all ten words, so she solves ~98 % of rounds nobody shortens.
+Each human solve takes 8 s off her, one word:
 
-Untouched she nearly always wins, one solve rarely turns it, and two or three make her the
-underdog. That is the shape the mode wants.
+| Humans who solve in time | Her budget (90 s room) | Words she gets | Outcome |
+|---|---|---|---|
+| 0 | 90 s | 10 | she solves ~98 % |
+| 1 | 82 s | 9 | she solves ~96 % |
+| 3 | 66 s | 7–8 | she solves ~94 % |
+| 5 | 50 s | 5–6 | she solves ~80 % |
+
+Read plainly: at this pace and ten attempts she is a fly who nearly always finishes the
+word, and the room's game is to finish first. The knobs, in the order to reach for
+them if that is too much: `BOSS.damageOnHumanSolve` (8 s), her pace (`BOSS_CADENCE`,
+3–6 s think), and last `BOSS.maxAttempts` (10, which the user set so that attempts
+never end her round: "es solo una mosquita").
 
 ### Her pace is a balance number, not flavour
 She takes 12 to 23 s per turn, so a round costs her 30 to 60 s. This is not decoration.
@@ -367,16 +376,16 @@ Each of her turns:
    **her clock**: solve before she does and take 8 s off it each time; she is
    beaten when it runs out, not when her attempts do.
 
-   Her pace is the balance knob that is left, and it is bounded below by
+   Her pace is as fast as the machine allows, and it is bounded by
    computation, not biology: a decision is 960 ms of simulated brain, and
-   simulating it costs about 7 s of wall time on the development machine, so
-   the floor is a word every ~9 s. That floor was played on 2026-09-14 and she
-   solved by her third word with the round barely begun — with the filter her
-   third or fourth word is the likely answer at any pace, so the pace is what
-   gives the room its time. The think time is now drawn uniformly between
-   **10 and 15 s** per turn, counted from the tick that starts it, plus 3 s of
-   typing: a word every **13 to 18 s**, her fifth at about 75 s, and the
-   spread means the room cannot count her down.
+   simulating it costs about 7 s of wall time on the development machine. The
+   think time is drawn uniformly between **3 and 6 s** per turn, counted from
+   the tick that starts it, plus 3 s of typing; since the brain's 7 s sit
+   inside it, the low end starts the next turn the moment she answers. A word
+   every **7 to 9 s**, with a spread so the room cannot count her down. It was
+   raised to 13–18 s on 2026-09-14 after one round where she solved by her
+   third word, and put back on 2026-09-15 once that was measured to be luck
+   (13.5 % of rounds; the typical solve is the 4th or 5th word).
 
    The live stream has its own thread since the same day: a decision blocks
    its thread for those 7 s, and while decisions and stream shared one the

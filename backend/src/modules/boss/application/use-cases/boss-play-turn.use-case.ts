@@ -40,17 +40,16 @@ export const BOSS_CADENCE = {
    *
    * The biology is 960 ms of simulated brain per decision; what costs about
    * seven seconds of wall time is simulating it, 138,639 neurons at 0.1 ms
-   * steps. Those seconds are inside this value, so the floor is a word every
-   * ~9 s (3 s of think plus 3 s of typing). That floor was tried on
-   * 2026-09-14 and she solved by her third word with the round barely
-   * begun; the filter makes her third or fourth word the likely answer
-   * whatever the pace, so the pace is what gives the room its time. Ten to
-   * fifteen seconds puts a word every 13 to 18 s, her fifth at about 75 s,
-   * and the spread means the room cannot count her down. Pacing is not
-   * help; it is reaction time.
+   * steps. Those seconds are inside this value, so anything below them is
+   * the floor: with 3 s the next turn starts the moment the brain answers,
+   * with 6 s it waits 2 s more. A word every 7 to 9 s. It was raised to
+   * 10–15 s on 2026-09-14 after a round where she solved by her third word,
+   * and put back on 2026-09-15 once that round was measured to be luck
+   * (13.5 % of rounds; the typical solve is the 4th or 5th word). Pacing
+   * is not help; it is reaction time.
    */
-  thinkMinMs: 10000,
-  thinkMaxMs: 15000,
+  thinkMinMs: 3000,
+  thinkMaxMs: 6000,
   /** She types the word out rather than submitting it instantly. */
   typeMsPerLetter: 600,
   /** How soon to look again when the brain has not answered at all. */
