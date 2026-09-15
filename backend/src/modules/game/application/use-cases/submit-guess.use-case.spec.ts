@@ -44,16 +44,27 @@ describe('SubmitGuessUseCase', () => {
     events = [];
     bus.subscribe((e) => events.push(e));
 
-    const wordList: IWordList = { isAllowed: () => true, answers: () => [ANSWER] };
+    const wordList: IWordList = {
+      isAllowed: () => true,
+      guessable: () => [],
+      answers: () => [ANSWER],
+    };
     scheduler = new RoundSchedulerService();
     const startRound = new StartRoundUseCase({ pick: () => ANSWER }, bus);
     const endRound = new EndRoundUseCase(rooms, clock, bus, scheduler, startRound);
     const lifecycle = new RoundLifecycleService(bus, endRound);
-    useCase = new SubmitGuessUseCase(rooms, wordList, clock, bus, lifecycle);
+    useCase = new SubmitGuessUseCase(rooms, wordList, clock, lifecycle);
 
     room = Room.create(
       'ABCD',
-      { language: 'es', initialSeconds: 60, rounds: 3, capacity: 8, hintEnabled: true },
+      {
+        language: 'es',
+        initialSeconds: 60,
+        rounds: 3,
+        capacity: 8,
+        hintEnabled: true,
+        bossMode: false,
+      },
       T0,
     );
     room.status = 'playing';

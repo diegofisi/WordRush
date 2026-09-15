@@ -1,18 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { MAX_ATTEMPTS, SCORING, WORD_LENGTH, type GuessAck } from '@shared/contract';
+import { MAX_ATTEMPTS, WORD_LENGTH, type GuessAck } from '@shared/contract';
 import { CLOCK, type Clock } from '@shared/domain/clock';
 import { DomainException } from '@shared/domain/domain.exception';
-import { RoomEventsBus } from '@shared/events/room-events.bus';
-import { Player } from '@modules/rooms/domain/entities/player.entity';
-import { Room } from '@modules/rooms/domain/entities/room.entity';
 import {
   IRoomRepository,
   ROOM_REPOSITORY,
 } from '@modules/rooms/domain/interfaces/room-repository.interface';
 import { IWordList, WORD_LIST } from '@modules/words/domain/interfaces/word-list.interface';
 import { isWordShaped, normalizeWord } from '@modules/words/domain/services/normalize-word';
-import { computeFeedback } from '../../domain/services/color-feedback';
-import { chargeGuess, totalSeconds } from '../../domain/services/time-ledger';
+import { applyGuessRow } from '../../domain/services/apply-guess';
 import { RoundLifecycleService } from '../services/round-lifecycle.service';
 
 /**
@@ -26,7 +22,6 @@ export class SubmitGuessUseCase {
     @Inject(ROOM_REPOSITORY) private readonly rooms: IRoomRepository,
     @Inject(WORD_LIST) private readonly wordList: IWordList,
     @Inject(CLOCK) private readonly clock: Clock,
-    private readonly bus: RoomEventsBus,
     private readonly lifecycle: RoundLifecycleService,
   ) {}
 
@@ -53,11 +48,7 @@ export class SubmitGuessUseCase {
       throw new DomainException('word_not_in_list');
     }
 
-    const feedback = computeFeedback(word, answer);
-    const gains = chargeGuess(round.charges, word, feedback);
-    const secondsGained = totalSeconds(gains);
-    round.addSeconds(secondsGained);
-    round.rows.push({ word, colors: feedback.colors });
+    const { colors, gains, secondsGained } = applyGuessRow(round, word, answer, true);
     room.touch(now);
 
     const solved = word === answer;
@@ -69,7 +60,7 @@ export class SubmitGuessUseCase {
     }
 
     const ack: GuessAck = {
-      colors: [...feedback.colors],
+      colors: [...colors],
       gains,
       secondsGained,
       secondsLeft: round.secondsLeft(now),
@@ -81,40 +72,8 @@ export class SubmitGuessUseCase {
     };
 
     this.lifecycle.publishProgress(room, player, now);
-    if (solved) this.announceSolve(room, player, now);
+    if (solved) this.lifecycle.announceSolve(room, player, now);
     this.lifecycle.endRoundIfOver(room, now);
     return ack;
-  }
-
-  /** `player:solved`, then -5 s to everyone still playing, then `time:penalty`. */
-  private announceSolve(room: Room, solver: Player, now: number): void {
-    const solverRound = solver.round;
-    if (!solverRound) return;
-    this.bus.publish({
-      roomCode: room.code,
-      event: 'player:solved',
-      payload: {
-        playerId: solver.id,
-        position: solverRound.solvedPosition ?? room.solvedCount,
-        attempt: solverRound.attempt,
-        secondsLeft: solverRound.secondsLeft(now),
-      },
-    });
-
-    const penalty = SCORING.penaltyOnRivalSolveSeconds;
-    const clocks: { playerId: string; secondsLeft: number; at: number }[] = [];
-    for (const rival of room.players) {
-      const r = rival.round;
-      if (rival.id === solver.id || !r || r.solved || r.finished) continue;
-      r.applyPenalty(penalty);
-      clocks.push({ playerId: rival.id, secondsLeft: r.secondsLeft(now), at: now });
-    }
-    this.bus.publish({
-      roomCode: room.code,
-      event: 'time:penalty',
-      payload: { fromPlayerId: solver.id, seconds: penalty, clocks },
-    });
-    // A penalty can push a clock past its deadline: settle those right away.
-    this.lifecycle.finishTimedOut(room, now);
   }
 }

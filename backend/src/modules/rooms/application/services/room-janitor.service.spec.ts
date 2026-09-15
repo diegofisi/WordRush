@@ -22,6 +22,7 @@ const settings = {
   rounds: 3,
   capacity: 8,
   hintEnabled: true,
+  bossMode: false,
 };
 
 function makeRoom(code: string, ids: string[], now: number): Room {

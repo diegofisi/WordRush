@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { EmoteIcon } from '@/shared/components/icons/EmoteIcon';
 import { Card } from '@/shared/components/ui/Card';
 import type { Emote } from '@/shared/contract';
+import { BOSS } from '@/shared/contract';
 import type { Dictionary } from '@/shared/i18n';
 import { cn } from '@/shared/lib/cn';
 import { formatClock } from '@/shared/lib/format';
@@ -26,7 +27,12 @@ const Body = ({ t, event }: { t: Dictionary; event: TextFeedEvent }) => {
     case 'solved':
       return (
         <span className="text-ink">
-          {name} {t.game.feedSolved} · <strong className="text-red">{t.game.feedPenalty}</strong>
+          {name} {t.game.feedSolved} ·{' '}
+          {event.hitBoss ? (
+            <strong className="text-green-ink">{t.game.bossHit(BOSS.damageOnHumanSolve)}</strong>
+          ) : (
+            <strong className="text-red">{t.game.feedPenalty}</strong>
+          )}
         </span>
       );
     case 'hint':
@@ -79,7 +85,7 @@ export const FeedRow = ({ t, event }: { t: Dictionary; event: TextFeedEvent }) =
   <li
     className={cn(
       'flex gap-2.5 rounded-[10px] p-2 text-[13px] leading-[1.4] text-ink-2',
-      event.kind === 'solved' && 'bg-red-soft',
+      event.kind === 'solved' && (event.hitBoss ? 'bg-green-soft' : 'bg-red-soft'),
     )}
   >
     <span

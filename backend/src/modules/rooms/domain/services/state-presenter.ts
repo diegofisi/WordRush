@@ -1,4 +1,5 @@
 import type {
+  BossState,
   FullState,
   PlayerProgress,
   RoundEndPayload,
@@ -44,6 +45,30 @@ export function toSelfState(player: Player, now: number): SelfState {
   };
 }
 
+/**
+ * The fly's clock presented as health: where it started, what the team has
+ * taken off it, and what she gave up by not earning time from letters.
+ * Null when the room is not in boss mode (docs/context/06-boss-mode.md).
+ */
+export function toBossState(room: Room, now: number): BossState | null {
+  const bot = room.bot;
+  const round = bot?.round;
+  if (!bot || !round) return null;
+  return {
+    playerId: bot.id,
+    startSeconds: round.initialSeconds,
+    damageSeconds: round.penaltySeconds,
+    secondsLeft: round.secondsLeft(now),
+    at: now,
+    attempt: round.attempt,
+    solved: round.solved,
+    defeated: round.finished && !round.solved,
+    forfeitedSeconds: round.forfeitedSeconds,
+    // Her last decision arrives on its own event; a fresh snapshot starts blank.
+    decision: null,
+  };
+}
+
 export function toRoundState(room: Room, player: Player, now: number): RoundState {
   return {
     round: room.currentRound,
@@ -53,6 +78,7 @@ export function toRoundState(room: Room, player: Player, now: number): RoundStat
     hintAvailable: room.settings.hintEnabled,
     me: toSelfState(player, now),
     players: room.players.map((p) => toPlayerProgress(p, now)),
+    boss: toBossState(room, now),
   };
 }
 

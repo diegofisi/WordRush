@@ -9,6 +9,7 @@ import { toast } from '@/shared/stores/useToastStore';
 
 import { useLeaveRoom } from '../api/leave-room/useLeaveRoom';
 import { useRestartRoom } from '../api/restart-room/useRestartRoom';
+import { BossRows } from '../components/BossRows';
 import { BreakdownTable } from '../components/BreakdownTable';
 import { FinalBanner } from '../components/FinalBanner';
 import { RoundHeader } from '../components/RoundHeader';
@@ -91,6 +92,7 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
         ) : null}
         <RoundHeader t={t} results={results} />
         <BreakdownTable t={t} rows={results.rows} />
+        {results.boss ? <BossRows t={t} boss={results.boss} /> : null}
         {initialSeconds !== null ? (
           <p className="m-0 text-[13px] text-ink-3">{t.results.timeNote(initialSeconds)}</p>
         ) : null}

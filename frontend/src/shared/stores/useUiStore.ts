@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import type { Language } from '@/shared/contract';
+import { sound } from '@/shared/lib/sound';
 
 export type Theme = 'light' | 'dark';
 export type UiLanguage = Language;
@@ -8,6 +9,7 @@ export type UiLanguage = Language;
 const LANG_KEY = 'wordrush.lang';
 const THEME_KEY = 'wordrush.theme';
 const NAME_KEY = 'wordrush.name';
+const MUTED_KEY = 'wordrush.muted';
 
 const readStorage = (key: string): string | null => {
   try {
@@ -48,6 +50,8 @@ const applyTheme = (theme: Theme) => {
 interface UiState {
   lang: UiLanguage;
   theme: Theme;
+  /** Cues off. Remembered across visits, like the theme. */
+  muted: boolean;
   /** Last name typed on the home screen, for convenience across visits. */
   rememberedName: string;
 }
@@ -56,12 +60,14 @@ interface UiActions {
   setLang: (lang: UiLanguage) => void;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
+  toggleMuted: () => void;
   rememberName: (name: string) => void;
 }
 
 const initialState: UiState = {
   lang: getInitialLang(),
   theme: getInitialTheme(),
+  muted: readStorage(MUTED_KEY) === '1',
   rememberedName: readStorage(NAME_KEY) ?? '',
 };
 
@@ -78,12 +84,21 @@ export const useUiStore = create<UiState & UiActions>((set, get) => ({
     set({ theme });
   },
   toggleTheme: () => get().setTheme(get().theme === 'dark' ? 'light' : 'dark'),
+  toggleMuted: () => {
+    const muted = !get().muted;
+    writeStorage(MUTED_KEY, muted ? '1' : '0');
+    sound.setMuted(muted);
+    // Turning it back on is itself the gesture that opens the audio device.
+    if (!muted) sound.unlock();
+    set({ muted });
+  },
   rememberName: (rememberedName) => {
     writeStorage(NAME_KEY, rememberedName);
     set({ rememberedName });
   },
 }));
 
-// Sync the DOM with the derived initial values once at module load.
+// Sync the DOM and the audio layer with the derived initial values once.
+sound.setMuted(initialState.muted);
 applyTheme(initialState.theme);
 document.documentElement.lang = initialState.lang;

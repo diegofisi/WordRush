@@ -104,7 +104,15 @@ export const RoomCodeHeader = ({
             onClick={edit}
             title={isHost ? t.lobby.changeRules : undefined}
           />
-          {!settings.hintEnabled ? (
+          {settings.bossMode ? (
+        <Chip
+          value={t.lobby.bossOn}
+          mono={false}
+          onClick={edit}
+          title={isHost ? t.lobby.changeRules : undefined}
+        />
+      ) : null}
+      {!settings.hintEnabled ? (
             <Chip
               value={t.lobby.hintOff}
               muted

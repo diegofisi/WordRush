@@ -10,12 +10,15 @@ const SETTINGS: RoomSettings = {
   rounds: 3,
   capacity: 8,
   hintEnabled: true,
+  bossMode: false,
 };
 
 const roundEnd = (): RoundEndPayload => ({
   round: 1,
   totalRounds: 3,
   word: 'ahora',
+  bossDefeated: null,
+  boss: null,
   breakdown: [],
   standings: [],
   nextRoundIn: 12,

@@ -155,6 +155,18 @@ export const RoomSettingsDialog = ({
           />
         </div>
 
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-accent/40 bg-accent-soft px-4 py-3.5">
+          <div className="flex min-w-0 flex-col gap-0.5 text-accent">
+            <span className="text-sm font-semibold">{t.home.bossToggle}</span>
+            <span className="text-xs text-ink-3">{t.home.bossToggleHint}</span>
+          </div>
+          <Toggle
+            checked={values.bossMode}
+            onChange={(bossMode) => patch({ bossMode })}
+            label={t.home.bossToggle}
+          />
+        </div>
+
         <div className="flex flex-wrap justify-end gap-2.5">
           <Button variant="ghost" onClick={onCancel}>
             {t.common.cancel}

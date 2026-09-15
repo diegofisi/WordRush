@@ -8,4 +8,6 @@ export interface IWordList {
   isAllowed(language: Language, word: string): boolean;
   /** Words the game may pick as the round answer. */
   answers(language: Language): readonly string[];
+  /** Every word a player may type. A superset of `answers`. */
+  guessable(language: Language): readonly string[];
 }

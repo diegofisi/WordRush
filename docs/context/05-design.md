@@ -34,6 +34,38 @@ comes out all in green before restarting. "Adivina rápido. Róbales el tiempo."
 The top bar of every screen carries an interface language selector (ES | EN) and a
 light/dark theme button with correct contrast in both modes. They were not on the canvas.
 
+## Sound (2026-09-13)
+Seven cues, all synthesised in the browser with WebAudio — no audio files. Short
+tones weigh nothing, need no attribution, and cannot arrive late over the
+network at the exact moment a round opens.
+
+| Cue | When |
+|---|---|
+| `start` | the round opens (rising C-E-G) |
+| `lowTime` | your clock crosses 15 s (two flat square beeps) |
+| `tick` | each of the last five seconds |
+| `solved` | **you** solved it |
+| `hit` | a solve took time off **your** clock |
+| `roundEnd` | the round closed |
+| `gameEnd` | the game closed |
+
+Every cue marks something the player would otherwise have to watch the screen
+for; none of them is decoration. `solved` and `hit` fire only for the player
+themselves — a cue for every rival's solve in an eight-player room would be
+noise, and the feed already carries those.
+
+Two details that are not obvious:
+
+- **The last round emits `round:end` and then `game:end` together.** The round
+  cue is held for 90 ms so the game cue replaces it instead of the two playing
+  over each other.
+- **Browsers refuse to open an audio device before the page is touched.** The
+  first click or key press opens it, which is why the round-start cue — that
+  nobody clicks for — is audible at all.
+
+Off with the speaker button in the top bar, remembered in `localStorage` like
+the theme. Master volume is 0.16; the cues are meant to sit under the room.
+
 ## Source files
 `docs/design/`. Each `.dc.html` is an artboard; `canvas.json` is the layout. The file
 `wordrush-multiplayer.html` is the assembled canvas that gets published; it is regenerated

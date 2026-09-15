@@ -26,10 +26,13 @@ const WaitingBadge = ({ label }: { label: string }) => (
 );
 
 export const PlayerSlots = ({ t, players, capacity }: PlayerSlotsProps) => {
-  const emptyCount = Math.max(0, capacity - players.length);
+  // Capacity is human seats: the fly sits beside them, she does not fill one.
+  const humans = players.filter((player) => !player.isBot);
+  const boss = players.find((player) => player.isBot) ?? null;
+  const emptyCount = Math.max(0, capacity - humans.length);
   return (
     <ul className="m-0 grid list-none grid-cols-2 gap-3.5 p-0 md:grid-cols-3 xl:grid-cols-4">
-      {players.map((player, index) => {
+      {humans.map((player, index) => {
         const subtitle = [player.isHost ? t.common.host : null, player.isMe ? t.common.you : null]
           .filter(Boolean)
           .join(' · ');
@@ -61,6 +64,23 @@ export const PlayerSlots = ({ t, players, capacity }: PlayerSlotsProps) => {
           </li>
         );
       })}
+      {boss ? (
+        <li
+          key={boss.id}
+          className="flex min-h-37.5 flex-col gap-3.5 rounded-2xl border border-accent/60 bg-accent-soft p-4 sm:p-5"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <Avatar name={t.game.boss} size={48} tone="ink" />
+            <span className="rounded-full bg-surface px-2.5 py-1.25 text-xs font-bold text-accent">
+              {t.lobby.bossOn}
+            </span>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="truncate text-[17px] font-bold">{t.game.boss}</span>
+            <span className="text-[13px] text-ink-3">{t.home.bossToggleHint}</span>
+          </div>
+        </li>
+      ) : null}
       {Array.from({ length: emptyCount }, (_, index) => (
         <li
           key={`empty-${index}`}

@@ -36,9 +36,18 @@ export class PlayerRound {
   hintUsed = false;
   hint: HintReveal | null = null;
   penaltySeconds = 0;
+  /**
+   * Seconds the letters would have paid but did not. Always 0 for a human; the
+   * fly forfeits every gain (docs/context/06-boss-mode.md) and the interface
+   * shows the number so the rule reads as a handicap.
+   */
+  forfeitedSeconds = 0;
   readonly charges: PositionCharge[];
+  /** The clock this round started with. The fly's differs from the room's. */
+  readonly initialSeconds: number;
 
   constructor(startedAt: number, initialSeconds: number) {
+    this.initialSeconds = initialSeconds;
     this.deadlineAt = startedAt + initialSeconds * 1000;
     this.charges = Array.from({ length: WORD_LENGTH }, () => ({
       yellow: false,

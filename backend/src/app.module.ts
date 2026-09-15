@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { BossModule } from '@modules/boss/boss.module';
 import { GameModule } from '@modules/game/game.module';
 import { GatewayModule } from '@modules/gateway/gateway.module';
 import { HealthModule } from '@modules/health/health.module';
@@ -15,6 +16,7 @@ import { SharedModule } from '@shared/shared.module';
     WordsModule,
     RoomsModule,
     GameModule,
+    BossModule,
     ReactionsModule,
     GatewayModule,
     HealthModule,

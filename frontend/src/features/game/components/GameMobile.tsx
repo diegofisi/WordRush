@@ -9,6 +9,7 @@ import { HintLetterChip } from './HintLetterChip';
 import { Keyboard } from './Keyboard';
 import { FeedRow } from './LiveFeed';
 import { PenaltyChip } from './PenaltyChip';
+import { BossPanel } from './BossPanel';
 import { RivalStrip } from './RivalStrip';
 import { ScorePreviewCard } from './ScorePreviewCard';
 import { StickerOverlay } from './StickerOverlay';
@@ -59,6 +60,8 @@ export const GameMobile = (props: GameViewProps) => {
           <HintLetterChip t={t} letter={props.hint.letter} count={props.hint.count} />
         </div>
       ) : null}
+
+      {props.boss ? <BossPanel t={t} boss={props.boss} roomCode={props.roomCode} compact /> : null}
 
       {props.rivals.length > 0 ? (
         <RivalStrip

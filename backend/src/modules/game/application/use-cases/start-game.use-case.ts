@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ROOM_LIMITS } from '@shared/contract';
+import { BOSS, ROOM_LIMITS } from '@shared/contract';
 import { CLOCK, type Clock } from '@shared/domain/clock';
 import { DomainException } from '@shared/domain/domain.exception';
 import {
@@ -26,7 +26,9 @@ export class StartGameUseCase {
     if (!room || !player) throw new DomainException('not_in_room');
     if (!player.isHost) throw new DomainException('not_host');
     if (room.status !== 'lobby') throw new DomainException('game_in_progress');
-    if (room.connectedPlayers().length < ROOM_LIMITS.minPlayers) {
+    // Boss mode is playable alone: the opponent is already seated.
+    const minimum = room.settings.bossMode ? BOSS.minHumans : ROOM_LIMITS.minPlayers;
+    if (room.connectedPlayers().length < minimum) {
       throw new DomainException('not_enough_players');
     }
     this.startRound.execute(room, this.clock.now());

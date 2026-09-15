@@ -1,6 +1,7 @@
 import { LOW_TIME_THRESHOLD } from '../stores/useGameStore';
 import type { GameViewProps } from '../models/game-view.model';
 import { Board } from './Board';
+import { BossPanel } from './BossPanel';
 import { Clock } from './Clock';
 import { EmotePicker } from './EmotePicker';
 import { Keyboard } from './Keyboard';
@@ -17,13 +18,17 @@ export const GameDesktop = (props: GameViewProps) => {
   // pinning the row to the viewport keeps every column scrolling inside itself.
   return (
     <div className="grid min-h-0 flex-1 grid-cols-[300px_minmax(0,1fr)_320px] grid-rows-[minmax(0,1fr)] gap-6 px-7 py-5">
-      <RivalsPanel
-        t={t}
-        rivals={props.rivals}
-        rivalClocks={props.rivalClocks}
-        solvedCount={props.solvedCount}
-        lowTimeThreshold={LOW_TIME_THRESHOLD}
-      />
+      <div className="flex min-h-0 flex-col gap-4">
+        {props.boss ? <BossPanel t={t} boss={props.boss} roomCode={props.roomCode} /> : null}
+        <RivalsPanel
+          t={t}
+          rivals={props.rivals}
+          rivalClocks={props.rivalClocks}
+          solvedCount={props.solvedCount}
+          lowTimeThreshold={LOW_TIME_THRESHOLD}
+          title={props.boss ? t.game.team : undefined}
+        />
+      </div>
 
       <div className="flex min-h-0 flex-col items-center justify-between gap-4">
         <Clock

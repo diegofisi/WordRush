@@ -73,7 +73,14 @@ describe('WordRush game flow (socket.io integration)', () => {
     // --- lobby ---------------------------------------------------------
     const created = await ana.emitWithAck('room:create', {
       name: '  Ana ',
-      settings: { language: 'es', initialSeconds: 60, rounds: 1, capacity: 4, hintEnabled: true },
+      settings: {
+        language: 'es',
+        initialSeconds: 60,
+        rounds: 1,
+        capacity: 4,
+        hintEnabled: true,
+        bossMode: false,
+      },
     });
     if (!created.ok) throw new Error(created.message);
     expect(created.roomCode).toMatch(/^[A-HJ-NP-Z2-9]{4}$/);

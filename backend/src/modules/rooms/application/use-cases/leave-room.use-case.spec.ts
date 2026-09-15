@@ -21,6 +21,7 @@ const settings = {
   rounds: 3,
   capacity: 8,
   hintEnabled: true,
+  bossMode: false,
 };
 
 const player = (id: string, name: string, isHost: boolean, joinedAt: number) =>

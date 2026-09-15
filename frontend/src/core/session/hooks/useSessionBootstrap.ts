@@ -13,14 +13,17 @@ import { pathForStatus, PATHS } from '@/shared/routes/paths';
  * the player choose (docs/context/02-game-rules.md -> "One game at a time").
  * A dead session is dropped quietly there too; the expiry notice is for
  * somebody who was thrown out of a room, not for a plain visit.
+ *
+ * `skip` is the brain tab: it must neither rejoin nor be navigated anywhere,
+ * since rejoining would take the seat of the tab that is actually playing.
  */
-export const useSessionBootstrap = () => {
+export const useSessionBootstrap = (skip = false) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const started = useRef(false);
 
   useEffect(() => {
-    if (started.current) return;
+    if (skip || started.current) return;
     started.current = true;
     const atHome = pathname === PATHS.home;
 
@@ -40,5 +43,5 @@ export const useSessionBootstrap = () => {
       }
       useSessionStore.getState().markBootstrapped();
     });
-  }, [navigate, pathname]);
+  }, [navigate, pathname, skip]);
 };

@@ -1,4 +1,13 @@
-import type { Emote, HintReveal, Language, OwnRow, RoundInfo } from '@/shared/contract';
+import type {
+  BossDecisionState,
+  BossFrame,
+  Emote,
+  HintReveal,
+  Language,
+  OwnRow,
+  RoundInfo,
+  TileColor,
+} from '@/shared/contract';
 import type { Dictionary } from '@/shared/i18n';
 
 import type { ScorePreview } from '../helpers/scorePreview';
@@ -17,6 +26,28 @@ export interface ClockViewModel {
   /** Frozen once I finished (solved, out of attempts, out of time). */
   frozen: boolean;
   low: boolean;
+}
+
+/** The fly's clock as the panel draws it. docs/context/06-boss-mode.md */
+export interface BossViewModel {
+  id: string;
+  /** Ticking seconds left, derived at the current frame. */
+  secondsLeft: number;
+  /** Health left, 0-100, against the clock she started the round with. */
+  percent: number;
+  startSeconds: number;
+  damageSeconds: number;
+  /** What the letters would have paid her under the normal rules. */
+  forfeitedSeconds: number;
+  attempt: number;
+  solved: boolean;
+  defeated: boolean;
+  /** Colours only, exactly like a rival's board. */
+  rows: TileColor[][];
+  /** Her last decision, and what her brain did while making it. */
+  decision: BossDecisionState | null;
+  /** The most recent live slice, several times a second while watched. */
+  frame: BossFrame | null;
 }
 
 export type MyOutcome = 'playing' | 'solved' | 'out-of-attempts' | 'out-of-time';
@@ -41,6 +72,8 @@ export interface GameViewProps {
   outcome: MyOutcome;
   solvedPosition: number | null;
   rivals: RivalViewModel[];
+  /** Null unless the room is playing against the fly. */
+  boss: BossViewModel | null;
   /** Derived seconds left per rival at the current tick. */
   rivalClocks: Record<string, number>;
   solvedCount: number;

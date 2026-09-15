@@ -18,11 +18,25 @@ export interface RoundResult {
   yellows: number;
 }
 
-/** docs/context/03-scoring-system.md, one player. */
+/**
+ * docs/context/03-scoring-system.md, one player.
+ *
+ * `bossBonus` is the flat team reward for the round the fly went down; it is 0
+ * outside boss mode and 0 for the fly herself (docs/context/06-boss-mode.md).
+ * It sits outside the solve floor so it also rewards a player who lost their
+ * own round while the team won it.
+ */
 export function scoreRound(
   result: RoundResult,
   initialSeconds: number,
   hintEnabled: boolean,
+  bossBonus = 0,
+  /**
+   * The fly is not charged per attempt. She gets 4 where a human gets 8, and
+   * her attempts are the only lever her brain has; charging her for using
+   * them would be charging her for playing (docs/context/06-boss-mode.md).
+   */
+  chargeAttempts = true,
 ): RoundBreakdown {
   const base: RoundBreakdown = {
     playerId: result.playerId,
@@ -40,13 +54,14 @@ export function scoreRound(
     greenPoints: 0,
     yellows: result.yellows,
     yellowPoints: 0,
+    bossBonus,
     roundPoints: 0,
   };
 
   if (!result.solved) {
     base.greenPoints = SCORING.pointsPerGreenUnsolved * result.greens;
     base.yellowPoints = SCORING.pointsPerYellowUnsolved * result.yellows;
-    base.roundPoints = base.greenPoints + base.yellowPoints;
+    base.roundPoints = base.greenPoints + base.yellowPoints + bossBonus;
     return base;
   }
 
@@ -54,7 +69,9 @@ export function scoreRound(
   base.timeLeftPercent = percent;
   base.timePoints = percent;
   base.solveBonus = SCORING.solveBonus;
-  base.attemptPenalty = -SCORING.attemptPenalty * Math.max(0, result.attempt - 1);
+  base.attemptPenalty = chargeAttempts
+    ? -SCORING.attemptPenalty * Math.max(0, result.attempt - 1)
+    : 0;
   const position = result.position ?? 0;
   base.positionBonus =
     position >= 1 && position <= SCORING.positionBonus.length
@@ -64,10 +81,11 @@ export function scoreRound(
 
   // The solve bonus is also the minimum: penalties never eat into it, so a solve
   // (>= 40) always outscores the best possible consolation (36).
-  base.roundPoints = Math.max(
-    SCORING.solveBonus,
-    base.timePoints + base.solveBonus + base.attemptPenalty + base.positionBonus + base.hintBonus,
-  );
+  base.roundPoints =
+    Math.max(
+      SCORING.solveBonus,
+      base.timePoints + base.solveBonus + base.attemptPenalty + base.positionBonus + base.hintBonus,
+    ) + bossBonus;
   return base;
 }
 

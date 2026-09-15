@@ -19,6 +19,7 @@ class FakeClock implements Clock {
 }
 
 const SETTINGS: RoomSettings = {
+  bossMode: false,
   language: 'en',
   initialSeconds: 120,
   rounds: 3,
@@ -56,6 +57,8 @@ describe('RestartRoomUseCase', () => {
       breakdown: [],
       standings: [],
       nextRoundIn: 0,
+      bossDefeated: null,
+      boss: null,
     };
     for (const player of room.players) {
       player.ready = true;

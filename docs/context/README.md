@@ -11,6 +11,8 @@ were agreed, in reading order.
 | `03-scoring-system.md` | The points formula with a table and a full simulation. |
 | `04-decisions-and-pending.md` | Log of decisions with their reason, discarded ideas, and what is still to be decided. |
 | `05-design.md` | Visual direction, list of screens and the link to the Claude Design canvas. |
+| `06-boss-mode.md` | The fly as a boss: 1 to 8 humans against her. Rules, scoring, the instrument panel, and how she was built. |
+| `07-what-the-fly-can-do.md` | **Read this before touching the fly.** The measured answer to whether a connectome can play this game, and why it cannot. |
 
 ## How to maintain it
 - If a rule changes, edit the matching file and add a line in `04-decisions-and-pending.md` with the date and the reason.

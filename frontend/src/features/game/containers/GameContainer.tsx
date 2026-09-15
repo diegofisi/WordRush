@@ -19,9 +19,11 @@ import { GameDesktop } from '../components/GameDesktop';
 import { GameMobile } from '../components/GameMobile';
 import { countGreenPositions, deriveKeyStates } from '../helpers/keyboard';
 import { computeScorePreview } from '../helpers/scorePreview';
+import { useBossBroadcast } from '../hooks/useBossBroadcast';
+import { useClockSounds } from '../hooks/useClockSounds';
 import { usePhysicalKeyboard } from '../hooks/usePhysicalKeyboard';
 import { toRivalViewModel } from '../models/game.model';
-import type { GameViewProps, MyOutcome } from '../models/game-view.model';
+import type { BossViewModel, GameViewProps, MyOutcome } from '../models/game-view.model';
 import { LOW_TIME_THRESHOLD, useGameStore } from '../stores/useGameStore';
 
 /** Clears the phone keyboard block (3 rows + the emote row) for the toasts. */
@@ -72,10 +74,14 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     if (status === 'ended') navigate(resultsPath(roomCode), { replace: true });
   }, [status, roomCode, navigate]);
 
+  const boss = useGameStore((state) => state.boss);
+  const bossFrame = useGameStore((state) => state.bossFrame);
+
   const rivals = useMemo(
     () =>
       Object.values(players)
-        .filter((player) => player.playerId !== myId)
+        // The fly gets her own health panel instead of a rival card.
+        .filter((player) => player.playerId !== myId && player.playerId !== boss?.playerId)
         .map((player) =>
           toRivalViewModel(
             player,
@@ -95,7 +101,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
           if (second.status === 'left') return -1;
           return 0;
         }),
-    [players, myId, roster, left, round?.initialSeconds],
+    [players, myId, roster, left, round?.initialSeconds, boss?.playerId],
   );
 
   const rivalClocks = useMemo(() => {
@@ -105,6 +111,32 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     }
     return clocks;
   }, [rivals, now]);
+
+  // Her clock ticks the same way a rival's does; the bar is that against the
+  // clock she started the round with (docs/context/06-boss-mode.md).
+  const bossView = useMemo<BossViewModel | null>(() => {
+    if (!boss) return null;
+    const done = boss.solved || boss.defeated;
+    const secondsLeft = done ? boss.secondsLeft : secondsLeftAt(boss, now);
+    return {
+      id: boss.playerId,
+      secondsLeft,
+      percent: Math.max(0, Math.min(100, percentOf(secondsLeft, boss.startSeconds))),
+      startSeconds: boss.startSeconds,
+      damageSeconds: boss.damageSeconds,
+      forfeitedSeconds: boss.forfeitedSeconds,
+      attempt: boss.attempt,
+      solved: boss.solved,
+      defeated: boss.defeated,
+      rows: players[boss.playerId]?.rows ?? [],
+      decision: boss.decision,
+      frame: bossFrame,
+    };
+  }, [boss, bossFrame, players, now]);
+
+  // The brain tab lives in another tab and has no socket of its own; this is
+  // what feeds it, and what tells the server to stream while it is open.
+  useBossBroadcast(roomCode, bossView);
 
   // "Hugo tiene menos de 15 s" is derived from the ticking clocks, once per rival.
   useEffect(() => {
@@ -169,6 +201,13 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     [sendReaction],
   );
 
+  // Above the early return: hooks run in the same order on every render, and
+  // `me` is only missing while the round is still being handed over.
+  useClockSounds(
+    me && !me.finished ? secondsLeftAt(me, now) : 0,
+    me !== null && !me.finished && status === 'playing',
+  );
+
   if (!round || !me || !settings) {
     return (
       <PageLoading
@@ -229,6 +268,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     solvedPosition,
     rivals,
     rivalClocks,
+    boss: bossView,
     solvedCount,
     feed,
     sticker,

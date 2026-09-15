@@ -39,7 +39,12 @@ export type FeedEvent = {
   name: string;
   isMe: boolean;
 } & (
-  | { kind: 'solved'; position: number }
+  | {
+      kind: 'solved';
+      position: number;
+      /** Boss mode: a human solve takes the time off the fly, not off the room. */
+      hitBoss?: boolean;
+    }
   | { kind: 'hint' }
   | { kind: 'reaction'; emote: Emote }
   | { kind: 'greens'; greens: number }

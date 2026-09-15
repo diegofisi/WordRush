@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { socket } from '@/core/session/lib/socket';
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { getT } from '@/shared/i18n';
+import { sound } from '@/shared/lib/sound';
 import {
   MAX_ATTEMPTS,
   ROOM_LIMITS,
@@ -13,6 +14,8 @@ import {
   type LobbyState,
   type PlayerProgress,
   type RoomSettings,
+  type BossFrame,
+  type BossState,
   type RoundInfo,
   type RoundState,
   type SelfState,
@@ -25,6 +28,13 @@ import type { FeedEvent, GainChip, RosterEntry, StickerFlash } from '../models/g
 export type GameStatus = 'idle' | 'playing' | 'ended';
 
 const LOW_TIME_SECONDS = 15;
+
+/**
+ * The last round:end of a game is followed immediately by game:end. Holding the
+ * round cue for a beat lets the game cue replace it instead of the two playing
+ * over each other.
+ */
+let endCue: number | null = null;
 const EMOTE_WINDOW_MS = ROOM_LIMITS.emoteBurstWindowSeconds * 1000;
 const EMOTE_PAUSE_MS = ROOM_LIMITS.emotePauseSeconds * 1000;
 const GREENS_ANNOUNCE_AT = 4;
@@ -45,6 +55,10 @@ interface Announced {
 interface GameState {
   status: GameStatus;
   round: RoundInfo | null;
+  /** The fly's clock as health; null outside boss mode. docs/context/06-boss-mode.md */
+  boss: BossState | null;
+  /** The most recent live slice of her brain, while somebody is watching. */
+  bossFrame: BossFrame | null;
   settings: RoomSettings | null;
   roster: Record<string, RosterEntry>;
   myId: string | null;
@@ -117,6 +131,8 @@ const rosterOf = (lobby: LobbyState): Record<string, RosterEntry> =>
 const initialState: GameState = {
   status: 'idle',
   round: null,
+  boss: null,
+  bossFrame: null,
   settings: null,
   roster: {},
   myId: null,
@@ -159,6 +175,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
     set({
       status,
       round: roundInfoOf(round),
+      boss: round.boss,
       me: round.me,
       players: Object.fromEntries(round.players.map((player) => [player.playerId, player])),
       left: {},
@@ -182,13 +199,34 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
     if (snapshot.round) {
       applyRound(snapshot.round, snapshot.lobby.status === 'playing' ? 'playing' : 'ended');
     } else {
-      set({ status: 'idle', round: null, me: null, players: {}, left: {} });
+      set({
+        status: 'idle',
+        round: null,
+        boss: null,
+        bossFrame: null,
+        me: null,
+        players: {},
+        left: {},
+      });
     }
   };
 
   const onProgress = (progress: PlayerProgress) => {
     const { myId, announced, left } = get();
-    set((state) => ({ players: { ...state.players, [progress.playerId]: progress } }));
+    set((state) => ({
+      players: { ...state.players, [progress.playerId]: progress },
+      boss:
+        state.boss && state.boss.playerId === progress.playerId
+          ? {
+              ...state.boss,
+              secondsLeft: progress.secondsLeft,
+              at: progress.at,
+              attempt: progress.attempt,
+              solved: progress.solved,
+              defeated: progress.finished && !progress.solved,
+            }
+          : state.boss,
+    }));
 
     if (progress.playerId === myId) {
       set((state) =>
@@ -246,11 +284,53 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       if (bound) return;
       bound = true;
 
-      socket.on('round:start', (round) => applyRound(round, 'playing'));
+      socket.on('round:start', (round) => {
+        applyRound(round, 'playing');
+        sound.play('start');
+      });
       socket.on('player:progress', onProgress);
       socket.on('player:solved', (payload) => {
-        set((state) => ({ solvedCount: Math.max(state.solvedCount, payload.position) }));
-        pushFeed({ kind: 'solved', playerId: payload.playerId, position: payload.position });
+        set((state) => ({
+          solvedCount: Math.max(state.solvedCount, payload.position),
+          boss:
+            state.boss && state.boss.playerId === payload.playerId
+              ? { ...state.boss, solved: true, secondsLeft: payload.secondsLeft, at: Date.now() }
+              : state.boss,
+        }));
+        const { settings, boss, myId } = get();
+        if (payload.playerId === myId) sound.play('solved');
+        pushFeed({
+          kind: 'solved',
+          playerId: payload.playerId,
+          position: payload.position,
+          hitBoss: settings?.bossMode === true && payload.playerId !== boss?.playerId,
+        });
+      });
+      socket.on('boss:frame', (frame) => set({ bossFrame: frame }));
+      socket.on('boss:decision', (payload) => {
+        set((state) =>
+          state.boss && state.boss.playerId === payload.playerId
+            ? {
+                boss: {
+                  ...state.boss,
+                  attempt: payload.attempt,
+                  decision: {
+                    action: payload.action,
+                    confidence: payload.confidence,
+                    hintWant: payload.hintWant,
+                    hintSpent: payload.hintSpent,
+                    attempt: payload.attempt,
+                    letters: payload.letters,
+                    brain: payload.brain,
+                    biologicalMs: payload.biologicalMs,
+                    wallMs: payload.wallMs,
+                    telemetry: payload.telemetry,
+                    typing: payload.typing,
+                  },
+                },
+              }
+            : {},
+        );
       });
       socket.on('player:hint', (payload) => {
         set((state) => {
@@ -265,6 +345,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
         const { myId } = get();
         set((state) => {
           const players = { ...state.players };
+          let boss = state.boss;
           let me = state.me;
           for (const clock of payload.clocks) {
             const current = players[clock.playerId];
@@ -273,6 +354,14 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
                 ...current,
                 secondsLeft: clock.secondsLeft,
                 at: clock.at,
+              };
+            }
+            if (boss && boss.playerId === clock.playerId) {
+              boss = {
+                ...boss,
+                secondsLeft: clock.secondsLeft,
+                at: clock.at,
+                damageSeconds: boss.damageSeconds + payload.seconds,
               };
             }
             if (clock.playerId === myId && me) {
@@ -284,8 +373,10 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
               };
             }
           }
-          return { players, me };
+          return { players, me, boss };
         });
+        // Only when the hit actually landed on this player's clock.
+        if (payload.clocks.some((clock) => clock.playerId === myId)) sound.play('hit');
       });
       // Every sticker, mine included, is a message in the feed. The phone has no
       // feed panel, so the newest one also feeds the 2.5 s overlay there.
@@ -303,8 +394,20 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
           set((state) => (state.sticker?.id === id ? { sticker: null } : {}));
         }, STICKER_MS);
       });
-      socket.on('round:end', () => set({ status: 'ended', draft: '' }));
-      socket.on('game:end', () => set({ status: 'ended', draft: '' }));
+      socket.on('round:end', () => {
+        set({ status: 'ended', draft: '' });
+        if (endCue !== null) window.clearTimeout(endCue);
+        endCue = window.setTimeout(() => {
+          endCue = null;
+          sound.play('roundEnd');
+        }, 90);
+      });
+      socket.on('game:end', () => {
+        set({ status: 'ended', draft: '' });
+        if (endCue !== null) window.clearTimeout(endCue);
+        endCue = null;
+        sound.play('gameEnd');
+      });
       socket.on('lobby:update', (lobby) =>
         set((state) => ({
           // Whoever left is no longer in the room; keep their name so the panel

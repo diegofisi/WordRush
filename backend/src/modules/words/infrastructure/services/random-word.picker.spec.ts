@@ -4,6 +4,7 @@ import { biasedIndex, RandomWordPicker } from './random-word.picker';
 const answers = Array.from({ length: 100 }, (_, i) => `w${String(i).padStart(3, '0')}`);
 const wordList: IWordList = {
   answers: () => answers,
+  guessable: () => answers,
   isAllowed: () => true,
 };
 

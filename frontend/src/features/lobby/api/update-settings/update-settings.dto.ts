@@ -12,5 +12,6 @@ export const toUpdateSettingsRequest = (form: RoomSettingsForm): UpdateSettingsR
     rounds: form.rounds,
     capacity: form.capacity,
     hintEnabled: form.hintEnabled,
+    bossMode: form.bossMode,
   },
 });
