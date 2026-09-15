@@ -5,7 +5,7 @@ inherited from a previous project (a cloud-drive API) and are project-agnostic;
 this file says how they map onto **this** game server. Read it first, then the
 workflow's doctrine files.
 
-**Status (2026-09-11):** `backend/` exists and follows this binding. Modules: `words`, `rooms`, `game`, `reactions`, `gateway`, `health`. Where this file and the code disagree, the code wins; fix the file.
+**Status (2026-09-14):** `backend/` exists and follows this binding. Modules: `words`, `rooms`, `game`, `reactions`, `gateway`, `health`. Where this file and the code disagree, the code wins; fix the file.
 
 ## What it is
 
@@ -44,58 +44,53 @@ Game rules and the scoring formula are **not** restated here. They live in
 | `rooms` | Create room (settings: language, initial time, rounds, capacity, hint on/off), join by code, lobby state, ready flags, host actions (start, change rules, restart into a new lobby). Room + Player aggregates. |
 | `game` | Round lifecycle: pick word, accept guesses, colour feedback, per-letter time bonuses (once per letter position), the −5 s broadcast, hint reveal, end-of-round scoring, accumulated table, tie-breaks. This module implements `docs/context/03-*`. |
 | `words` | Word lists ES/EN, validation of a guess (must be a real word), normalisation of accents and Ñ (see pending decision in `04-*`). Pure domain service; no I/O after boot. |
-| `reactions` | Emote broadcast with the per-player burst limit (more than 8 in 3 s pauses the player for 5 s). Tiny; may start inside `game`. |
+| `reactions` | Emote broadcast with the per-player burst limit (more than 8 in 3 s pauses the player for 5 s). Its own module. |
 | `gateway` | The Socket.IO gateway(s): auth-less join by room code + display name, event validation via DTOs, mapping domain exceptions to socket error payloads. Presentation layer only — no rules here. |
 
-Shared kernel (`backend/src/shared/`): keep the doctrine's `BaseEntity`,
-domain exception hierarchy, `ErrorMessages`, `BaseResponse`. Drop the
-storage/crypto/stream utilities — nothing here streams files.
+Shared kernel (`backend/src/shared/`): `contract/` (owns the socket contract),
+`domain/` (`Clock` + its `CLOCK` token, `DomainException`, `ERROR_MESSAGES`),
+`events/` (`RoomEventsBus`), `config/` (env parsers), `socket/` (the CORS
+adapter). The doctrine's `BaseEntity` and `BaseResponse` were never brought
+over — there is no ORM, and the one HTTP route returns a plain object — and its
+storage/crypto/stream utilities do not apply either.
 
-## Socket contract (v1 draft — the frontend binding mirrors this table)
+## Socket contract
 
-Client → server (all payloads validated by class-validator DTOs):
+The contract is `src/shared/contract/index.ts`: typed, versioned through
+`CONTRACT_VERSION`, and the single owner of every event name, payload, tuning
+constant and error code.
 
-| Event | Payload | Result |
-|---|---|---|
-| `room:create` | `{ name, language, initialSeconds, rounds, capacity, hintEnabled }` | `{ roomCode, playerId }` |
-| `room:join` | `{ roomCode, name }` | `{ playerId, lobby }` or error `room_full` / `room_not_found` / `game_in_progress` / `already_in_room` |
-| `room:rejoin` | `{ roomCode, playerId, token }` | full state, or `room_not_found` / `session_expired` |
-| `room:leave` | — | frees the seat for good; broadcasts `player:left` + `lobby:update` |
-| `room:ready` | `{ ready: boolean }` | broadcast `lobby:update` |
-| `room:update-settings` | `{ settings }` (host only, lobby only) | broadcast `lobby:update`; errors `not_host` / `game_in_progress` / `invalid_payload` (capacity below the seated players) |
-| `room:start` | — (host only) | broadcast `round:start` |
-| `room:restart` | — (host only, finished game only) | "Play again": same room back to `lobby` with players, settings and host kept and everything the game produced cleared; broadcast `lobby:update`; errors `not_host` / `game_in_progress` ("The game has not finished yet") |
-| `game:guess` | `{ word }` | ack `{ colors[5], secondsGained, solved }` + broadcasts below |
-| `game:hint` | — | ack `{ letter, count }` — how many times the letter occurs; the position never leaves the server |
-| `reaction:send` | `{ emote }` | broadcast `reaction:show` |
+It is deliberately **not** restated here. The table that used to sit in this
+section was copied by hand and had drifted on almost every row — flat
+`room:create` payloads that are now a `settings` object, acks missing half
+their fields, `rowColors` for what the contract calls `rows`, `accumulated`
+for `standings`, no `player:hint` at all, and no `server_full`. A prose copy
+of a typed source of truth drifts the moment somebody changes the type.
 
-Server → client:
+The frontend keeps a byte-identical copy at
+`frontend/src/shared/contract/index.ts`. `pnpm sync-contract` refreshes it and
+`pnpm check-contract` fails when the two differ.
 
-| Event | Payload | Notes |
-|---|---|---|
-| `lobby:update` | `{ players[], settings }` | on join / leave / ready |
-| `round:start` | `{ round, totalRounds, initialSeconds, startedAt }` | word is **never** sent |
-| `player:progress` | `{ playerId, rowColors[][], attempt, secondsLeft, solved }` | colours only, never letters |
-| `player:solved` | `{ playerId, position, secondsLeft }` | followed by `time:penalty` |
-| `time:penalty` | `{ seconds: 5, fromPlayerId }` | to every unsolved player |
-| `round:end` | `{ word, breakdown[], accumulated[] }` | breakdown fields = table in `03-*` |
-| `game:end` | `{ final[] }` | with tie-breaks applied |
-| `reaction:show` | `{ playerId, emote }` | |
-| `player:left` | `{ playerId, name, newHostId }` | somebody used `room:leave`; `newHostId` when the host changed |
-| `session:replaced` | `{ roomCode }` | the same player rejoined from another socket; this one is seatless |
-| `error` | `{ code, message }` | codes from `ErrorMessages` |
+What the contract file cannot express, and so belongs here:
 
-Timers are server-side. The client receives absolute timestamps and
-`secondsLeft` snapshots and only *renders* a countdown; it never decides that
-time ran out.
+| Rule | Enforced in |
+|---|---|
+| Every client → server event answers with an ack; none is fire-and-forget. | `gateway/presentation/game.gateway.ts` |
+| A handler calls **one** use case and returns its ack. Server → client events are published by the use cases on `RoomEventsBus`; the gateway is the bus's only subscriber. | `shared/events/room-events.bus.ts` |
+| `round:start` is addressed per player (`toPlayerId`), so every socket gets its own `me` slice. | `game/application/use-cases/start-round.use-case.ts` |
+| The word is never on the wire before `round:end`. Rival state is colours and counts, never letters. | `rooms/domain/services/state-presenter.ts` |
+| Timers are server-side. The client receives `{ secondsLeft, at }` snapshots and only *renders* a countdown; it never decides that time ran out. | `rooms/domain/entities/player-round.entity.ts` |
+| Floodable events are rate limited per socket; rules keyed by player (the emote burst limit) live in their use case instead. | `.claude/rules/backend-presentation.md` |
 
-## Environment variables (planned)
+## Environment variables
 
-`PORT` (default 3000), `FRONTEND_URL` (CORS allowlist, comma-separated),
-`NODE_ENV`. Add new ones through `ConfigService`, with a safe default or in the
-`required` list, and document them in `.env.example` **and** this file.
+`PORT`, `FRONTEND_URL`, `NODE_ENV`, `MAX_ROOMS`, and the development-only
+`WORDRUSH_FIXED_WORD`. Defaults and meanings live in `backend/README.md` →
+Environment, which is the one table to keep current; the parsers are in
+`shared/config/env.ts`, each with a safe fallback. A new variable gets a parser
+there, an entry in `.env.example` **and** a row in that README table.
 
-## Commands (once scaffolded)
+## Commands
 
 ```bash
 pnpm start:dev                      # dev server

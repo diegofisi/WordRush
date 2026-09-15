@@ -48,6 +48,8 @@ import { createWsValidationPipe } from './ws-validation.pipe';
 
 /** Flood protection only; a human never approaches these. */
 const GUESS_LIMIT: RateLimit = { max: 10, windowMs: 1000 };
+/** Five rooms in ten seconds is far past what a person does and far under a script. */
+const CREATE_LIMIT: RateLimit = { max: 5, windowMs: 10_000 };
 
 /**
  * The single Socket.IO entry point. Thin by design: validate, resolve the
@@ -112,6 +114,10 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     @ConnectedSocket() client: GameSocket,
     @MessageBody() dto: CreateRoomDto,
   ): Ack<SessionAck> {
+    // Flood guard first, so a script never reaches the rest of the handler.
+    if (!this.limiter.allow(client.id, 'room:create', CREATE_LIMIT, this.clock.now())) {
+      throw new DomainException('cooldown');
+    }
     // One game at a time: a socket still seated in a live room cannot open another.
     this.ensureNotInRoom.execute(client.data);
     // The use case runs first so a failure leaves the caller's current room untouched.

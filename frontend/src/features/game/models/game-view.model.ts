@@ -69,6 +69,8 @@ export interface GameViewProps {
   /** Guess error caption under the current row; the id restarts its 1.6 s fade. */
   guessNotice: { id: number; text: string } | null;
   keyStates: Record<string, KeyState>;
+  /** Screen-reader wording for each tile/key state, derived once from `t`. */
+  tileLabels: Record<KeyState, string>;
   outcome: MyOutcome;
   solvedPosition: number | null;
   rivals: RivalViewModel[];

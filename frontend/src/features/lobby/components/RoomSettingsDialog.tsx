@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { HintIcon } from '@/shared/components/icons/GameIcons';
 import { Button } from '@/shared/components/ui/Button';
@@ -6,6 +6,7 @@ import { Segmented } from '@/shared/components/ui/Segmented';
 import { Stepper } from '@/shared/components/ui/Stepper';
 import { Toggle } from '@/shared/components/ui/Toggle';
 import { ROOM_LIMITS, type Language, type RoomSettings } from '@/shared/contract';
+import { useFocusTrap } from '@/shared/hooks/useFocusTrap';
 import type { Dictionary } from '@/shared/i18n';
 
 interface RoomSettingsDialogProps {
@@ -35,6 +36,8 @@ export const RoomSettingsDialog = ({
   onSave,
 }: RoomSettingsDialogProps) => {
   const [values, setValues] = useState<RoomSettings>(settings);
+  const card = useRef<HTMLFormElement>(null);
+  useFocusTrap(card, open);
 
   // Re-prefill every time it opens, and follow a rival edit while it is closed.
   useEffect(() => {
@@ -61,6 +64,7 @@ export const RoomSettingsDialog = ({
       onClick={onCancel}
     >
       <form
+        ref={card}
         role="dialog"
         aria-modal="true"
         aria-label={t.lobby.rulesTitle}

@@ -5,7 +5,7 @@
 > replace them here, what the feature map is, and where the design comes from.
 > Read it first, then the workflow's doctrine files.
 
-**Status (2026-09-11):** `frontend/` exists and follows this binding (core `session`; features `lobby`, `game`, `results`; `shared/` with tokens, i18n, primitives, icons). Where this file and the code disagree, the code wins; fix the file.
+**Status (2026-09-14):** `frontend/` exists and follows this binding (core `session`; features `lobby`, `game`, `results`; `shared/` with tokens, i18n, primitives, icons). Where this file and the code disagree, the code wins; fix the file.
 
 ## What it is
 
@@ -20,15 +20,24 @@ Game rules, scoring and design decisions are **not** restated here:
 - `docs/context/05-design.md` — visual direction and the link to the Claude Design canvas.
 - `docs/design/*.dc.html` — the six screens (create room, lobby, game, results, mobile game, dark game) with exact colours, spacing and copy. Build from these, not from memory.
 
-## Stack (confirmed 2026-09-11)
+## Stack (confirmed 2026-09-14)
 
 React **19** · TypeScript · Vite 7 · **Tailwind v4** with hand-made primitives in
-`shared/components/ui` (no shadcn, no UI kit) · `lucide-react` (only for UI chrome; game
-emotes are the custom SVGs from the design) · `socket.io-client` · `zustand` ·
-`react-router-dom` v7. No React Query: everything is socket-driven. ESLint flat config with
-`simple-import-sort` and the boundaries plugin; Prettier. No i18n library in
-v1: UI strings live in one `es`/`en` dictionary object per feature, selected
-by the room language.
+`shared/components/ui` (no shadcn, no UI kit) · `lucide-react` (only for UI chrome; the
+twenty game emotes are **raster WebP**, 256×256 with transparency, never recoloured) ·
+`socket.io-client` · `zustand` · `react-router-dom` v7. No React Query: everything is
+socket-driven.
+
+ESLint flat config with `typescript-eslint`, `react-hooks`, `react-refresh` and
+`eslint-config-prettier`; Prettier. There is **no** `simple-import-sort` and
+**no** `eslint-plugin-boundaries` here, so the slice rules below are convention
+on this side — unlike the backend, where the boundaries plugin does enforce its
+layer rules in `lint:check`.
+
+No i18n library: UI strings live in one `es`/`en` dictionary (`shared/i18n/`,
+Spanish is the source and its shape is the `Dictionary` type). The interface
+language is chosen in the top bar and is **independent** of the room's word
+language — a player can read the UI in English and play a Spanish room.
 
 Fonts from the design: Bricolage Grotesque (display, tiles), DM Sans (UI),
 JetBrains Mono (clock and figures). Colour tokens are the hex values in
@@ -39,16 +48,22 @@ variables and never hardcode hex in components.
 
 | Doctrine (MUI) | Here |
 |---|---|
-| `<Typography variant>` | `H1`…`H6`, `P`, `Span`, `Small` from `@/shared/components/ui/typography` |
-| `<Stack>` / `<Grid>` / `<Box>` | `Stack`, `Grid`, `Box` from `@/shared/components/layout` |
-| `sx` + theme `Palette` | Tailwind classes + `cn()`; colours are CSS variables in `src/index.css` |
-| `CircularProgress` / `Alert` | `PageLoading`, `PageError`, `PageEmpty` in `@/shared/components/ui/` |
-| MUI controls | hand-made `Button`, `Segmented`, `Toggle`, `Card`, `Input`, `Stepper`, `Avatar` in `@/shared/components/ui/` |
+| `<Typography variant>` | plain semantic tags with Tailwind classes. There is **no** typography primitive; the three fonts are `font-display` / `font-sans` / `font-mono`. |
+| `<Stack>` / `<Grid>` / `<Box>` | plain `div` with Tailwind flex/grid utilities. There are **no** layout primitives. |
+| `sx` + theme `Palette` | Tailwind classes + `cn()`; colours are CSS variables in `src/index.css`. `cn()` is a four-line join, **not** `tailwind-merge`: conflicting classes are not resolved for you. |
+| `CircularProgress` / `Alert` | `PageLoading` and `PageEmpty`, both exported from `@/shared/components/ui/PageState.tsx`. There is no `PageError`. |
+| MUI controls | hand-made `Button`, `Card`, `Input`, `Segmented`, `Stepper`, `Toggle`, `Avatar`, `ConfirmDialog` in `@/shared/components/ui/` |
+| Error fallback | `ErrorBoundary` + `CrashScreen` in `@/shared/components/ui/`, wrapped around `<App/>` in `main.tsx` |
 | Snackbar | `useToastStore` + `<Toaster>` in `@/shared/components/ui/`, called from containers only |
-| Icons | `lucide-react` for chrome; `shared/components/icons/EmoteIcon.tsx` for the twenty emote stickers (raster art in `src/assets/emotes/`) |
+| Icons | `lucide-react` for chrome; `shared/components/icons/GameIcons.tsx` for the traced 24×24 stroke set, `EmoteIcon.tsx` for the twenty emote stickers (raster art in `src/assets/emotes/`) |
 
-Everything else in the doctrine (vertical slices, adapter pattern,
-Container/Presentational, stores, forms, routing, conventions) applies unchanged.
+The rest of the doctrine — vertical slices, adapter pattern,
+Container/Presentational, stores, routing, conventions — applies unchanged.
+
+**Except forms.** `references/forms.md` is written for Zod + react-hook-form and
+neither is installed. The forms here are plain `useState` with inline validation
+(see `HomeContainer`), which is enough for two fields and a room code; read that
+chapter for its principles, not for its API.
 
 ## Feature map
 
@@ -57,9 +72,17 @@ Container/Presentational, stores, forms, routing, conventions) applies unchanged
 | **core** | `src/core/` | `session` — player identity (name, playerId, roomCode, token in `localStorage` under `wordrush.session`), the socket connection and its lifecycle |
 | **features** | `src/features/` | `lobby` (create room form, join by code, waiting room), `game` (clock, board, keyboard with Ñ, rivals panel, live feed, hint, emotes, score preview), `results` (round breakdown, accumulated table, final table) |
 
-`src/shared/`: `components/ui` (primitives, state components, typography, icons),
-`components/layout` (`AppLayout`, `TopBar`), `i18n`, `stores` (ui, toast), `lib`
-(`result`, `utils`), `routes`, `hooks` (`useNow`, `useMediaQuery`).
+`src/shared/`:
+
+| Folder | Contents |
+|---|---|
+| `components/ui` | `Avatar` `Button` `Card` `ConfirmDialog` `CrashScreen` `ErrorBoundary` `Input` `PageState` `Segmented` `Stepper` `Toaster` `Toggle` |
+| `components/layout` | `AppLayout` `TopBar` `Logo` `ThemeToggle` `LangSegmented` `RoomContext` |
+| `components/icons` | `GameIcons` `EmoteIcon` `customEmotes` |
+| `lib` | `cn` `format` `result` `avatarTone` |
+| `hooks` | `useNow` `useMediaQuery` `useToastSafeBottom` |
+| `stores` | `useUiStore` (theme + interface language + remembered name), `useToastStore` |
+| `i18n`, `routes`, `contract` | dictionaries, `paths.ts`, the synced copy of the socket contract |
 
 ## Sanctioned facades (the only cross-slice imports)
 
@@ -78,9 +101,20 @@ This app is **socket-driven**. Per the doctrine's endpoint classification
 (`data-flow.md`), everything that arrives as a push event is a **store-driven
 endpoint** and never gets a React Query hook:
 
-- `useLobbyStore` — `lobby:update`.
+- `useSessionStore` — `connect`, `disconnect`, `connect_error`,
+  `session:replaced`, `error`. Every `connect` re-runs `rejoin()` when a session
+  is stored, which covers both the first connect and every reconnect.
+- `useLobbyStore` — `lobby:update`, `round:start`.
 - `useGameStore` — `round:start`, `player:progress`, `player:solved`,
-  `time:penalty`, `reaction:show`, `round:end`, `game:end`.
+  `player:hint`, `player:left`, `time:penalty`, `reaction:show`, `round:end`,
+  `game:end`, `lobby:update`.
+- `useResultsStore` — `round:end`, `game:end`, `round:start`, `lobby:update`.
+
+Each store's `bind()` is guarded by a module-level flag so the listeners attach
+once despite StrictMode's double-invoke, and they are never removed: these are
+app singletons that must keep receiving events across route changes. `App.tsx`
+calls `bind()` once from `<Bootstrap/>`. Stores rehydrate from each other by
+subscribing to `useSessionStore` directly, outside React.
 
 Emits go through `features/{feature}/api/{event}/` adapters
 (`{event}.dto.ts` with the payload shape + `toModel` mapper for the ack, and
@@ -98,28 +132,46 @@ client never declares a timeout; it waits for the server.
 
 ## Routing shape
 
-Flat router under `RootLayout`: `/` (create / join), `/room/:code` (lobby),
-`/game/:code` (game), `/results/:code` (results). Path constants in
-`shared/routes/*-path.ts`. A reload on `/game/:code` re-joins with the stored
-playerId; if the server rejects it, go to `/`.
+Flat router under `AppLayout`: `/` (create / join), `/room/:code` (lobby),
+`/game/:code` (game), `/results/:code` (results), `/brain/:code` (the fly's
+brain, opened in its own tab from the game; it neither rejoins nor navigates,
+see `useSessionBootstrap(skip)`), plus a `*` 404. Path constants and builders
+in `shared/routes/paths.ts`, including `pathForStatus()`, which maps a room
+status to its screen, and `isBrainPath()`. The three room routes sit behind
+`RequireSession`.
+
+A reload on `/game/:code` re-joins with the stored session; if the server
+rejects it, go to `/`. Note the `:code` segment is **not** authoritative: where
+a session exists it wins (`session?.roomCode ?? code`), so the segment is only
+there to be shareable.
 
 ## Verification commands
 
 ```bash
-npx tsc --noEmit -p tsconfig.app.json   # 0 errors expected
-npx eslint .         # not the --fix script
-npx vite build
+pnpm typecheck                          # tsc --noEmit -p tsconfig.app.json
+pnpm lint                               # eslint . — 0 errors AND 0 warnings today
+pnpm build                              # tsc -b && vite build, what Railway runs
 ```
+
+From the repo root, `pnpm check-contract` must also pass: it fails when
+`frontend/src/shared/contract/index.ts` has drifted from the backend's copy.
 
 ## Known traps
 
 - Rival boards render **colours only**. The DTO must not even have a
   `letters` field for other players; if the server ever sends one, drop it in
   the mapper.
-- Keyboard state (green/yellow/gray per key) derives from the player's own
-  rows; compute it with a selector in the store, not in the component.
-- The hint tile uses the dashed yellow style (`t-h` in the design); it must not
-  be confused with a normal yellow.
+- Keyboard state (green/yellow/gray/hint per key) derives from the player's own
+  rows through `deriveKeyStates` in `features/game/helpers/keyboard.ts`. It is
+  called from a `useMemo` in `GameContainer`, not from a selector in the store —
+  it is a pure function of `me.rows` + `me.hint` and nothing persists it.
+- **The hint never appears on the board.** It only lights its letter on the
+  keyboard (`key-hint`, dashed yellow). `index.css` also defines a `tile-hint`
+  class, but no component uses it; do not take its presence as a sign that the
+  board is supposed to show the hint.
+- Tile and key colour is not enough on its own: every revealed tile and every
+  key that carries a state also gets an `aria-label` with that state, because a
+  screen reader never hears a CSS class.
 - The emote burst rule (more than 8 in 3 s pauses the player for 5 s) is
   enforced server-side; run the same rule in the store before sending and show
   the countdown on the picker trigger, so the UI never looks broken.

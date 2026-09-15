@@ -284,4 +284,35 @@ describe('WordRush game flow (socket.io integration)', () => {
     const emptied = await fetch(`${url}/health`).then((r) => r.json());
     expect(emptied).toEqual({ status: 'ok', rooms: 0 });
   });
+
+  it('throttles room creation per socket, spending the budget on failed attempts too', async () => {
+    const settings = {
+      language: 'es' as const,
+      initialSeconds: 60,
+      rounds: 1,
+      capacity: 2,
+      hintEnabled: true,
+      bossMode: false,
+    };
+    const flood = await connect();
+
+    const first = await flood.emitWithAck('room:create', { name: 'Flood', settings });
+    expect(first.ok).toBe(true);
+
+    // Attempts 2..5 bounce off the "one game at a time" rule, but they still
+    // spend the flood budget: a script must not earn free retries by failing.
+    for (let i = 2; i <= 5; i++) {
+      expect(await flood.emitWithAck('room:create', { name: 'Flood', settings })).toMatchObject({
+        ok: false,
+        code: 'already_in_room',
+      });
+    }
+
+    expect(await flood.emitWithAck('room:create', { name: 'Flood', settings })).toMatchObject({
+      ok: false,
+      code: 'cooldown',
+    });
+
+    expect(await flood.emitWithAck('room:leave')).toEqual({ ok: true });
+  });
 });

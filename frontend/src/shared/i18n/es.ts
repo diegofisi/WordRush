@@ -33,6 +33,10 @@ export const es = {
     cancel: 'Cancelar',
     confirmLeave: 'Salir',
     backHome: 'Volver al inicio',
+    reload: 'Recargar',
+    crashTitle: 'Algo se rompió',
+    crashBody:
+      'Esta pantalla dejó de responder. Recargar suele bastar. Si vuelve a pasar, vuelve al inicio: tu partida sigue en el servidor.',
     ordinal: (n: number) => `${n}.º`,
     percent: (n: number) => `${n} %`,
     points: (n: number) => (n > 0 ? `+${n}` : `${n}`),
@@ -235,6 +239,13 @@ export const es = {
     usedHint: 'usó pista',
     greens: (n: number) => (n === 1 ? '1 verde' : `${n} verdes`),
     yellows: (n: number) => (n === 1 ? '1 amarillo' : `${n} amarillos`),
+    /** Read out after the letter on a board tile and on a keyboard key
+     * ("C, correcta"). The colour alone never reaches a screen reader, so
+     * without these the result of a guess is invisible to it. */
+    tileCorrect: 'correcta',
+    tilePresent: 'en la palabra, en otro lugar',
+    tileAbsent: 'no está en la palabra',
+    tileHint: 'revelada por la pista',
     outOfAttempts: 'Sin intentos',
     outOfTime: 'Sin tiempo',
     disconnected: 'desconectado',
@@ -348,6 +359,7 @@ export const es = {
   errors: {
     room_not_found: 'Esa sala no existe.',
     room_full: 'La sala está llena.',
+    server_full: 'El servidor está lleno ahora mismo. Inténtalo en un momento.',
     game_in_progress: 'La partida ya empezó.',
     name_taken: 'Ese nombre ya está en uso en la sala.',
     invalid_payload: 'Datos no válidos.',

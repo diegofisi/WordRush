@@ -203,7 +203,10 @@ describe('Boss mode (socket.io integration)', () => {
     // She is on the room's clock at the room's minimum, 60 s, and she thinks
     // for 9-20 s per guess: the round genuinely takes most of a minute to close
     // now that the real brain is driving her. That is the wall time, not a hang.
-    const endPromise = waitFor<'round:end'>(ana, 'round:end', 70000);
+    // She earns time from new letters like anybody else and has ten attempts,
+    // so her round on a 60 s clock runs anywhere from ~50 to ~90 s depending
+    // on the words she draws. That spread is the game, not a hang.
+    const endPromise = waitFor<'round:end'>(ana, 'round:end', 150000);
     await ana.emitWithAck('room:start');
     // Ana solves immediately; the fly then has to beat a clock she cannot heal.
     await ana.emitWithAck('game:guess', { word: ANSWER });
@@ -255,5 +258,5 @@ describe('Boss mode (socket.io integration)', () => {
     }
 
     ana.disconnect();
-  }, 80000);
+  }, 170000);
 });
