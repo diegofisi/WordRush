@@ -10,7 +10,7 @@ and almost all of them come from the clock.
 |---|---|
 | You solve the word | **+40**, flat |
 | Time left when you solve | 1 point for every 1 % of the **initial time** you have left |
-| Each attempt after the first | −2 |
+| Each attempt after the first | −2 (v1.1: **−4**, with a solve floor of 40 — `06-v1.1.md`) |
 | First, second and third to solve | +20, +15, +10 |
 | You finish the round still holding your hint | +10 |
 | You do not solve, you have greens at the end | **8 per green** |
@@ -60,6 +60,8 @@ chance. A green is hard evidence (the slot is settled), a yellow is half of one 
 is in the word, the place is not), so a yellow pays half. It stays a consolation and not a
 strategy: the ceiling without solving is 36, and nobody plans a round around that when
 solving fast gives more than 150.
+
+Team mode (v1.1) scores per team with its own table: `06-v1.1.md`.
 
 ## Final table
 Sum of the points of every round. Tie-breaks: fewer total attempts, then fewer hints used.

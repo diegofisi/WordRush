@@ -11,6 +11,7 @@ were agreed, in reading order.
 | `03-scoring-system.md` | The points formula with a table and a full simulation. |
 | `04-decisions-and-pending.md` | Log of decisions with their reason, discarded ideas, and what is still to be decided. |
 | `05-design.md` | Visual direction, list of screens and the link to the Claude Design canvas. |
+| `06-v1.1.md` | v1.1 (2026-09-15): word length 5/6/7, the new hint, teams, chat, observers, sound, kick. |
 
 ## How to maintain it
 - If a rule changes, edit the matching file and add a line in `04-decisions-and-pending.md` with the date and the reason.

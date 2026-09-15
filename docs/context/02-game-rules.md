@@ -2,7 +2,8 @@
 
 ## Room
 - Whoever creates the room chooses: language (ES / EN), initial time per round, number of
-  rounds, and capacity (2 to 8 players).
+  rounds, and capacity (2 to 8 players). From v1.1 also the **word length** (5 / 6 / 7)
+  and **normal or teams** — see `06-v1.1.md`.
 - Recommended minimum initial time: 60 seconds. Below that, with 8 players, the last one
   is almost always knocked out by the −5 s penalties. See `03-scoring-system.md`.
 - You get in with a room code. There is a waiting room with the player list and a "Listo"
@@ -51,6 +52,10 @@ Maximum possible per round: 50 seconds (5 letters × 10). With repeated letters 
 - The HUD shows how many seconds you have lost to this in the round.
 
 ## Hint
+> v1.1 replaces this hint with one that reveals a new letter, or places a known one when
+> every letter is known; in team mode it is one per team. See `06-v1.1.md`. What follows is
+> the v1.0 hint, still the one in the code until step 2 of v1.1 lands.
+
 - Every player gets **one hint per round**. If they do not use it, it is lost when the round ends; it does not carry over.
 - Using it reveals **one letter that is in the word, without saying in which position**. It is marked on the keyboard with the hint style (dotted yellow). Nothing is marked on the board.
 - The chip says how many times that letter appears: "Hay una M en la palabra", "Hay dos L en
@@ -101,6 +106,7 @@ room at a time. There is never a doubt about "which game do I go back to".
   tab") notice with a "Usar esta pestaña" ("Use this tab") button that takes the seat back.
 
 ## Disconnections and room lifetime
+- Mid-round, decided 2026-09-15: the clock keeps running, the player may come back while the round lasts, an absent player counts as not solved. Teams: `06-v1.1.md`.
 - The player's session is stored in the browser (`localStorage`). If they close the tab or lose internet and come back while the game is still running, they re-enter in their place with their board and their clock exactly as they were (the clock does not stop for a disconnection).
 - If they come back when the game has already finished or the room no longer exists, they see a "sesión expirada" ("session expired") message and go back to the start.
 - A waiting room with nobody connected: deleted after 10 minutes.
@@ -108,7 +114,7 @@ room at a time. There is never a doubt about "which game do I go back to".
 - Finished game: the room is deleted after 5 minutes. Rooms live in memory and take up a few KB; these delays are hygiene, not cost.
 
 ## Visibility between players
-- You never see the letters the others type.
+- You never see the letters the others type (v1.1: except your **teammates'**, live — `06-v1.1.md`).
 - You do see, in a side panel, each rival's board in colours (green / yellow / grey),
   their name, which attempt they are on, their clock and whether they have already solved.
 - Shared event feed: solves, penalties, hints used, emotes.

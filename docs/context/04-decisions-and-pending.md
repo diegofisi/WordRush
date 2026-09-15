@@ -50,10 +50,26 @@
 | "Fake letter" (marking in yellow a letter that is not there) | Breaks trust in the board; people stop reasoning. If it comes back, as a room option off by default. |
 | A flat zero for not solving | The consolation per green (and, since 2026-09-11, per yellow) was preferred, to keep people in the game. |
 
+## Decisions taken (2026-09-15) — v1.1
+| Decision | Reason |
+|---|---|
+| v1.1 is built on `ef99747` (the ten PRs), with nothing from the fly boss mode, and sound + English routes rewritten rather than cherry-picked | The fly branch is a separate experiment; the user wants a clean base. |
+| Word length 5 / 6 / 7 as a room setting, attempts 8 / 9 / 10 | Longer words need more attempts; per-position rules need no new numbers. |
+| Answer lists to ~1,300 (5 letters) and ~800–1,000 (6 and 7), reviewed by hand | More variety; the frequency tail must not bring regionalisms or rare forms. |
+| The hint reveals a new letter (yellow) or, when every letter is known, places one (green) | "Letter + count" was often not noticed and rarely decisive. |
+| Teams with one clock and one score per team, own boards, teammates' boards visible live, any split allowed | Cooperation without a shared keyboard; a single clock makes the team the unit. |
+| Attempts −4 instead of −2, solve floor 40, both modes | Attempts were nearly free. |
+| First-team bonus only (+20), no second/third | With two teams, second is last. |
+| Chat: finished players only (normal), team channel live + "(Todos)" between rounds (teams), per round, kept in results | Nobody can leak the word to somebody still playing. |
+| Observers join running games, chat with the finished, labelled, become players next round if there is a slot | Nobody waits for a whole game to end. |
+| Four sounds: room created, joined, game started, round ended; players cannot send sounds | Feedback without noise. |
+| Kick by host with a 30 s rejoin delay; no "ready" gate | Enough control for 8 people. |
+| Surviving a deploy with games in progress is **deferred** | Needs persistence (Redis/disk) and a restore path; too big for v1.1. |
+
 ## Pending decisions
+- **Games surviving a deploy.** Rooms are in memory; every deploy ends every game. Deferred on 2026-09-15 (`06-v1.1.md`).
 - **Name of the game.** "WordRush" is a placeholder.
 - **Light or dark mode as the main one.** The canvas brings both so one can be chosen.
 - **Static mockups vs. clickable prototype.** The first design delivery is static.
-- **What happens if a player disconnects mid-round** (does it count 0? does it pause?).
 - **Round options.** The selector offers 1, 3, 5 and 10. Decide whether to add 2 (or a free field between 1 and 10).
 - **Name of the language of the words.** The room card always shows the endonym (Español / English) even when the interface is in the other language. This is deliberate; confirm it.

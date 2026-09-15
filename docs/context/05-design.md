@@ -34,6 +34,40 @@ comes out all in green before restarting. "Adivina rápido. Róbales el tiempo."
 The top bar of every screen carries an interface language selector (ES | EN) and a
 light/dark theme button with correct contrast in both modes. They were not on the canvas.
 
+## v1.1 (2026-09-15)
+- The hint button becomes impossible to miss: large, pulsing until spent, hints left on it.
+- The language of the words (Español / English) sits in the game header as well as the lobby.
+- Teams: slots in the lobby are clickable to switch team; the game view shows teammates'
+  boards with letters, rivals' with colours; one clock per team; a rounds-won counter.
+- Chat panel (text + stickers) with "(Equipo)" / "(Todos)" labels and an observer label.
+- Observers have their own area; a QR for the room code; connected count in the lobby.
+- 7-letter words need a mobile layout pass (tiles and keyboard at ~400 px).
+- Results show every board with the word, who solved and the chat of the round.
+Rules for all of this: `06-v1.1.md`.
+
+### Guess the phrase (mocked up 2026-09-15)
+Canvas: https://claude.ai/artifact/1u8BU1kHjJ5NNzBJh9XShL — artboards in `docs/design/phrase/`
+(`Main` desktop normal, `Equipos` desktop teams, `Completar` the modal after a miss, `Movil`),
+built with the app's own tokens (dark palette, DM Sans / Bricolage / JetBrains Mono, 52 px
+tiles, 44 px keys, 16 px cards). What the mockup settled:
+- Minimal header: room code · round · word language; in teams, the rounds score by team
+  name ("Los Rápidos 1 · 2 Búhos"). No hint button in this mode.
+- Left column: your clock card (44 px mono, bar, time gained) — the team clock card in
+  teams — then rivals as **phrase slots** (green where they have a letter, never which),
+  scrolling with the app's thin scrollbar. Teams: teammates' letters tried, rival team's
+  slots.
+- Centre: the phrase card (words as dashed slots, found letters green), a 6-row board of
+  the room's word length, the keyboard with a purple **FRASE** key at the end of the last
+  row. Phrase, board and keyboard always fit on one screen and never scroll.
+- Right column: the chat (one design in both modes: "Escribe un mensaje…", sticker button,
+  purple send; disabled when text is not allowed) and the Wordle-style score card ("Si
+  completas ahora" → rows → big total; "Tu ronda" once over).
+- The modal: "Completa la frase. Recuerda: cada intento te resta 5 puntos. Te quedan N
+  intentos." — known letters fixed, missed letters in red, footer "N % de la frase
+  completada · mm:ss restantes", Cerrar / Enviar. It stays open on a miss.
+- Phone: one rival at a time (name with ellipsis above its slots, rotating); the FRASE
+  action is a pill in the phrase card header.
+
 ## Source files
 `docs/design/`. Each `.dc.html` is an artboard; `canvas.json` is the layout. The file
 `wordrush-multiplayer.html` is the assembled canvas that gets published; it is regenerated

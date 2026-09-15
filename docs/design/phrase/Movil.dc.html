@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap">
+  <style>
+    body { margin: 0; background: #151412; color: #f3efe8; font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #8b72ff; } a:hover { color: #a996ff; }
+    * { scrollbar-width: thin; scrollbar-color: #3a3631 transparent; }
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: #3a3631; border-radius: 999px; border: 2px solid #1f1d1a; }
+    *::-webkit-scrollbar-thumb:hover { background: #55504a; }
+    html, body { overflow: hidden; }
+    .label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #8a847b; }
+    .tile { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 40px; height: 40px; border: 2px solid #4a4640; border-radius: 7px; background: #1f1d1a; color: #f3efe8; font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; font-weight: 700; font-size: 20px; text-transform: uppercase; }
+    .tile-filled { border-color: #8a847b; }
+    .tile-green { background: #3fa66b; border-color: #3fa66b; color: #ffffff; }
+    .tile-yellow { background: #e5b537; border-color: #e5b537; color: #1c1a17; }
+    .tile-gray { background: #4a4640; border-color: #4a4640; color: #b5aea3; }
+    .ptile { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 24px; height: 28px; border: 2px dashed #4a4640; border-radius: 5px; background: transparent; color: #f3efe8; font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; font-weight: 700; font-size: 13px; text-transform: uppercase; }
+    .ptile-given { border-style: solid; border-color: #2e2b27; background: #2a2723; color: #b5aea3; }
+    .ptile-found { border-style: solid; border-color: #3fa66b; background: #3fa66b; color: #ffffff; }
+    .key { display: flex; align-items: center; justify-content: center; box-sizing: border-box; height: 44px; flex: 1; min-width: 0; border-radius: 8px; background: #2a2723; color: #f3efe8; font-weight: 600; font-size: 15px; }
+    .key-green { background: #3fa66b; color: #ffffff; } .key-yellow { background: #e5b537; color: #1c1a17; } .key-gray { background: #1a1815; color: #918e89; }
+    .key-enter { background: #f3efe8; color: #151412; font-size: 12px; letter-spacing: 0.04em; flex: 1.6; }
+    .mini { width: 7px; height: 7px; border-radius: 2px; background: #2a2723; }
+    .mini-green { background: #3fa66b; } .mini-yellow { background: #e5b537; } .mini-gray { background: #55504a; }
+    .ps { display: block; width: 6px; height: 8px; border-radius: 2px; border: 1px dashed #4a4640; box-sizing: border-box; }
+    .ps-on { border-style: solid; border-color: #3fa66b; background: #3fa66b; }
+        .mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+    .display { font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #151412; display: flex; flex-direction: column; overflow: hidden;">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 54px 16px 8px; border-bottom: 1px solid #2e2b27; background: #1f1d1a;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="display: flex; gap: 3px;">
+        <span style="display: block; width: 10px; height: 18px; border-radius: 3px; background: #3fa66b;"></span>
+        <span style="display: block; width: 10px; height: 18px; border-radius: 3px; background: #e5b537;"></span>
+        <span style="display: block; width: 10px; height: 18px; border-radius: 3px; background: #f3efe8;"></span>
+      </div>
+      <span class="mono" style="font-size: 13px; font-weight: 700;">K7PM</span>
+      
+    </div>
+    <span style="font-size: 13px; color: #b5aea3;">Ronda 2 de 3 · <strong style="color: #f3efe8;">Español</strong></span>
+  </header>
+
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px 0;">
+    <div style="display: flex; align-items: baseline; gap: 8px;">
+      <span class="mono" style="font-size: 36px; line-height: 1; font-weight: 700; letter-spacing: -0.03em;">00:53</span>
+      <span class="mono" style="font-size: 12px; font-weight: 700; color: #6fd79a;">+8 s</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 3px; align-items: flex-start; max-width: 168px;">
+      <span style="font-size: 12px; font-weight: 700; color: #f3efe8; max-width: 168px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Bruno Alejandro Martínez del Río</span>
+      <div style="display: flex; flex-wrap: wrap; gap: 2px 3px;"><div style="display: flex; gap: 1px;"><span class="ps ps-on"></span></div><div style="display: flex; gap: 1px;"><span class="ps ps-on"></span><span class="ps ps-on"></span><span class="ps"></span><span class="ps ps-on"></span><span class="ps"></span><span class="ps"></span><span class="ps"></span></div><div style="display: flex; gap: 1px;"><span class="ps ps-on"></span><span class="ps"></span><span class="ps"></span><span class="ps"></span><span class="ps"></span><span class="ps ps-on"></span><span class="ps"></span><span class="ps"></span></div><div style="display: flex; gap: 1px;"><span class="ps"></span><span class="ps"></span></div><div style="display: flex; gap: 1px;"><span class="ps ps-on"></span><span class="ps"></span></div><div style="display: flex; gap: 1px;"><span class="ps"></span><span class="ps ps-on"></span><span class="ps ps-on"></span><span class="ps"></span><span class="ps"></span></div><div style="display: flex; gap: 1px;"><span class="ps ps-on"></span><span class="ps"></span></div><div style="display: flex; gap: 1px;"><span class="ps"></span><span class="ps"></span><span class="ps"></span><span class="ps"></span><span class="ps ps-on"></span><span class="ps"></span></div></div>
+      <div style="display: flex; gap: 4px; align-items: center; padding-top: 2px;">
+        <span style="display: block; width: 5px; height: 5px; border-radius: 999px; background: #55504a;"></span>
+        <span style="display: block; width: 5px; height: 5px; border-radius: 999px; background: #a996ff;"></span>
+        <span style="display: block; width: 5px; height: 5px; border-radius: 999px; background: #55504a;"></span>
+        <span style="display: block; width: 5px; height: 5px; border-radius: 999px; background: #55504a;"></span>
+        <span style="display: block; width: 5px; height: 5px; border-radius: 999px; background: #55504a;"></span>
+        <span style="display: block; width: 5px; height: 5px; border-radius: 999px; background: #55504a;"></span>
+        <span style="display: block; width: 5px; height: 5px; border-radius: 999px; background: #55504a;"></span>
+      </div>
+    </div>
+  </div>
+  <div style="margin: 6px 16px 0; height: 4px; border-radius: 999px; background: #2a2723; overflow: hidden;"><div style="width: 59%; height: 100%; background: #3fa66b;"></div></div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px; margin: 10px 16px 0; padding: 10px 12px; border-radius: 12px; background: #1f1d1a; border: 1px solid #2e2b27;">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <span class="label">La frase · 15 de 33 letras</span>
+      <span style="display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 999px; background: #8b72ff; color: #ffffff; font-size: 13px; font-weight: 800;">¡Sé la frase!</span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;">
+      <div style="display: flex; gap: 3px;"><span class="ptile ptile-found">A</span></div>
+      <div style="display: flex; gap: 3px;"><span class="ptile ptile-found">C</span><span class="ptile ptile-found">A</span><span class="ptile"></span><span class="ptile ptile-found">A</span><span class="ptile ptile-found">L</span><span class="ptile ptile-found">L</span><span class="ptile"></span></div>
+      <div style="display: flex; gap: 3px;"><span class="ptile ptile-found">R</span><span class="ptile"></span><span class="ptile"></span><span class="ptile ptile-found">A</span><span class="ptile ptile-found">L</span><span class="ptile ptile-found">A</span><span class="ptile"></span><span class="ptile"></span></div>
+      <div style="display: flex; gap: 3px;"><span class="ptile"></span><span class="ptile"></span></div>
+      <div style="display: flex; gap: 3px;"><span class="ptile ptile-found">L</span><span class="ptile"></span></div>
+      <div style="display: flex; gap: 3px;"><span class="ptile ptile-found">M</span><span class="ptile"></span><span class="ptile ptile-found">R</span><span class="ptile"></span><span class="ptile"></span></div>
+      <div style="display: flex; gap: 3px;"><span class="ptile"></span><span class="ptile ptile-found">L</span></div>
+      <div style="display: flex; gap: 3px;"><span class="ptile"></span><span class="ptile"></span><span class="ptile"></span><span class="ptile"></span><span class="ptile ptile-found">T</span><span class="ptile"></span></div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; justify-content: center; padding: 8px 16px;">
+    <div style="display: flex; gap: 5px;"><span class="tile tile-gray">P</span><span class="tile tile-green">L</span><span class="tile tile-gray">U</span><span class="tile tile-green">M</span><span class="tile tile-green">A</span></div>
+    <div style="display: flex; gap: 5px;"><span class="tile tile-green">C</span><span class="tile tile-green">A</span><span class="tile tile-green">R</span><span class="tile tile-green">T</span><span class="tile tile-green">A</span></div>
+    <div style="display: flex; gap: 5px;"><span class="tile tile-filled">D</span><span class="tile tile-filled">I</span><span class="tile tile-filled">E</span><span class="tile"></span><span class="tile"></span></div>
+    <div style="display: flex; gap: 5px;"><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span></div>
+    <div style="display: flex; gap: 5px;"><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span></div>
+    <div style="display: flex; gap: 5px;"><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span></div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 6px; padding: 0 8px 22px;">
+    <div style="display: flex; gap: 5px;"><span class="key">Q</span><span class="key">W</span><span class="key">E</span><span class="key key-green">R</span><span class="key key-green">T</span><span class="key key-gray">U</span><span class="key">I</span><span class="key">O</span><span class="key key-gray">P</span></div>
+    <div style="display: flex; gap: 5px; padding: 0 12px;"><span class="key key-green">A</span><span class="key">S</span><span class="key">D</span><span class="key">F</span><span class="key">G</span><span class="key">H</span><span class="key">J</span><span class="key">K</span><span class="key key-green">L</span><span class="key">Ñ</span></div>
+    <div style="display: flex; gap: 5px;"><span class="key key-enter">ENTER</span><span class="key">Z</span><span class="key">X</span><span class="key key-green">C</span><span class="key">V</span><span class="key">B</span><span class="key">N</span><span class="key key-green">M</span><span class="key" style="flex: 1.6;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 6H8l-5 6 5 6h13a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1zM17 9l-6 6M11 9l6 6"></path></svg></span></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

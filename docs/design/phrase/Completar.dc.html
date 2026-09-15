@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap">
+  <style>
+    body { margin: 0; background: #151412; color: #f3efe8; font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #8b72ff; } a:hover { color: #a996ff; }
+    html, body { overflow: hidden; }
+    .label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #8a847b; }
+    .ptile { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 36px; height: 42px; border: 2px dashed #4a4640; border-radius: 8px; background: transparent; color: #f3efe8; font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; font-weight: 700; font-size: 20px; text-transform: uppercase; }
+    .ptile-given { border-style: solid; border-color: #2e2b27; background: #2a2723; color: #b5aea3; }
+    .ptile-found { border-style: solid; border-color: #3fa66b; background: #3fa66b; color: #ffffff; }
+    .ptile-typing { border-style: solid; border-color: #8a847b; }
+    .ptile-wrong { border-style: solid; border-color: #f08a7a; background: #3a1f1b; color: #f08a7a; }
+    .ptile-cursor { border-style: solid; border-color: #8b72ff; box-shadow: 0 0 0 3px #2a2440; }
+    .mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+    .display { font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; }
+  </style>
+</helmet>
+<div style="width: 820px; height: 470px; box-sizing: border-box; background: rgba(21, 20, 18, 0.92); display: flex; align-items: center; justify-content: center; padding: 24px;">
+  <div style="width: 740px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px; padding: 26px 28px; border-radius: 16px; border: 1px solid #2e2b27; background: #1f1d1a; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <span class="display" style="font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Completar la frase</span>
+        <span style="font-size: 14px; color: #b5aea3;">Completa la frase. Recuerda: cada intento te resta <strong style="color: #f08a7a;">5 puntos</strong>. Te quedan <strong style="color: #f3efe8;">4 intentos</strong>.</span>
+      </div>
+      <span style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: #2a2723; color: #b5aea3;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"></path></svg></span>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 18px; border-radius: 12px; background: #151412; border: 1px solid #2e2b27;">
+      <div style="display: flex; gap: 4px;"><span class="ptile ptile-typing">A</span></div>
+      <div style="display: flex; gap: 4px;"><span class="ptile ptile-found">C</span><span class="ptile ptile-found">A</span><span class="ptile ptile-typing">B</span><span class="ptile ptile-found">A</span><span class="ptile ptile-found">L</span><span class="ptile ptile-found">L</span><span class="ptile ptile-typing">O</span></div>
+      <div style="display: flex; gap: 4px;"><span class="ptile ptile-found">R</span><span class="ptile ptile-wrong">O</span><span class="ptile ptile-wrong">B</span><span class="ptile ptile-found">A</span><span class="ptile ptile-found">L</span><span class="ptile ptile-found">A</span><span class="ptile ptile-typing">D</span><span class="ptile ptile-typing">O</span></div>
+      <div style="display: flex; gap: 4px;"><span class="ptile ptile-typing">N</span><span class="ptile ptile-typing">O</span></div>
+      <div style="display: flex; gap: 4px;"><span class="ptile ptile-typing">L</span><span class="ptile ptile-typing">E</span></div>
+      <div style="display: flex; gap: 4px;"><span class="ptile ptile-found">M</span><span class="ptile ptile-cursor"></span><span class="ptile ptile-found">R</span><span class="ptile"></span><span class="ptile"></span></div>
+      <div style="display: flex; gap: 4px;"><span class="ptile ptile-typing">E</span><span class="ptile ptile-typing">L</span></div>
+      <div style="display: flex; gap: 4px;"><span class="ptile"></span><span class="ptile"></span><span class="ptile"></span><span class="ptile"></span><span class="ptile ptile-found">T</span><span class="ptile"></span></div>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+      <span style="font-size: 13px; color: #b5aea3;"><strong style="color: #f3efe8;">75 %</strong> de la frase completada · <span class="mono" style="color: #6fd79a;">00:44</span> restantes</span>
+      <div style="display: flex; gap: 10px;">
+        <span style="display: flex; align-items: center; height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid #2e2b27; color: #b5aea3; font-size: 14px; font-weight: 600;">Cerrar</span>
+        <span style="display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 999px; background: #8b72ff; color: #ffffff; font-size: 15px; font-weight: 800; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>
+          Enviar
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

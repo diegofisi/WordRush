@@ -1,0 +1,213 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap">
+  <style>
+    body { margin: 0; background: #151412; color: #f3efe8; font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #8b72ff; } a:hover { color: #a996ff; }
+    * { scrollbar-width: thin; scrollbar-color: #3a3631 transparent; }
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: #3a3631; border-radius: 999px; border: 2px solid #1f1d1a; }
+    *::-webkit-scrollbar-thumb:hover { background: #55504a; }
+    html, body { overflow: hidden; }
+    .label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #8a847b; }
+    .card { background: #1f1d1a; border: 1px solid #2e2b27; border-radius: 16px; }
+    .tile { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 48px; height: 48px; border: 2px solid #4a4640; border-radius: 9px; background: #1f1d1a; color: #f3efe8; font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; font-weight: 700; font-size: 24px; text-transform: uppercase; user-select: none; }
+    .tile-filled { border-color: #8a847b; }
+    .tile-green { background: #3fa66b; border-color: #3fa66b; color: #ffffff; }
+    .tile-yellow { background: #e5b537; border-color: #e5b537; color: #1c1a17; }
+    .tile-gray { background: #4a4640; border-color: #4a4640; color: #b5aea3; }
+    .t { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 22px; height: 22px; border-radius: 5px; background: #2a2723; color: #f3efe8; font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; font-weight: 700; font-size: 12px; text-transform: uppercase; }
+    .t-green { background: #3fa66b; color: #ffffff; } .t-yellow { background: #e5b537; color: #1c1a17; } .t-gray { background: #4a4640; color: #b5aea3; } .t-typing { background: transparent; border: 1.5px solid #8a847b; color: #b5aea3; }
+    .ptile { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 32px; height: 36px; border: 2px dashed #4a4640; border-radius: 7px; background: transparent; color: #f3efe8; font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; font-weight: 700; font-size: 17px; text-transform: uppercase; }
+    .ptile-given { border-style: solid; border-color: #2e2b27; background: #2a2723; color: #b5aea3; }
+    .ptile-found { border-style: solid; border-color: #3fa66b; background: #3fa66b; color: #ffffff; }
+    .key { display: flex; align-items: center; justify-content: center; box-sizing: border-box; height: 44px; min-width: 40px; padding: 0 10px; border-radius: 8px; background: #2a2723; color: #f3efe8; font-weight: 600; font-size: 15px; user-select: none; }
+    .key-green { background: #3fa66b; color: #ffffff; } .key-yellow { background: #e5b537; color: #1c1a17; } .key-gray { background: #1a1815; color: #918e89; }
+    .key-enter { background: #f3efe8; color: #151412; font-size: 13px; letter-spacing: 0.04em; min-width: 76px; }
+    .mini { width: 12px; height: 12px; border-radius: 3px; background: #2a2723; }
+    .mini-green { background: #3fa66b; } .mini-yellow { background: #e5b537; } .mini-gray { background: #55504a; }
+    .ps { display: block; width: 14px; height: 16px; border-radius: 4px; border: 1.5px dashed #4a4640; box-sizing: border-box; }
+    .ps-on { border-style: solid; border-color: #3fa66b; background: #3fa66b; }
+    .mono { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+    .display { font-family: 'Bricolage Grotesque', 'Arial Black', sans-serif; }
+    .msg { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+    .msg .who { font-weight: 700; color: #f3efe8; } .msg .who .tag { font-weight: 700; color: #a996ff; font-size: 11px; margin-left: 6px; }
+    .msg .txt { color: #b5aea3; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #151412; display: flex; flex-direction: column; overflow: hidden;">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding: 8px 28px; box-sizing: border-box; border-bottom: 1px solid #2e2b27; background: #1f1d1a;">
+    <div style="display: flex; align-items: center; gap: 20px; min-width: 0;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="display: flex; gap: 3px;">
+          <span style="display: block; width: 10px; height: 18px; border-radius: 3px; background: #3fa66b;"></span>
+          <span style="display: block; width: 10px; height: 18px; border-radius: 3px; background: #e5b537;"></span>
+          <span style="display: block; width: 10px; height: 18px; border-radius: 3px; background: #f3efe8;"></span>
+        </div>
+        <span class="display" style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em;">WordRush</span>
+      </div>
+      <span style="width: 1px; height: 24px; background: #2e2b27;"></span>
+      <div style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #b5aea3;">
+        <span class="mono" style="font-weight: 700; color: #f3efe8;">K7PM</span>
+        <span>·</span>
+        <span>Ronda 2 de 3 <span style="color: #8a847b;">·</span> <span style="font-weight: 700; color: #f3efe8;">English</span></span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700;">
+        <span style="color: #a996ff;">Los Rápidos</span>
+        <span class="mono" style="font-size: 20px; color: #a996ff;">1</span>
+        <span style="color: #8a847b;">·</span>
+        <span class="mono" style="font-size: 20px; color: #f0c862;">2</span>
+        <span style="color: #f0c862;">Búhos</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 999px; background: #8b72ff; color: #ffffff; font-weight: 700; font-size: 13px;">D</div>
+        <span style="font-size: 14px; font-weight: 600;">Diego</span>
+      </div>
+    </div>
+  </header>
+
+  <div style="display: grid; grid-template-columns: 340px minmax(0, 1fr) 320px; grid-template-rows: minmax(0, 1fr); gap: 24px; padding: 20px 28px; flex: 1; min-height: 0;">
+
+    <!-- My team: shared clock + teammates' boards with letters -->
+    <div style="display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+      <div class="card" style="display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-color: #8b72ff;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span class="label" style="color: #a996ff;">Los Rápidos · 3</span>
+          <span style="font-size: 12px; color: #8a847b;">reloj compartido</span>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 10px;">
+          <span class="mono" style="font-size: 44px; line-height: 1; font-weight: 700; letter-spacing: -0.03em;">01:12</span>
+          <span class="mono" style="font-size: 13px; font-weight: 700; color: #6fd79a;">+5 s</span>
+        </div>
+        <div style="height: 6px; border-radius: 999px; background: #2a2723; overflow: hidden;"><div style="width: 80%; height: 100%; background: #3fa66b;"></div></div>
+        <span style="font-size: 12px; color: #b5aea3;">59 % de la frase completada · 5 palabras gastadas entre los tres</span>
+      </div>
+
+      <div class="card" style="display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; flex: 1; min-height: 0; overflow: hidden;">
+        <span class="label">Tus compañeros · en vivo</span>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600;"><span style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 999px; background: #2a2723; font-size: 11px; font-weight: 700;">M</span>Mateo</span>
+          <span style="font-size: 12px; color: #8a847b;">palabra 3 · escribiendo…</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; padding-left: 32px;">
+          <span class="t t-green">S</span><span class="t t-green">E</span><span class="t t-green">T</span><span class="t t-green">R</span><span class="t t-gray">Y</span><span class="t t-gray">M</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600;"><span style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 999px; background: #2a2723; font-size: 11px; font-weight: 700;">L</span>Lucía</span>
+          <span style="font-size: 12px; color: #8a847b;">palabra 2</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; padding-left: 32px;">
+          <span class="t t-green">A</span><span class="t t-green">L</span><span class="t t-green">O</span><span class="t t-gray">P</span><span class="t t-gray">N</span>
+        </div>
+        <span style="font-size: 12px; color: #8a847b; padding-left: 32px;">Las letras que cada uno ha probado: verdes en la frase, grises fuera.</span>
+      </div>
+
+      <div class="card" style="display: flex; flex-direction: column; gap: 8px; padding: 12px 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span class="label" style="color: #f0c862;">Búhos · 2</span>
+          <span class="mono" style="font-size: 14px; font-weight: 700; color: #f0c862;">00:58</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px 8px;">
+          <div style="display: flex; gap: 3px;"><span class="ps ps-on"></span><span class="ps"></span><span class="ps ps-on"></span><span class="ps"></span><span class="ps"></span><span class="ps ps-on"></span><span class="ps"></span></div>
+          <div style="display: flex; gap: 3px;"><span class="ps"></span><span class="ps ps-on"></span><span class="ps ps-on"></span><span class="ps"></span><span class="ps"></span></div>
+          <div style="display: flex; gap: 3px;"><span class="ps ps-on"></span><span class="ps"></span><span class="ps"></span><span class="ps ps-on"></span><span class="ps ps-on"></span><span class="ps"></span></div>
+          <div style="display: flex; gap: 3px;"><span class="ps"></span><span class="ps"></span><span class="ps"></span><span class="ps"></span></div>
+          <div style="display: flex; gap: 3px;"><span class="ps ps-on"></span><span class="ps"></span><span class="ps"></span><span class="ps"></span><span class="ps ps-on"></span></div>
+        </div>
+        <span style="font-size: 12px; color: #8a847b;">Su frase: 11 de 27 letras · solo ves cuánto llevan, no qué</span>
+      </div>
+    </div>
+
+    <!-- Centre -->
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 12px; min-height: 0; overflow: hidden;">
+      <div class="card" style="display: flex; flex-direction: column; gap: 10px; padding: 12px 18px; width: 680px; box-sizing: border-box;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span class="label">The phrase · 16 of 27 letters · shared by the team</span>
+          <span style="font-size: 12px; color: #8a847b;">5 words · everything comes from what you type</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px;">
+          <div style="display: flex; gap: 4px;"><span class="ptile ptile-found">A</span><span class="ptile"></span><span class="ptile ptile-found">T</span><span class="ptile"></span><span class="ptile ptile-found">O</span><span class="ptile"></span><span class="ptile ptile-found">S</span></div>
+          <div style="display: flex; gap: 4px;"><span class="ptile ptile-found">S</span><span class="ptile"></span><span class="ptile ptile-found">E</span><span class="ptile ptile-found">A</span><span class="ptile"></span></div>
+          <div style="display: flex; gap: 4px;"><span class="ptile ptile-found">L</span><span class="ptile ptile-found">O</span><span class="ptile"></span><span class="ptile"></span><span class="ptile ptile-found">E</span><span class="ptile ptile-found">R</span></div>
+          <div style="display: flex; gap: 4px;"><span class="ptile ptile-found">T</span><span class="ptile"></span><span class="ptile ptile-found">A</span><span class="ptile"></span></div>
+          <div style="display: flex; gap: 4px;"><span class="ptile"></span><span class="ptile ptile-found">O</span><span class="ptile ptile-found">R</span><span class="ptile"></span><span class="ptile ptile-found">S</span></div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; gap: 6px;"><span class="tile tile-green">S</span><span class="tile tile-green">O</span><span class="tile tile-green">R</span><span class="tile tile-green">R</span><span class="tile tile-gray">Y</span><span class="tile tile-green">S</span></div>
+        <div style="display: flex; gap: 6px;"><span class="tile tile-filled">W</span><span class="tile tile-filled">O</span><span class="tile tile-filled">R</span><span class="tile tile-filled">R</span><span class="tile"></span><span class="tile"></span></div>
+        <div style="display: flex; gap: 6px;"><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span></div>
+        <div style="display: flex; gap: 6px;"><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span></div>
+        <div style="display: flex; gap: 6px;"><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span></div>
+        <div style="display: flex; gap: 6px;"><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span><span class="tile"></span></div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+        <div style="display: flex; gap: 6px;"><span class="key">Q</span><span class="key">W</span><span class="key key-green">E</span><span class="key key-green">R</span><span class="key key-green">T</span><span class="key">U</span><span class="key">I</span><span class="key key-green">O</span><span class="key">P</span></div>
+        <div style="display: flex; gap: 6px;"><span class="key key-green">A</span><span class="key key-gray">S</span><span class="key">D</span><span class="key key-green">F</span><span class="key">G</span><span class="key">H</span><span class="key">J</span><span class="key">K</span><span class="key key-green">L</span></div>
+        <div style="display: flex; gap: 6px;"><span class="key key-enter">ENTER</span><span class="key">Z</span><span class="key">X</span><span class="key">C</span><span class="key">V</span><span class="key key-green">B</span><span class="key">N</span><span class="key">M</span><span class="key" style="min-width: 52px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 6H8l-5 6 5 6h13a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1zM17 9l-6 6M11 9l6 6"></path></svg></span><span class="key" style="background: #8b72ff; color: #ffffff; min-width: 104px; font-size: 13px; letter-spacing: 0.04em; gap: 6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>FRASE</span></div>
+      </div>
+    </div>
+
+    <!-- Team chat and score -->
+    <div style="display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+    <div class="card" style="display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; border-bottom: 1px solid #2e2b27;">
+        <span class="label">Chat</span>
+        <div style="display: flex; gap: 4px; padding: 3px; border-radius: 999px; background: #2a2723;">
+          <span style="padding: 4px 10px; border-radius: 999px; background: #8b72ff; color: #ffffff; font-size: 12px; font-weight: 700;">Los Rápidos</span>
+          <span style="padding: 4px 10px; border-radius: 999px; color: #8a847b; font-size: 12px; font-weight: 700;">Todos · entre rondas</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; flex: 1; min-height: 0; overflow: hidden;">
+        <div class="msg"><span class="who">Mateo <span class="tag">(Equipo)</span></span><span class="txt">SPEAK ya casi sale, faltan la K y la P</span></div>
+        <div class="msg"><span class="who">Lucía <span class="tag">(Equipo)</span></span><span class="txt">la D de LOUDER la saqué yo, +5 s al reloj</span></div>
+        <div class="msg"><span class="who">Mateo <span class="tag">(Equipo)</span></span><span class="txt">la de 4 tiene que ser THAN, yo la completo</span></div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 10px; background: #2a2723; color: #f3efe8;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"></path></svg></span>
+          <span style="font-size: 12px; color: #8a847b;">Pau <span style="font-weight: 600;">(Observador)</span> · sticker, lo ven todos</span>
+        </div>
+        <div class="msg"><span class="who">Tú <span class="tag">(Equipo)</span></span><span class="txt">completo la frase en cuanto caiga la de 4</span></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-top: 1px solid #2e2b27;">
+        <div style="display: flex; align-items: center; flex: 1; height: 40px; padding: 0 14px; border-radius: 999px; background: #2a2723; color: #8a847b; font-size: 14px;">Escribe un mensaje…</div>
+        <span style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: #2a2723; color: #f3efe8;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"></path></svg></span>
+        <span style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: #8b72ff; color: #ffffff;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg></span>
+      </div>
+    </div>
+      <div class="card" style="display: flex; flex-direction: column; gap: 8px; padding: 14px 16px 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span class="label">Si el equipo completa ahora</span>
+          <span style="font-size: 12px; color: #8a847b;">1.º en llegar</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px; font-size: 13px;">
+          <div style="display: flex; justify-content: space-between; gap: 12px;"><span style="color: #b5aea3;">Tiempo restante · 80 %</span><span class="mono" style="font-weight: 600; color: #f3efe8;">+80</span></div>
+          <div style="display: flex; justify-content: space-between; gap: 12px;"><span style="color: #b5aea3;">Frase completa</span><span class="mono" style="font-weight: 600; color: #6fd79a;">+80</span></div>
+          <div style="display: flex; justify-content: space-between; gap: 12px;"><span style="color: #b5aea3;">Palabras del equipo · 5</span><span class="mono" style="font-weight: 600; color: #f08a7a;">-20</span></div>
+          <div style="display: flex; justify-content: space-between; gap: 12px;"><span style="color: #b5aea3;">Frases falladas · 0 de 5</span><span class="mono" style="font-weight: 600; color: #f08a7a;">0</span></div>
+          <div style="display: flex; justify-content: space-between; gap: 12px;"><span style="color: #b5aea3;">1.º en completar</span><span class="mono" style="font-weight: 600; color: #6fd79a;">+20</span></div>
+        </div>
+        <div style="height: 1px; background: #2e2b27;"></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between;">
+          <span style="font-size: 13px; font-weight: 600;">Total de la ronda</span>
+          <span class="display" style="font-size: 28px; font-weight: 800; letter-spacing: -0.02em;">160</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
