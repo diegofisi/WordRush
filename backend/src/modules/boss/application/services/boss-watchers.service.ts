@@ -31,9 +31,8 @@ export class BossWatchersService {
     return this.byRoom.has(roomCode);
   }
 
-  /** The one room being watched, when exactly one is; the worker serves one at a time. */
-  onlyRoom(): string | null {
-    const codes = [...this.byRoom.keys()];
-    return codes.length === 1 ? (codes[0] ?? null) : null;
+  /** Every room with a panel open, oldest first: the first ones keep their stream. */
+  rooms(): string[] {
+    return [...this.byRoom.keys()];
   }
 }

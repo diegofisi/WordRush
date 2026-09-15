@@ -159,6 +159,49 @@ describe('Boss mode (socket.io integration)', () => {
     ana.disconnect();
   }, 60000);
 
+  it('gives three rooms at once their own fly and their own live panel', async () => {
+    // The brain threads are shared by every room. Each room still has its own
+    // fly: her own board, her own words, and her own frames on her own panel.
+    const rooms = await Promise.all(
+      ['Uno', 'Dos', 'Tres'].map(async (name) => {
+        const socket = await connect();
+        const created = await socket.emitWithAck('room:create', { name, settings: SETTINGS });
+        if (!created.ok) throw new Error('room:create failed');
+        const bot = created.state.lobby.players.find((p) => p.isBot);
+        if (!bot) throw new Error('no fly seated');
+        return { socket, code: created.state.lobby.code, botId: bot.id };
+      }),
+    );
+
+    // Every fly plays, and none of them plays another room's turn.
+    const firstMoves = rooms.map(
+      ({ socket, botId }) =>
+        new Promise<number>((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('a fly never played')), 45000);
+          socket.on('player:progress', (p) => {
+            if (p.playerId === botId && p.attempt > 0) {
+              clearTimeout(timer);
+              resolve(p.attempt);
+            }
+          });
+        }),
+    );
+    for (const { socket } of rooms) await socket.emitWithAck('room:start');
+    expect(await Promise.all(firstMoves)).toEqual([1, 1, 1]);
+
+    // Two panels open at the same time both get frames: the stream used to be
+    // one thread that switched itself off as soon as two rooms watched.
+    const [a, b] = rooms;
+    const frames = [waitFor(a.socket, 'boss:frame', 30000), waitFor(b.socket, 'boss:frame', 30000)];
+    await a.socket.emitWithAck('boss:watch', { watching: true });
+    await b.socket.emitWithAck('boss:watch', { watching: true });
+    const [fa, fb] = await Promise.all(frames);
+    expect(fa.biologicalMs).toBeGreaterThan(0);
+    expect(fb.biologicalMs).toBeGreaterThan(0);
+
+    for (const { socket } of rooms) socket.disconnect();
+  }, 90000);
+
   it('sends a human solve at the fly and never at a teammate', async () => {
     const ana = await connect();
     const bruno = await connect();

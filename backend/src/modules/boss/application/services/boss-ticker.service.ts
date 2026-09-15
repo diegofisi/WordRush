@@ -37,13 +37,13 @@ export class BossTickerService implements OnModuleInit, OnModuleDestroy {
     private readonly bus: RoomEventsBus,
   ) {}
 
-  private streamedRoom: string | null = null;
+  /** Rooms whose board a stream thread is currently pointed at. */
+  private readonly streamed = new Set<string>();
 
   onModuleInit(): void {
-    // Live slices go straight out to the room that asked for them.
-    this.brain.subscribe((frame) => {
-      const room = this.streamedRoom;
-      if (room) this.bus.publish({ roomCode: room, event: 'boss:frame', payload: frame });
+    // Live slices go straight out to the room they were simulated for.
+    this.brain.subscribe((roomCode, frame) => {
+      this.bus.publish({ roomCode, event: 'boss:frame', payload: frame });
     });
     this.timer = setInterval(() => this.tick(), BOSS_TICK_INTERVAL_MS);
     this.timer.unref();
@@ -55,32 +55,34 @@ export class BossTickerService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Points the live stream at the room somebody is watching, and stops it when
-   * nobody is. The board she is looking at is pushed with it so the stream
-   * reflects the position, not a blank brain.
+   * Gives every watched room a stream thread, oldest watcher first, up to the
+   * thread count, and releases the threads of rooms nobody watches any more.
+   * The board she is looking at is pushed with it so the stream reflects the
+   * position, not a blank brain.
    */
   private syncStream(): void {
-    const wanted = this.watchers.onlyRoom();
-    if (wanted === this.streamedRoom) {
-      if (wanted) this.pointStream(wanted);
-      return;
+    const wanted = this.watchers.rooms().slice(0, this.brain.streams);
+    for (const code of this.streamed) {
+      if (!wanted.includes(code)) {
+        this.brain.stream(code, false);
+        this.streamed.delete(code);
+      }
     }
-    if (this.streamedRoom && !wanted) this.brain.stream(false);
-    this.streamedRoom = wanted;
-    if (wanted) this.pointStream(wanted, true);
+    for (const code of wanted) this.pointStream(code);
   }
 
-  private pointStream(roomCode: string, turnOn = false): void {
+  private pointStream(roomCode: string): void {
     const room = this.rooms.findByCode(roomCode);
     const bot = room?.bot;
     if (!room || !bot?.round || !room.settings.bossMode) {
-      if (turnOn) this.brain.stream(false);
+      if (this.streamed.delete(roomCode)) this.brain.stream(roomCode, false);
       return;
     }
-    this.brain.stream(true, {
+    this.brain.stream(roomCode, true, {
       slots: slotsOfRound(bot.round),
       letters: lettersOfRound(bot.round),
     });
+    this.streamed.add(roomCode);
   }
 
   /**
@@ -100,8 +102,8 @@ export class BossTickerService implements OnModuleInit, OnModuleDestroy {
         const bot = room.bot;
         if (!bot) continue;
         // Nobody to play against, nobody to play for. A room outlives its last
-        // human for the reconnection grace, and there is one brain thread for
-        // every room: a fly still thinking in an abandoned room starves the
+        // human for the reconnection grace, and the brain threads are shared
+        // by every room: a fly still thinking in an abandoned room slows the
         // fly in a room with people in it.
         if (room.connectedPlayers().length === 0) continue;
         void this.playTurn.execute(room, bot, now).catch((error: unknown) => {

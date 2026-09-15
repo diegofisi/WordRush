@@ -23,6 +23,15 @@ export const MAX_ROOMS = Symbol('MAX_ROOMS');
  * read. The default is a starting point, not a measurement: raise it once
  * `/health` shows what this deployment actually holds.
  */
+/**
+ * Brain threads of one kind (`BOSS_DECIDERS`, `BOSS_STREAMS`). Each holds a
+ * copy of the connectome, about 90 MB, so the range is deliberately small.
+ */
+export function parseThreadCount(raw: string | undefined, fallback: number): number {
+  const count = Number(raw);
+  return Number.isInteger(count) && count >= 1 && count <= 8 ? count : fallback;
+}
+
 export function parseMaxRooms(raw: string | undefined, fallback = 500): number {
   const max = Number(raw);
   return Number.isInteger(max) && max > 0 ? max : fallback;

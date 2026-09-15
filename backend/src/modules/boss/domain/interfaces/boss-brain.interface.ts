@@ -10,10 +10,19 @@ export const BOSS_BRAIN_STREAM = Symbol('BOSS_BRAIN_STREAM');
  * board she is looking at and emits a slice several times a second.
  */
 export interface IBossBrainStream {
-  /** Every live slice, while the stream is on. */
-  subscribe(listener: (frame: BossFrame) => void): void;
-  /** Turns it on or off, and points it at a board. Off costs nothing. */
-  stream(on: boolean, board?: { slots?: string[]; letters?: [string, string][] }): void;
+  /** Every live slice, with the room it was simulated for. */
+  subscribe(listener: (roomCode: string, frame: BossFrame) => void): void;
+  /**
+   * Points a stream at a room's board, or stops streaming that room. Off costs
+   * nothing; a room past the thread count gets no stream until one frees up.
+   */
+  stream(
+    roomCode: string,
+    on: boolean,
+    board?: { slots?: string[]; letters?: [string, string][] },
+  ): void;
+  /** How many rooms can be streamed at once. */
+  readonly streams: number;
 }
 
 export type { BossAction };

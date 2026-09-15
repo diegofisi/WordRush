@@ -387,9 +387,20 @@ Each of her turns:
    third word, and put back on 2026-09-15 once that was measured to be luck
    (13.5 % of rounds; the typical solve is the 4th or 5th word).
 
-   The live stream has its own thread since the same day: a decision blocks
+   The live stream has its own threads since the same day: a decision blocks
    its thread for those 7 s, and while decisions and stream shared one the
    panel froze for every decision.
+
+   **Threads, 2026-09-15.** The brain is shared by every room; the game state
+   is not. Each room has its own fly (seat, round, clock, attempts, memory,
+   candidate draws). The brain runs as two pools of worker threads, each
+   thread with its own copy of the connectome (~90 MB): `BOSS_DECIDERS` (3)
+   answer turns, a request going to the thread with the fewest in flight;
+   `BOSS_STREAMS` (3) feed the panel, one watched room each, oldest watcher
+   first. Sized for three simultaneous boss rooms. A fourth room plays (its
+   decisions queue, so its fly slows) but gets no live panel until a stream
+   frees up. More threads than cores buys nothing: on one vCPU three decisions
+   take three times as long; they just all finish inside the 30 s timeout.
 
 What is honest to say about her, and what her page says: she is a real brain
 choosing among words the game has already narrowed; her choice is real and
