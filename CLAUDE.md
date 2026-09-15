@@ -44,4 +44,5 @@ frontend/                web client (React + Vite).
 - Documentation, file names and code comments in English. The player-facing interface
   exists in Spanish and English (`frontend/src/shared/i18n/`).
 - Complete dates in the documents (2026-09-11), never relative ones.
-- No commits or pushes unless asked.
+- No commits or pushes unless asked. Commit messages carry no `Co-Authored-By` or AI
+  attribution lines, ever.
