@@ -1,4 +1,4 @@
-import type { HintReveal, OwnRow } from '@shared/contract';
+import type { HintKind, HintReveal, OwnRow } from '@shared/contract';
 
 /** Time ledger entry for one position of the answer (0..wordLength-1). */
 export interface PositionCharge {
@@ -10,14 +10,13 @@ export interface PositionCharge {
 export type FinishReason = 'solved' | 'attempts' | 'timeout' | 'left';
 
 /**
- * What the hint picker resolved internally. The position stays on the server:
- * the contract's `HintReveal` carries the letter and how many times it occurs.
+ * What the hint picker resolved. For a letter hint the position stays on the
+ * server (it only feeds the ledger); for a placement it travels to the player.
  */
 export interface HintPick {
   letter: string;
   position: number;
-  /** Occurrences of `letter` in the answer (1..wordLength). */
-  count: number;
+  kind: HintKind;
 }
 
 /**
@@ -102,10 +101,19 @@ export class PlayerRound {
     this.finish('solved', now);
   }
 
-  /** Stores the revealed letter and charges the position so it earns no yellow. */
+  /**
+   * Stores the reveal and charges the slot: a hinted letter earns no yellow
+   * later (5 s when placed); a placed slot is green already and earns nothing.
+   */
   revealHint(pick: HintPick): void {
     this.hintUsed = true;
-    this.hint = { letter: pick.letter, count: pick.count };
-    this.charges[pick.position].hinted = true;
+    this.hint = {
+      letter: pick.letter,
+      kind: pick.kind,
+      position: pick.kind === 'position' ? pick.position : null,
+    };
+    const charge = this.charges[pick.position];
+    charge.hinted = true;
+    if (pick.kind === 'position') charge.green = true;
   }
 }

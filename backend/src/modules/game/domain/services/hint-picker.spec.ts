@@ -1,6 +1,6 @@
 import { PlayerRound } from '@modules/rooms/domain/entities/player-round.entity';
 import { computeFeedback } from './color-feedback';
-import { countLetter, pickHint } from './hint-picker';
+import { pickHint } from './hint-picker';
 import { chargeGuess } from './time-ledger';
 
 /** Plays a guess through the ledger so the charges match a real round. */
@@ -8,103 +8,82 @@ function play(round: PlayerRound, guess: string, answer: string): void {
   chargeGuess(round.charges, guess, computeFeedback(guess, answer));
 }
 
-/** Every letter the hint can come out with, over all random draws. */
-function possibleLetters(answer: string, round: PlayerRound): Set<string> {
-  const letters = new Set<string>();
+/** Every pick the hint can come out with, over all random draws. */
+function possiblePicks(answer: string, round: PlayerRound) {
+  const picks = new Map<string, { position: number; kind: string }>();
   for (let i = 0; i < round.charges.length; i++) {
     const pick = pickHint(answer, round.charges, () => i / round.charges.length);
-    if (pick) letters.add(pick.letter);
-  }
-  return letters;
-}
-
-/** Every (letter, count) pair the hint can come out with, over all draws. */
-function possiblePicks(answer: string, round: PlayerRound): Map<string, number> {
-  const picks = new Map<string, number>();
-  for (let i = 0; i < round.charges.length; i++) {
-    const pick = pickHint(answer, round.charges, () => i / round.charges.length);
-    if (pick) picks.set(pick.letter, pick.count);
+    if (pick) picks.set(pick.letter, { position: pick.position, kind: pick.kind });
   }
   return picks;
 }
 
 describe('pickHint', () => {
-  it('never reveals a letter the player already holds in yellow', () => {
+  it('reveals a new letter while some slot is unknown, never one the player holds', () => {
     const answer = 'plato'; // no repeated letters
     const round = new PlayerRound(0, 90, 5);
     play(round, 'tapes', answer); // T, A and P yellow; E and S absent
-    expect(round.charges.filter((c) => c.yellow)).toHaveLength(3);
-
-    const letters = possibleLetters(answer, round);
-    expect(letters).toEqual(new Set(['l', 'o']));
+    const picks = possiblePicks(answer, round);
+    expect([...picks.keys()].sort()).toEqual(['l', 'o']);
+    for (const pick of picks.values()) expect(pick.kind).toBe('letter');
   });
 
   it('still offers the second slot of a repeated letter', () => {
     const answer = 'llama'; // L L A M A
     const round = new PlayerRound(0, 90, 5);
     play(round, 'salto', answer); // one L yellow and one A yellow, one slot each
-    expect(round.charges.filter((c) => c.yellow)).toHaveLength(2);
-
-    const letters = possibleLetters(answer, round);
-    // The player knows one L and one A, not that there are two of each.
-    expect(letters).toEqual(new Set(['l', 'a', 'm']));
-
-    // Once both L slots are known, L can no longer come out.
+    expect([...possiblePicks(answer, round).keys()].sort()).toEqual(['a', 'l', 'm']);
     round.charges[0].yellow = true;
     round.charges[1].yellow = true;
-    expect(possibleLetters(answer, round).has('l')).toBe(false);
+    expect(possiblePicks(answer, round).has('l')).toBe(false);
   });
 
-  it('falls back to a known letter when every non-green slot is known', () => {
+  it('places a known letter once every slot is known', () => {
     const answer = 'plato';
     const round = new PlayerRound(0, 90, 5);
     round.charges[0].green = true; // P placed
     for (let i = 1; i < round.charges.length; i++) round.charges[i].yellow = true;
+    const picks = possiblePicks(answer, round);
+    expect([...picks.keys()].sort()).toEqual(['a', 'l', 'o', 't']);
+    for (const [letter, pick] of picks) {
+      expect(pick.kind).toBe('position');
+      expect(answer[pick.position]).toBe(letter);
+      expect(pick.position).toBeGreaterThan(0); // never the green slot
+    }
+  });
 
+  it('a placement turns the slot green and earns nothing later', () => {
+    const answer = 'plato';
+    const round = new PlayerRound(0, 90, 5);
+    for (let i = 0; i < round.charges.length; i++) round.charges[i].yellow = true;
     const pick = pickHint(answer, round.charges, () => 0);
-    expect(pick).not.toBeNull();
-    expect(pick?.position ?? 0).toBeGreaterThan(0); // never the green slot
-    expect(possibleLetters(answer, round)).toEqual(new Set(['l', 'a', 't', 'o']));
+    expect(pick?.kind).toBe('position');
+    round.revealHint(pick!);
+    expect(round.hint).toEqual({
+      letter: pick!.letter,
+      kind: 'position',
+      position: pick!.position,
+    });
+    expect(round.charges[pick!.position].green).toBe(true);
+    const gains = chargeGuess(round.charges, answer, computeFeedback(answer, answer));
+    expect(gains.some((g) => g.position === pick!.position)).toBe(false);
   });
 
-  it('reports how many times the letter occurs in an answer with repeats', () => {
-    const answer = 'llama'; // L L A M A
-    const round = new PlayerRound(0, 90, 5);
-
-    expect(possiblePicks(answer, round)).toEqual(
-      new Map([
-        ['l', 2],
-        ['a', 2],
-        ['m', 1],
-      ]),
-    );
-  });
-
-  it('reports a count of 1 on an answer with no repeated letter', () => {
+  it('a letter hint keeps the slot unsaid and charges it as hinted', () => {
     const answer = 'plato';
     const round = new PlayerRound(0, 90, 5);
-
-    const counts = [...possiblePicks(answer, round).values()];
-    expect(counts).toHaveLength(5);
-    expect(counts.every((c) => c === 1)).toBe(true);
+    const pick = pickHint(answer, round.charges, () => 0);
+    expect(pick?.kind).toBe('letter');
+    round.revealHint(pick!);
+    expect(round.hint).toEqual({ letter: pick!.letter, kind: 'letter', position: null });
+    expect(round.charges[pick!.position].hinted).toBe(true);
+    expect(round.charges[pick!.position].green).toBe(false);
   });
 
-  it('counts occurrences of a letter in the answer', () => {
-    expect(countLetter('llama', 'l')).toBe(2);
-    expect(countLetter('llama', 'a')).toBe(2);
-    expect(countLetter('llama', 'm')).toBe(1);
-    expect(countLetter('llama', 'z')).toBe(0);
-  });
-
-  it('never reveals a green slot and returns null when all of them are green', () => {
+  it('returns null when every slot is green', () => {
     const answer = 'plato';
     const round = new PlayerRound(0, 90, 5);
-    play(round, 'plata', answer); // P L A T green, last slot still unknown
-    expect(round.greens).toBe(4);
-
-    expect(possibleLetters(answer, round)).toEqual(new Set(['o']));
-
-    round.charges[4].green = true;
+    play(round, 'plato', answer);
     expect(pickHint(answer, round.charges, () => 0)).toBeNull();
   });
 });

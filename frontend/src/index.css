@@ -244,6 +244,16 @@
     --tile-bd: var(--yellow);
     border-style: dashed;
   }
+  /* A slot the hint placed: waits, green and dashed, until the player types it. */
+  .tile-placed {
+    --tile-bg: var(--green-soft);
+    --tile-fg: var(--green-ink);
+    --tile-bd: var(--green);
+    border-style: dashed;
+  }
+  .hint-pulse {
+    animation: hint-pulse 1.6s ease-out infinite;
+  }
 
   .key {
     display: flex;
@@ -303,6 +313,16 @@
   }
   .mini-gray {
     background: var(--mini-gray);
+  }
+}
+
+@keyframes hint-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(229, 181, 55, 0.55);
+  }
+  60% {
+    box-shadow: 0 0 0 10px rgba(229, 181, 55, 0);
   }
 }
 

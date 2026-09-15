@@ -152,7 +152,12 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const handleHint = useCallback(async () => {
     const result = await requestHint();
     if (result.ok) {
-      toast.info(t.game.hintInWord(result.value.letter.toUpperCase(), result.value.count));
+      const letter = result.value.letter.toUpperCase();
+      toast.info(
+        result.value.kind === 'position' && result.value.position !== null
+          ? t.game.hintPosition(letter, result.value.position + 1)
+          : t.game.hintLetter(letter),
+      );
     } else {
       toast.error(result.error.code);
     }

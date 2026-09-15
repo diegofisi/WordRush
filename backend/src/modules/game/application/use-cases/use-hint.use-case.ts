@@ -11,9 +11,9 @@ import { pickHint } from '../../domain/services/hint-picker';
 import { RoundLifecycleService } from '../services/round-lifecycle.service';
 
 /**
- * One hint per player per round: reveals a letter of the word, never its
- * position, and never a letter the player already knows about (the picker
- * prefers answer slots that are neither green nor charged yellow).
+ * One hint per player per round (docs/context/06-v1.1.md -> Hint): a new letter
+ * while any slot is unknown, the placement of a known one once none is. The
+ * room is told a hint was spent, never by whom.
  */
 @Injectable()
 export class UseHintUseCase {
@@ -50,12 +50,12 @@ export class UseHintUseCase {
     this.bus.publish({
       roomCode: room.code,
       event: 'player:hint',
-      payload: { playerId: player.id },
+      payload: { usedInRound: room.players.filter((p) => p.round?.hintUsed).length },
     });
-    // Only the letter and its count travel: the answer position stays here.
     return {
       letter: pick.letter,
-      count: pick.count,
+      kind: pick.kind,
+      position: pick.kind === 'position' ? pick.position : null,
       secondsLeft: round.secondsLeft(now),
       at: now,
     };

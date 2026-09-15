@@ -23,9 +23,14 @@ export const GameMobile = (props: GameViewProps) => {
     <div className="flex flex-1 flex-col gap-3.5 px-4 pt-3 pb-5">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-xs text-ink-3">
-            {t.common.roundOf(props.round.round, props.round.totalRounds)} ·{' '}
-            <span className="font-mono">{props.roomCode}</span>
+          <span className="flex items-center gap-2 text-xs text-ink-3">
+            <span>
+              {t.common.roundOf(props.round.round, props.round.totalRounds)} ·{' '}
+              <span className="font-mono">{props.roomCode}</span>
+            </span>
+            <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-bold text-accent">
+              {t.common.language[props.wordLanguage]}
+            </span>
           </span>
           <Clock
             compact
@@ -56,7 +61,7 @@ export const GameMobile = (props: GameViewProps) => {
 
       {props.hint ? (
         <div className="flex justify-end">
-          <HintLetterChip t={t} letter={props.hint.letter} count={props.hint.count} />
+          <HintLetterChip t={t} reveal={props.hint} />
         </div>
       ) : null}
 
@@ -86,6 +91,7 @@ export const GameMobile = (props: GameViewProps) => {
           shakeKey={props.shakeKey}
           notice={props.guessNotice}
           finished={props.outcome !== 'playing'}
+          hint={props.hint}
           colorLabels={props.tileLabels}
           size="sm"
         />

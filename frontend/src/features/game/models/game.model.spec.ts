@@ -17,7 +17,6 @@ const progress = (over: Partial<PlayerProgress> = {}): PlayerProgress => ({
   solved: false,
   solvedPosition: null,
   finished: false,
-  hintUsed: false,
   greens: 0,
   yellows: 0,
   penaltySeconds: 0,

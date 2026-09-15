@@ -24,7 +24,6 @@ export function toPlayerProgress(player: Player, now: number): PlayerProgress {
     solved: round?.solved ?? false,
     solvedPosition: round?.solvedPosition ?? null,
     finished: round?.finished ?? false,
-    hintUsed: round?.hintUsed ?? false,
     greens: round?.greens ?? 0,
     yellows: round?.yellows ?? 0,
     penaltySeconds: round?.penaltySeconds ?? 0,

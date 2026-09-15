@@ -46,7 +46,7 @@ describe('chargeGuess (time ledger)', () => {
   });
 
   it('counts a hinted position that was never placed as a yellow', () => {
-    round.revealHint({ letter: 'o', position: 1, count: 1 });
+    round.revealHint({ letter: 'o', position: 1, kind: 'letter' });
     expect(round.greens).toBe(0);
     expect(round.yellows).toBe(1);
     play(round, 'solid'); // the hinted position finally goes green
@@ -68,7 +68,7 @@ describe('chargeGuess (time ledger)', () => {
   });
 
   it('pays nothing for the yellow and 5 for the green of a hinted position', () => {
-    round.revealHint({ letter: 'o', position: 1, count: 1 });
+    round.revealHint({ letter: 'o', position: 1, kind: 'letter' });
     // O at guess index 0 is yellow and accounts for answer position 1 (hinted): 0 s.
     const yellowTry = play(round, 'ovals');
     expect(yellowTry.gains.find((g) => g.letter === 'o')).toBeUndefined();

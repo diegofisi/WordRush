@@ -1,24 +1,19 @@
 import type { HintPick, PositionCharge } from '@modules/rooms/domain/entities/player-round.entity';
 
 /**
- * Picks the answer position the hint reveals. The ledger is keyed by answer
- * slot, so "what the player already knows" is read per slot: a slot is known
- * when it is green, when it has been charged yellow, or when it was hinted.
+ * Picks what the hint reveals (docs/context/06-v1.1.md -> Hint). The ledger is
+ * keyed by answer slot, so "what the player already knows" is read per slot: a
+ * slot is known when it is green, charged yellow, or hinted.
  *
- * The hint prefers a slot the player does not know yet, so it never repeats a
- * letter they already have. With repeated letters this works per slot: on
- * `LLAMA`, a player holding one yellow `L` can still be hinted the other `L`
- * (they do not know the word has two); once both `L` slots are known, `L` can
- * no longer come out. When every non-green slot is already known, the hint
- * falls back to one of those known slots instead of failing — it is still a
- * real letter of the word, and the ledger is unaffected (a yellow slot is
- * already charged, so marking it hinted changes no seconds).
+ * - While some slot is still unknown, the hint reveals a **new letter**: one
+ *   of the unknown slots is drawn and its letter is told, position unsaid.
+ *   With repeated letters this works per slot: on `LLAMA`, a player holding
+ *   one yellow `L` can still be told the other `L`.
+ * - Once every slot is known and at least one is not green, the hint
+ *   **places** one of those: letter and position, and the slot turns green.
  *
- * Returns null only when there is nothing left at all (every slot green).
- * The position never leaves the server: it only feeds the time ledger (no
- * yellow seconds there, 5 s when it turns green). The player is told the
- * letter and how many times it occurs in the answer -- on `LLAMA` an `L`
- * comes with a count of 2 -- so the chip can read "Hay dos L en la palabra".
+ * Returns null only when every slot is already green. The slot never leaves
+ * the server for a letter hint; it only feeds the time ledger.
  */
 export function pickHint(
   answer: string,
@@ -32,16 +27,11 @@ export function pickHint(
     if (c.yellow || c.hinted) known.push(i);
     else unknown.push(i);
   });
-  const pool = unknown.length > 0 ? unknown : known;
-  if (pool.length === 0) return null;
-  const position = pool[Math.floor(random() * pool.length)];
-  const letter = answer[position];
-  return { letter, position, count: countLetter(answer, letter) };
-}
-
-/** How many times `letter` occurs in the answer. */
-export function countLetter(answer: string, letter: string): number {
-  let total = 0;
-  for (const char of answer) if (char === letter) total += 1;
-  return total;
+  if (unknown.length > 0) {
+    const position = unknown[Math.floor(random() * unknown.length)];
+    return { letter: answer[position], position, kind: 'letter' };
+  }
+  if (known.length === 0) return null;
+  const position = known[Math.floor(random() * known.length)];
+  return { letter: answer[position], position, kind: 'position' };
 }

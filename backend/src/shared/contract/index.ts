@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 9;
+export const CONTRACT_VERSION = 10;
 
 export type Language = 'es' | 'en';
 export type TileColor = 'green' | 'yellow' | 'gray';
@@ -140,7 +140,6 @@ export interface PlayerProgress {
   solvedPosition: number | null;
   /** Solved, out of attempts, or out of time. */
   finished: boolean;
-  hintUsed: boolean;
   greens: number;
   /** Answer slots known to be in the word (yellow or hinted) but never turned green. */
   yellows: number;
@@ -154,11 +153,17 @@ export interface OwnRow {
   colors: TileColor[];
 }
 
-/** The hint reveals a letter that is in the word, never its position. */
+/**
+ * What the hint revealed (docs/context/06-v1.1.md -> Hint). While some answer
+ * position is still unknown it is a new **letter** of the word, position
+ * unsaid; once every letter is known it **places** one of the yellows.
+ */
+export type HintKind = 'letter' | 'position';
 export interface HintReveal {
   letter: string;
-  /** How many times `letter` occurs in the answer (1..wordLength). */
-  count: number;
+  kind: HintKind;
+  /** 0-based answer position; only for `kind: 'position'`. */
+  position: number | null;
 }
 
 export type GainKind = 'yellow' | 'green' | 'green-after-yellow' | 'green-after-hint';
@@ -361,6 +366,12 @@ export interface ClientToServerEvents {
 // Server -> client
 // ---------------------------------------------------------------------------
 
+/** Hints are anonymous: the room learns that one was spent, never by whom. */
+export interface HintUsedPayload {
+  /** Hints spent in the round so far, this one included. */
+  usedInRound: number;
+}
+
 export interface PenaltyPayload {
   fromPlayerId: string;
   seconds: number;
@@ -393,7 +404,7 @@ export interface ServerToClientEvents {
   'round:start': (round: RoundState) => void;
   'player:progress': (progress: PlayerProgress) => void;
   'player:solved': (payload: SolvedPayload) => void;
-  'player:hint': (payload: { playerId: string }) => void;
+  'player:hint': (payload: HintUsedPayload) => void;
   'player:left': (payload: PlayerLeftPayload) => void;
   'time:penalty': (payload: PenaltyPayload) => void;
   'round:end': (payload: RoundEndPayload) => void;

@@ -41,7 +41,7 @@ const GameTopBarActions = () => {
         disabled={status !== 'playing' || me.finished}
         onClick={() => void onHint()}
       />
-      {me.hint ? <HintLetterChip t={t} letter={me.hint.letter} count={me.hint.count} /> : null}
+      {me.hint ? <HintLetterChip t={t} reveal={me.hint} /> : null}
     </>
   );
 };
@@ -71,7 +71,11 @@ export const GamePage = () => {
               code={session.roomCode}
               parts={[
                 round ? t.common.roundOf(round.round, round.totalRounds) : null,
-                settings ? t.common.language[settings.language] : null,
+                settings ? (
+                  <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-bold text-accent">
+                    {t.common.language[settings.language]}
+                  </span>
+                ) : null,
               ]}
             />
           ) : null

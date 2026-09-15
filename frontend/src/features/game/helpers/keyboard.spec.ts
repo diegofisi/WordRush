@@ -51,20 +51,22 @@ describe('deriveKeyStates', () => {
   });
 
   it('marks a hinted letter that has not been tried', () => {
-    const states = deriveKeyStates([], { letter: 'M', count: 1 });
+    const states = deriveKeyStates([], { letter: 'M', kind: 'letter', position: null });
     expect(states['M']).toBe('hint');
   });
 
   it('does not downgrade a green or a yellow to the hint style', () => {
     const green = deriveKeyStates([row('MESAS', ['green', 'gray', 'gray', 'gray', 'gray'])], {
       letter: 'M',
-      count: 1,
+      kind: 'letter',
+      position: null,
     });
     expect(green['M']).toBe('green');
 
     const yellow = deriveKeyStates([row('AMIGO', ['gray', 'yellow', 'gray', 'gray', 'gray'])], {
       letter: 'M',
-      count: 1,
+      kind: 'letter',
+      position: null,
     });
     expect(yellow['M']).toBe('yellow');
   });

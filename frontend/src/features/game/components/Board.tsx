@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-import type { OwnRow, TileColor } from '@/shared/contract';
+import type { HintReveal, OwnRow, TileColor } from '@/shared/contract';
 import { cn } from '@/shared/lib/cn';
 
 interface BoardProps {
@@ -13,11 +13,13 @@ interface BoardProps {
   shakeKey: number;
   /** No current row is editable once finished. */
   finished: boolean;
+  /** A placement hint: its slot shows the letter, green and dashed, until typed. */
+  hint?: HintReveal | null;
   /** Guess error printed under the row being typed; the id restarts the fade. */
   notice?: { id: number; text: string } | null;
   /** Wording for the colour of a revealed tile; the colour alone is invisible
    * to a screen reader, so every revealed tile is labelled "C, correcta". */
-  colorLabels: Record<TileColor, string>;
+  colorLabels: Record<TileColor | 'hint', string>;
   size: 'lg' | 'sm';
 }
 
@@ -46,6 +48,7 @@ export const Board = ({
   revealRow,
   shakeKey,
   finished,
+  hint = null,
   notice = null,
   colorLabels,
   size,
@@ -101,6 +104,19 @@ export const Board = ({
                 }
                 if (isCurrent) {
                   const typed = draft[col];
+                  if (!typed && hint?.kind === 'position' && hint.position === col) {
+                    return (
+                      <div
+                        key={`${col}-placed`}
+                        role="gridcell"
+                        aria-label={`${hint.letter.toUpperCase()}, ${colorLabels.hint}`}
+                        className="tile tile-placed"
+                        style={tileStyle}
+                      >
+                        {hint.letter.toUpperCase()}
+                      </div>
+                    );
+                  }
                   if (typed) {
                     return (
                       <div

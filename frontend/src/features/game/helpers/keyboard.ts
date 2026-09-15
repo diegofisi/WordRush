@@ -40,8 +40,10 @@ export const deriveKeyStates = (
   }
   if (hint) {
     const letter = hint.letter.toUpperCase();
-    if (states[letter] !== 'green')
+    if (hint.kind === 'position') states[letter] = 'green';
+    else if (states[letter] !== 'green') {
       states[letter] = states[letter] === 'yellow' ? 'yellow' : 'hint';
+    }
   }
   return states;
 };

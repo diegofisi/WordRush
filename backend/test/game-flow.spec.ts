@@ -157,8 +157,11 @@ describe('WordRush game flow (socket.io integration)', () => {
     if (!hint.ok) throw new Error(hint.message);
     // The ack carries the letter only; the position never leaves the server.
     expect(ANSWER).toContain(hint.letter);
-    expect(hint).not.toHaveProperty('position');
-    expect(await hintSeen).toEqual({ playerId: joined.playerId });
+    // Some slot is still unknown, so the hint is a letter and the slot stays unsaid.
+    expect(hint.kind).toBe('letter');
+    expect(hint.position).toBeNull();
+    // Anonymous: the room learns that a hint was spent, not by whom.
+    expect(await hintSeen).toEqual({ usedInRound: 1 });
     const again = await bruno2.emitWithAck('game:hint');
     expect(again).toMatchObject({ ok: false, code: 'hint_already_used' });
 

@@ -1,8 +1,5 @@
 import type { Emote, ErrorCode, Language } from '@/shared/contract';
 
-/** Feminine number words for the hint chip; beyond three the digit is used. */
-const SPANISH_COUNTS: Record<number, string> = { 1: 'una', 2: 'dos', 3: 'tres' };
-
 /** Spanish is the source dictionary: its shape is the `Dictionary` type. */
 export const es = {
   common: {
@@ -135,7 +132,6 @@ export const es = {
     alreadySolved: (n: number) => (n === 1 ? '1 ya resolvió' : `${n} ya resolvieron`),
     solved: 'Resolvió',
     attempt: (n: number) => `Intento ${n}`,
-    usedHint: 'usó pista',
     greens: (n: number) => (n === 1 ? '1 verde' : `${n} verdes`),
     yellows: (n: number) => (n === 1 ? '1 amarillo' : `${n} amarillos`),
     /** Read out after the letter on a board tile and on a keyboard key
@@ -156,14 +152,17 @@ export const es = {
     hintAvailable: '1 disponible',
     hintUsed: 'usada',
     hintOff: 'sin pista',
-    /** "Hay dos L en la palabra" when the letter is repeated in the answer. */
-    hintInWord: (letter: string, count: number) =>
-      `Hay ${SPANISH_COUNTS[count] ?? String(count)} ${letter} en la palabra`,
+    /** A new letter of the word, position unsaid. */
+    hintLetter: (letter: string) => `Hay una ${letter} en la palabra`,
+    /** Every letter was known: the hint places one (1-based position). */
+    hintPosition: (letter: string, position: number) =>
+      `La ${letter} va en la posición ${position}`,
+    hintLeft: (n: number) => (n === 1 ? '1 disponible' : `${n} disponibles`),
     liveFeed: 'Sala en vivo',
     feedEmpty: 'Todavía no ha pasado nada. Escribe tu primera palabra.',
     feedSolved: 'respondió correctamente',
     feedPenalty: '−5 s al resto',
-    feedHint: 'usó su pista',
+    feedHint: 'Alguien usó una pista',
     feedGreens: (n: number) => `ya tiene ${n} verdes`,
     feedLowTime: 'tiene menos de 15 s',
     feedOutOfAttempts: 'agotó sus intentos',

@@ -15,9 +15,6 @@ const ordinal = (n: number) => {
   }
 };
 
-/** Number words for the hint chip; beyond three the digit is used. */
-const ENGLISH_COUNTS: Record<number, string> = { 2: 'two', 3: 'three' };
-
 export const en: Dictionary = {
   common: {
     appName: 'WordRush',
@@ -154,7 +151,6 @@ export const en: Dictionary = {
     tilePresent: 'in the word, wrong place',
     tileAbsent: 'not in the word',
     tileHint: 'revealed by the hint',
-    usedHint: 'used hint',
     greens: (n) => (n === 1 ? '1 green' : `${n} greens`),
     yellows: (n) => (n === 1 ? '1 yellow' : `${n} yellows`),
     outOfAttempts: 'Out of attempts',
@@ -168,15 +164,14 @@ export const en: Dictionary = {
     hintAvailable: '1 available',
     hintUsed: 'used',
     hintOff: 'no hint',
-    hintInWord: (letter, count) =>
-      count === 1
-        ? `There is one ${letter} in the word`
-        : `There are ${ENGLISH_COUNTS[count] ?? String(count)} ${letter}'s in the word`,
+    hintLetter: (letter) => `There is a ${letter} in the word`,
+    hintPosition: (letter, position) => `The ${letter} goes in position ${position}`,
+    hintLeft: (n) => (n === 1 ? '1 available' : `${n} available`),
     liveFeed: 'Live room',
     feedEmpty: 'Nothing has happened yet. Type your first word.',
     feedSolved: 'solved it',
     feedPenalty: '−5 s to the rest',
-    feedHint: 'used their hint',
+    feedHint: 'Somebody used a hint',
     feedGreens: (n) => `already has ${n} greens`,
     feedLowTime: 'has under 15 s left',
     feedOutOfAttempts: 'ran out of attempts',

@@ -13,7 +13,10 @@ interface HintButtonProps {
   compact?: boolean;
 }
 
-/** Yellow "hint available" pill from the top bar of Main.dc.html. */
+/**
+ * The hint, impossible to miss (docs/context/06-v1.1.md): a tall yellow pill
+ * that pulses until it is spent, with the hints left on it.
+ */
 export const HintButton = ({
   t,
   state,
@@ -25,10 +28,11 @@ export const HintButton = ({
   const inactive = state !== 'available' || disabled || pending;
   const caption =
     state === 'available'
-      ? t.game.hintAvailable
+      ? t.game.hintLeft(1)
       : state === 'used'
         ? t.game.hintUsed
         : t.game.hintOff;
+
   return (
     <button
       type="button"
@@ -36,10 +40,11 @@ export const HintButton = ({
       aria-busy={pending || undefined}
       onClick={onClick}
       className={cn(
-        'flex h-11 items-center gap-2 rounded-full border border-yellow-line bg-yellow-soft px-3.5 text-sm font-semibold text-yellow-deep transition-opacity disabled:cursor-not-allowed disabled:opacity-60 sm:h-10 sm:px-4',
+        'flex h-12 items-center gap-2.5 rounded-full border-2 border-yellow bg-yellow-soft px-4 text-[15px] font-bold text-yellow-deep transition-opacity disabled:cursor-not-allowed disabled:opacity-60 sm:h-11 sm:px-5',
+        !inactive && 'hint-pulse',
       )}
     >
-      <HintIcon size={18} />
+      <HintIcon size={20} />
       <span>{t.common.hint}</span>
       {!compact ? <span className="font-medium text-yellow-mid">{caption}</span> : null}
     </button>

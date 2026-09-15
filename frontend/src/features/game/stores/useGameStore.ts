@@ -201,7 +201,6 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
                 at: progress.at,
                 solved: progress.solved,
                 finished: progress.finished,
-                hintUsed: progress.hintUsed,
                 penaltySeconds: progress.penaltySeconds,
               },
             }
@@ -259,15 +258,8 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
         set((state) => ({ solvedCount: Math.max(state.solvedCount, payload.position) }));
         pushFeed({ kind: 'solved', playerId: payload.playerId, position: payload.position });
       });
-      socket.on('player:hint', (payload) => {
-        set((state) => {
-          const current = state.players[payload.playerId];
-          return current
-            ? { players: { ...state.players, [payload.playerId]: { ...current, hintUsed: true } } }
-            : {};
-        });
-        pushFeed({ kind: 'hint', playerId: payload.playerId });
-      });
+      // Anonymous: the feed says a hint was spent, never by whom.
+      socket.on('player:hint', () => pushFeed({ kind: 'hint', playerId: '' }));
       socket.on('time:penalty', (payload) => {
         const { myId } = get();
         set((state) => {
@@ -410,7 +402,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
               me: {
                 ...state.me,
                 hintUsed: true,
-                hint: { letter: ack.letter, count: ack.count },
+                hint: { letter: ack.letter, kind: ack.kind, position: ack.position },
                 secondsLeft: ack.secondsLeft,
                 at: ack.at,
               },

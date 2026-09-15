@@ -22,7 +22,6 @@ export interface RivalViewModel {
   solvedPosition: number | null;
   /** Percent of the initial time frozen at solve; null while playing. */
   timePercent: number | null;
-  hintUsed: boolean;
   greens: number;
 }
 
@@ -100,7 +99,6 @@ export const toRivalViewModel = (
     status,
     solvedPosition: progress.solvedPosition,
     timePercent: progress.solved ? percentOf(progress.secondsLeft, initialSeconds) : null,
-    hintUsed: progress.hintUsed,
     greens: progress.greens,
   };
 };

@@ -44,6 +44,7 @@ export const GameDesktop = (props: GameViewProps) => {
           shakeKey={props.shakeKey}
           notice={props.guessNotice}
           finished={props.outcome !== 'playing'}
+          hint={props.hint}
           colorLabels={props.tileLabels}
           size="lg"
         />

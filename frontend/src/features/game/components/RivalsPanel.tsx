@@ -28,7 +28,6 @@ const statusLine = (t: Dictionary, rival: RivalViewModel) => {
       return t.game.left;
     default: {
       const parts = [t.game.attempt(rival.currentAttempt)];
-      if (rival.hintUsed) parts.push(t.game.usedHint);
       if (rival.greens >= 4) parts.push(t.game.greens(rival.greens));
       if (!rival.connected) parts.push(t.game.disconnected);
       return parts.join(' · ');

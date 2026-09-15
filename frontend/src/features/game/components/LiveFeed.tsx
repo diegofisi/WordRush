@@ -30,11 +30,7 @@ const Body = ({ t, event }: { t: Dictionary; event: TextFeedEvent }) => {
         </span>
       );
     case 'hint':
-      return (
-        <span>
-          {name} {t.game.feedHint}
-        </span>
-      );
+      return <span className="text-ink-2">{t.game.feedHint}</span>;
     case 'greens':
       return (
         <span>
