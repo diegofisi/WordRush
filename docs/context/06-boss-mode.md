@@ -295,6 +295,16 @@ Two details that were wrong and are covered by a test now
 the frames carried only the descending column. The test asserts that a frame
 carries all three columns and that two consecutive slices differ.
 
+### After switching branches, restart the backend
+`nest start --watch` copies `src/modules/boss/data/*` into `dist/` once, at
+start-up, and its asset watcher does not reliably re-copy files that a branch
+switch deletes and re-creates. On 2026-09-14 a checkout of `master` followed by
+the merge left `dist/modules/boss/data/` with two files of nine; the worker
+failed to load the connectome, the brain stayed `null` for the life of the
+process, and the fly sat through a whole round without moving. The panel
+showed only "she has not thought with the connectome yet". If she does that,
+check the backend log for the worker's error and restart `pnpm start:dev`.
+
 ### What it costs
 Half a second of wall time for 150 ms of biological time, measured. It runs on a **worker
 thread**, because half a second on the main thread would freeze every socket in every room.

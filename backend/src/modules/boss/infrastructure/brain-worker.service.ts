@@ -74,7 +74,7 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
     if (this.booting) return this.booting;
     const file = this.resolveWorkerPath();
     if (!file) {
-      this.logger.warn('Brain worker not found; the fly will use her fallback policy');
+      this.logger.warn('Brain worker not found; the fly will not move');
       return Promise.resolve(null);
     }
 
