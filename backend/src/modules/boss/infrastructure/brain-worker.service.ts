@@ -10,30 +10,43 @@ import type { BrainIdle, BrainReady, BrainRequest, BrainResponse } from './brain
  * Owns the worker threads the brain runs on, and turns their messages into
  * promises.
  *
- * Two pools, each thread with its own copy of the connectome (~90 MB):
+ * Two pools that grow with demand and shrink when it goes, each thread with
+ * its own copy of the connectome (~90 MB):
  *
- *   deciders  answer the fly's turns. A decision is about seven seconds of
- *             wall time, and one thread served every room in a queue, so two
- *             rooms halved her pace and four pushed decisions past their
- *             timeout. A request goes to the thread with the fewest in flight.
- *   streamers feed the brain panel, one room each. They were one thread that
- *             switched off as soon as two rooms watched at once.
+ *   deciders  answer the fly's turns. One is always warm, because the first
+ *             turn of a round should not wait for a connectome to load. When
+ *             a question arrives and every decider already has one in flight,
+ *             another thread boots (up to `BOSS_DECIDERS`); a request goes to
+ *             the thread with the fewest in flight. One decision is about
+ *             seven seconds of a core, and one thread serving every room in a
+ *             queue halved her pace with two rooms.
+ *   streamers feed the brain panel, one watched room each. None runs until
+ *             somebody opens a panel; a second room watching boots a second
+ *             thread (up to `BOSS_STREAMS`).
  *
- * Sized for three simultaneous boss rooms (2026-09-15); `BOSS_DECIDERS` and
- * `BOSS_STREAMS` override the counts where memory or cores are short. More
- * threads than cores buys nothing: on one vCPU three decisions still take
- * three times as long, they just all finish inside the timeout.
+ * A thread with nothing to do for `IDLE_MS` is terminated, except the warm
+ * decider. Sized for three simultaneous boss rooms with two being the usual
+ * case (2026-09-15). More threads than cores buys nothing: on one vCPU three
+ * decisions take three times as long, they just all finish inside the timeout.
  */
 interface Decider {
   worker: Worker;
+  ready: boolean;
   inFlight: number;
+  /** Epoch ms since it last had nothing in flight. */
+  idleSince: number;
 }
 
 interface Streamer {
   worker: Worker;
+  ready: boolean;
   /** The room whose board this thread is streaming; null while idle. */
   room: string | null;
+  idleSince: number;
 }
+
+const IDLE_MS = 60_000;
+const REAP_EVERY_MS = 10_000;
 
 const EMPTY_TELEMETRY = {
   raster: [],
@@ -50,8 +63,11 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(BrainWorkerService.name);
   private readonly deciders: Decider[] = [];
   private readonly streamers: Streamer[] = [];
-  private readonly deciderCount = parseThreadCount(process.env.BOSS_DECIDERS, 3);
-  private readonly streamCount = parseThreadCount(process.env.BOSS_STREAMS, 3);
+  private readonly deciderMax = parseThreadCount(process.env.BOSS_DECIDERS, 3);
+  private readonly streamMax = parseThreadCount(process.env.BOSS_STREAMS, 3);
+  private file: string | null = null;
+  private silenced = false;
+  private reaper: NodeJS.Timeout | null = null;
   private nextId = 1;
   private readonly pending = new Map<number, (response: BrainResponse) => void>();
   private booting: Promise<BrainReady | null> | null = null;
@@ -65,18 +81,24 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
 
   /** Whether the brain is online at all; the tests read it before asserting. */
   get online(): boolean {
-    return this.deciders.length > 0 && this.info !== null;
+    return this.info !== null && this.deciders.some((d) => d.ready);
   }
 
   /** How many rooms can have their panel live at the same time. */
   get streams(): number {
-    return this.streamCount;
+    return this.streamMax;
+  }
+
+  /** Threads alive right now, for the log and the tests. */
+  get threads(): { deciders: number; streamers: number } {
+    return { deciders: this.deciders.length, streamers: this.streamers.length };
   }
 
   /**
    * Points a stream thread at a room's board, or releases the thread when the
-   * room stops being watched. A room that asks while every thread is taken
-   * gets nothing until one frees up; the panel shows her last decision instead.
+   * room stops being watched. The ticker calls this every tick for every
+   * watched room, so a thread that is still booting is simply found ready on
+   * a later call; a room past the thread count gets nothing until one frees.
    */
   stream(roomCode: string, on: boolean, board?: Omit<BrainIdle, 'idle' | 'on'>): void {
     if (!this.info) return;
@@ -84,11 +106,17 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
     if (!on) {
       if (!current) return;
       current.room = null;
+      current.idleSince = Date.now();
       current.worker.postMessage({ idle: true, on: false } satisfies BrainIdle);
       return;
     }
-    const target = current ?? this.streamers.find((s) => s.room === null);
-    if (!target) return;
+    const target = current ?? this.streamers.find((s) => s.ready && s.room === null);
+    if (!target) {
+      if (this.streamers.length < this.streamMax && !this.streamers.some((s) => !s.ready)) {
+        this.spawnStreamer();
+      }
+      return;
+    }
     target.room = roomCode;
     target.worker.postMessage({ idle: true, on: true, ...board } satisfies BrainIdle);
   }
@@ -104,6 +132,8 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleDestroy(): void {
+    if (this.reaper) clearInterval(this.reaper);
+    this.reaper = null;
     for (const { worker } of this.deciders) void worker.terminate();
     for (const { worker } of this.streamers) void worker.terminate();
     this.deciders.length = 0;
@@ -129,49 +159,68 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Starts the threads. `silenced` cuts every synapse: the control condition.
-   * Resolves when the first decider is online; a stream thread that fails to
-   * start is a dark panel, not a fly that will not move.
+   * Boots the warm decider. `silenced` cuts every synapse: the control
+   * condition, and it applies to every thread spawned later too.
    */
   start(silenced = false): Promise<BrainReady | null> {
     if (this.booting) return this.booting;
-    const file = this.resolveWorkerPath();
-    if (!file) {
+    this.file = this.resolveWorkerPath();
+    this.silenced = silenced;
+    if (!this.file) {
       this.logger.warn('Brain worker not found; the fly will not move');
       return Promise.resolve(null);
     }
 
     this.booting = new Promise<BrainReady | null>((resolve) => {
-      let settled = false;
-      let failed = 0;
-      const settle = (ready: BrainReady | null): void => {
-        if (ready === null) {
-          failed += 1;
-          if (settled || failed < this.deciderCount) return;
-        }
-        if (settled) return;
-        settled = true;
-        resolve(ready);
-      };
-      for (let i = 0; i < this.deciderCount; i += 1) {
-        const worker = this.spawn(file, 'decide', silenced, settle);
-        if (worker) this.deciders.push({ worker, inFlight: 0 });
-      }
-      for (let i = 0; i < this.streamCount; i += 1) {
-        const worker = this.spawn(file, 'stream', silenced, null);
-        if (worker) this.streamers.push({ worker, room: null });
-      }
+      if (!this.spawnDecider(resolve)) resolve(null);
     });
+    this.reaper = setInterval(() => this.reap(), REAP_EVERY_MS);
+    this.reaper.unref();
     return this.booting;
   }
 
-  /** One thread. `settle` reports a decider's boot to the pool's boot promise. */
+  /** Terminates threads that have had nothing to do for a while, keeping one decider. */
+  private reap(): void {
+    const now = Date.now();
+    for (let i = this.deciders.length - 1; i >= 1; i -= 1) {
+      const d = this.deciders[i];
+      if (d && d.ready && d.inFlight === 0 && now - d.idleSince > IDLE_MS) {
+        this.deciders.splice(i, 1);
+        void d.worker.terminate();
+        this.logger.log(`Brain decide thread released after ${IDLE_MS / 1000} s idle`);
+      }
+    }
+    for (let i = this.streamers.length - 1; i >= 0; i -= 1) {
+      const s = this.streamers[i];
+      if (s && s.ready && s.room === null && now - s.idleSince > IDLE_MS) {
+        this.streamers.splice(i, 1);
+        void s.worker.terminate();
+        this.logger.log(`Brain stream thread released after ${IDLE_MS / 1000} s idle`);
+      }
+    }
+  }
+
+  private spawnDecider(settle: ((ready: BrainReady | null) => void) | null): boolean {
+    if (!this.file) return false;
+    const worker = this.spawn(this.file, 'decide', settle);
+    if (!worker) return false;
+    this.deciders.push({ worker, ready: false, inFlight: 0, idleSince: Date.now() });
+    return true;
+  }
+
+  private spawnStreamer(): void {
+    if (!this.file) return;
+    const worker = this.spawn(this.file, 'stream', null);
+    if (worker) this.streamers.push({ worker, ready: false, room: null, idleSince: Date.now() });
+  }
+
+  /** One thread. `settle` reports a decider's boot to the boot promise. */
   private spawn(
     file: string,
     role: 'decide' | 'stream',
-    silenced: boolean,
     settle: ((ready: BrainReady | null) => void) | null,
   ): Worker | null {
+    const silenced = this.silenced;
     const options = file.endsWith('.ts')
       ? { workerData: { silenced, role }, execArgv: ['-r', 'ts-node/register'] }
       : { workerData: { silenced, role } };
@@ -193,9 +242,20 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
         return;
       }
       if ('ready' in message) {
-        if (role === 'decide' && !this.info) this.info = message;
+        if (role === 'decide') {
+          const decider = this.deciders.find((d) => d.worker === worker);
+          if (decider) decider.ready = true;
+          if (!this.info) this.info = message;
+        } else {
+          const streamer = this.streamers.find((s) => s.worker === worker);
+          if (streamer) {
+            streamer.ready = true;
+            streamer.idleSince = Date.now();
+          }
+        }
         this.logger.log(
-          `Brain ${role} thread online: ${message.neurons.toLocaleString()} neurons, ` +
+          `Brain ${role} thread online (${this.deciders.length} deciding, ` +
+            `${this.streamers.length} streaming): ${message.neurons.toLocaleString()} neurons, ` +
             `${message.edges.toLocaleString()} synapses, loaded in ${message.loadMs} ms` +
             (silenced ? ' [SILENCED: control condition]' : ''),
         );
@@ -203,7 +263,10 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
         return;
       }
       const decider = this.deciders.find((d) => d.worker === worker);
-      if (decider) decider.inFlight = Math.max(0, decider.inFlight - 1);
+      if (decider) {
+        decider.inFlight = Math.max(0, decider.inFlight - 1);
+        if (decider.inFlight === 0) decider.idleSince = Date.now();
+      }
       const pending = this.pending.get(message.id);
       if (pending) {
         this.pending.delete(message.id);
@@ -242,8 +305,9 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Shows her a board and reads what her descending cells did, on the decider
-   * with the fewest questions waiting.
+   * Shows her a board and reads what her descending cells did, on the ready
+   * decider with the fewest questions waiting. If every one of them is busy
+   * and there is room for another, one starts booting for the next question.
    *
    * A decision is 960 biological ms and about seven seconds of wall time, more
    * on a loaded machine. The old 8 s limit left no margin: a late answer was
@@ -251,8 +315,16 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
    * behind the one still running.
    */
   ask(request: Omit<BrainRequest, 'id'>, timeoutMs = 30000): Promise<BrainResponse | null> {
-    if (!this.info || this.deciders.length === 0) return Promise.resolve(null);
-    const decider = this.deciders.reduce((best, d) => (d.inFlight < best.inFlight ? d : best));
+    const ready = this.deciders.filter((d) => d.ready);
+    if (!this.info || ready.length === 0) return Promise.resolve(null);
+    const decider = ready.reduce((best, d) => (d.inFlight < best.inFlight ? d : best));
+    if (
+      decider.inFlight > 0 &&
+      this.deciders.length < this.deciderMax &&
+      !this.deciders.some((d) => !d.ready)
+    ) {
+      this.spawnDecider(null);
+    }
     const id = this.nextId;
     this.nextId += 1;
 
