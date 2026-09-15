@@ -146,8 +146,15 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
     return this.booting;
   }
 
-  /** Shows her a board and reads what her descending cells did. */
-  ask(request: Omit<BrainRequest, 'id'>, timeoutMs = 8000): Promise<BrainResponse | null> {
+  /**
+   * Shows her a board and reads what her descending cells did.
+   *
+   * A decision is 960 biological ms and about seven seconds of wall time, more
+   * on a loaded machine or with the stream on. The old 8 s limit left no
+   * margin: a late answer was discarded, the turn retried, and each retry
+   * queued another seven seconds behind the one still running.
+   */
+  ask(request: Omit<BrainRequest, 'id'>, timeoutMs = 30000): Promise<BrainResponse | null> {
     const worker = this.worker;
     if (!worker || !this.info) return Promise.resolve(null);
     const id = this.nextId;

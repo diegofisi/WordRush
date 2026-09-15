@@ -282,7 +282,7 @@ was playing — and redirected itself straight back to the game.
 ### Live, not per-turn
 Her decision is one 150 ms simulation per turn, which left the panel frozen
 between turns. Since contract v15 the worker also runs a **continuous stream**
-while somebody is watching: 20 biological ms every 160 ms, sent as `boss:frame`
+while somebody is watching: 20 biological ms every 320 ms (160 ms until 2026-09-14, when the stream alone kept the brain thread 93 % busy and starved her decisions), sent as `boss:frame`
 with the fired-neuron bitset, the voltage histogram, the population rates, the
 spike raster, the 64 descending rates **and the readout run on those live rates**
 — its 12 hidden units and its 27 letter preferences. That last part matters: the

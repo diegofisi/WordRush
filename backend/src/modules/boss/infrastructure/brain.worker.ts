@@ -136,9 +136,18 @@ parentPort?.postMessage(ready);
 
 /* ---- the live stream ---------------------------------------------------- */
 
-/** 20 biological ms per slice, about six a second: alive without burning a core. */
+/**
+ * 20 biological ms per slice, three a second.
+ *
+ * A slice costs about 150 ms of wall time, and a decision (60 + 900 ms) about
+ * seven seconds, on the same thread. At one slice every 160 ms the stream alone
+ * kept the thread 93 % busy, a decision arriving behind it overran its timeout,
+ * the turn retried into a thread still running the discarded one, and the fly
+ * fell silent with the stream frozen (2026-09-14). Every 320 ms halves the load
+ * and the panel still moves.
+ */
 const SLICE_MS = 20;
-const SLICE_EVERY_MS = 160;
+const SLICE_EVERY_MS = 320;
 
 const live = new LifNetwork(connectome, Math.random);
 const liveRates = new Float32Array(wiring.readout.length);
