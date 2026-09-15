@@ -34,8 +34,12 @@ import { BossMemoryService, type BossMemory } from '../services/boss-memory.serv
  * (docs/context/06-boss-mode.md).
  */
 export const BOSS_CADENCE = {
-  /** How long a turn takes her, flat. Pacing is not help; it is reaction time. */
-  thinkMs: 12000,
+  /**
+   * How long a turn takes her, flat, counted from the tick that starts it; the
+   * seven seconds her brain takes to answer are inside it, so a word lands
+   * about every 12 s. Pacing is not help; it is reaction time.
+   */
+  thinkMs: 9000,
   /** She types the word out rather than submitting it instantly. */
   typeMsPerLetter: 600,
   /** How soon to look again when the brain has not answered at all. */

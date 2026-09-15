@@ -117,14 +117,15 @@ export const BOSS = {
   /** Boss mode allows a solo run; the normal game needs two humans. */
   minHumans: 1,
   /**
-   * Her attempts per round. Fewer than a human's 8, and that is what makes her
-   * brain matter: measured on 2026-09-14, a fly choosing at random among the
-   * words still compatible with her colours solves 98.6% of rounds in 8
-   * attempts — no room left for a brain to add anything — and 47.7% in 4,
-   * against 74.5% for the best achievable choice. Four is where her choice
-   * decides the round (docs/context/07-what-the-fly-can-do.md).
+   * Her attempts per round. Fewer than a human's 8, because the filter does
+   * the deduction for her and a coin among the survivors already solves
+   * (measured 2026-09-14, 3,000 rounds, 8 candidates a turn): 43% in 4
+   * attempts, 70% in 5, 86% in 6, 98% in 8. Her brain chooses no better than
+   * that coin (docs/context/07-what-the-fly-can-do.md, section 9), so this
+   * number is the balance knob: it is how often the team wins. Four made her
+   * lose with over a minute on her clock; five is the middle.
    */
-  maxAttempts: 4,
+  maxAttempts: 5,
   /**
    * How many compatible words she is shown each turn, drawn at random. Her
    * output pathway carries about two independent quantities on the boards a

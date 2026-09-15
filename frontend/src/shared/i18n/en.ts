@@ -182,7 +182,7 @@ export const en: Dictionary = {
     bossStimulus: 'Stimulus · previous row',
     bossStimulusNote: 'Poisson injected into each channel, in Hz. It is all the input she gets.',
     bossWantsNote:
-      "The game strikes out the words that contradict her colours and shows her 8 at random. She chooses among those 8 with these letters. The deduction is the game's; the choice is hers. Measured over 120 rounds on the same 8: brain intact solved 43, every synapse cut 41, a coin 49. Her choice is real (she played differently from a dead brain in 119 rounds) and it is no better than chance.",
+      "The game strikes out the words that contradict her colours and shows her 8 at random. She chooses among those 8 with these letters. The deduction is the game's; the choice is hers. Measured over 120 rounds at 4 attempts on the same 8: brain intact solved 43, every synapse cut 41, a coin 49. Her choice is real (she played differently from a dead brain in 119 rounds) and it is no better than chance.",
     bossCloud: 'Neuron cloud',
     bossMode: {
       transmitter: 'Mode · transmitter',

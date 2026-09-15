@@ -343,9 +343,19 @@ Each of her turns:
 3. Her readout — a ridge fit over all 1,299 descending cells, trained against
    ground truth — scores the 8 by how much more than usual it wants each letter.
    **She plays the highest.** This is the only decision in the turn that is hers.
-4. She has **4 attempts** (`BOSS.maxAttempts`), not a human's 8. Measured: with
-   the filter, a coin toss among the survivors already solves 98.6 % of rounds
-   in 8 attempts and 47.7 % in 4. Four is where her choice can still matter.
+4. She has **5 attempts** (`BOSS.maxAttempts`), not a human's 8. Her brain
+   chooses no better than a coin (below), so this number is the balance knob:
+   measured over 3,000 rounds, a coin among the filtered survivors solves
+
+   | attempts | 3 | 4 | 5 | 6 | 7 | 8 |
+   |---|---|---|---|---|---|---|
+   | she solves | 13.5 % | 43 % | 70 % | 86.5 % | 94 % | 98 % |
+
+   Four (the first value) had her losing with over a minute still on her
+   clock; five means the team wins about three rounds in ten by her failing,
+   plus whatever they take off her clock. Her pace is 9 s of think per turn
+   counted from the tick that starts it, brain time included, so a word lands
+   about every 12 s and five fit inside a 90 s round.
 
 What is honest to say about her, and what her page says: she is a real brain
 choosing among words the game has already narrowed; her choice is real and

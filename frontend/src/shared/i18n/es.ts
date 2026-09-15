@@ -167,7 +167,7 @@ export const es = {
     bossStimulus: 'Estímulo · fila anterior',
     bossStimulusNote: 'Poisson inyectado en cada canal, en Hz. Es toda la entrada que recibe.',
     bossWantsNote:
-      'El juego descarta las palabras incompatibles con sus colores y le enseña 8 al azar. Ella elige entre esas 8 con estas letras. La deducción es del juego; la elección es suya. Medido en 120 rondas sobre las mismas 8: con el cerebro intacto resolvió 43, con las sinapsis cortadas 41, una moneda 49. Su elección es real (jugó distinto que un cerebro muerto en 119 rondas) y no es mejor que el azar.',
+      'El juego descarta las palabras incompatibles con sus colores y le enseña 8 al azar. Ella elige entre esas 8 con estas letras. La deducción es del juego; la elección es suya. Medido en 120 rondas a 4 intentos sobre las mismas 8: con el cerebro intacto resolvió 43, con las sinapsis cortadas 41, una moneda 49. Su elección es real (jugó distinto que un cerebro muerto en 119 rondas) y no es mejor que el azar.',
     bossCloud: 'Nube de neuronas',
     bossMode: {
       transmitter: 'Modo · neurotransmisor',
