@@ -34,7 +34,7 @@ function unsolved(greens: number, yellows = 0): RoundResult {
 }
 
 describe('scoreRound (03-scoring-system.md)', () => {
-  it('Ana: 94 s of 90, attempt 3, second, hint kept -> 165', () => {
+  it('Ana: 94 s of 90, attempt 3, second, hint kept -> 161', () => {
     const b = scoreRound(
       solved({ name: 'Ana', secondsLeftAtSolve: 94, attempt: 3, position: 2 }),
       INITIAL,
@@ -43,13 +43,13 @@ describe('scoreRound (03-scoring-system.md)', () => {
     expect(b.timeLeftPercent).toBe(104);
     expect(b.timePoints).toBe(104);
     expect(b.solveBonus).toBe(40);
-    expect(b.attemptPenalty).toBe(-4);
+    expect(b.attemptPenalty).toBe(-8);
     expect(b.positionBonus).toBe(15);
     expect(b.hintBonus).toBe(10);
-    expect(b.roundPoints).toBe(165);
+    expect(b.roundPoints).toBe(161);
   });
 
-  it('Ana with the hint used: 89 s -> 99 -> 150', () => {
+  it('Ana with the hint used: 89 s -> 99 -> 146', () => {
     const b = scoreRound(
       solved({ secondsLeftAtSolve: 89, attempt: 3, position: 2, hintUsed: true }),
       INITIAL,
@@ -57,10 +57,10 @@ describe('scoreRound (03-scoring-system.md)', () => {
     );
     expect(b.timePoints).toBe(99);
     expect(b.hintBonus).toBe(0);
-    expect(b.roundPoints).toBe(150);
+    expect(b.roundPoints).toBe(146);
   });
 
-  it('Bruno: 100 s, attempt 2, first, hint kept -> 179', () => {
+  it('Bruno: 100 s, attempt 2, first, hint kept -> 177', () => {
     const b = scoreRound(
       solved({ secondsLeftAtSolve: 100, attempt: 2, position: 1 }),
       INITIAL,
@@ -68,23 +68,23 @@ describe('scoreRound (03-scoring-system.md)', () => {
     );
     expect(b.timePoints).toBe(111);
     expect(b.positionBonus).toBe(20);
-    expect(b.roundPoints).toBe(179);
+    expect(b.roundPoints).toBe(177);
   });
 
-  it('Carla: 40 s, attempt 5, fourth, hint kept -> 86', () => {
+  it('Carla: 40 s, attempt 5, fourth, hint kept -> 78', () => {
     const b = scoreRound(
       solved({ secondsLeftAtSolve: 40, attempt: 5, position: 4 }),
       INITIAL,
       true,
     );
     expect(b.timeLeftPercent).toBe(44);
-    expect(b.attemptPenalty).toBe(-8);
+    expect(b.attemptPenalty).toBe(-16);
     expect(b.positionBonus).toBe(0);
     expect(b.hintBonus).toBe(10);
-    expect(b.roundPoints).toBe(86);
+    expect(b.roundPoints).toBe(78);
   });
 
-  it('Elena: 12 s, attempt 6, fifth, hint kept -> 53', () => {
+  it('Elena: 12 s, attempt 6, fifth, hint kept -> 43', () => {
     const b = scoreRound(
       solved({ secondsLeftAtSolve: 12, attempt: 6, position: 5 }),
       INITIAL,
@@ -92,11 +92,11 @@ describe('scoreRound (03-scoring-system.md)', () => {
     );
     expect(b.timePoints).toBe(13);
     expect(b.solveBonus).toBe(40);
-    expect(b.attemptPenalty).toBe(-10);
-    expect(b.roundPoints).toBe(53);
+    expect(b.attemptPenalty).toBe(-20);
+    expect(b.roundPoints).toBe(43);
   });
 
-  it('a late solve never drops below the solve bonus: 2 s, attempt 8 -> raw 28, paid 40', () => {
+  it('a late solve never drops below the solve bonus: 2 s, attempt 8 -> raw 14, paid 40', () => {
     const b = scoreRound(
       solved({ secondsLeftAtSolve: 2, attempt: 8, position: 6 }),
       INITIAL,
@@ -104,7 +104,7 @@ describe('scoreRound (03-scoring-system.md)', () => {
     );
     expect(b.timePoints).toBe(2);
     expect(b.hintBonus).toBe(0);
-    expect(b.attemptPenalty).toBe(-14);
+    expect(b.attemptPenalty).toBe(-28);
     expect(b.roundPoints).toBe(SCORING.solveBonus);
   });
 

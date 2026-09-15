@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 10;
+export const CONTRACT_VERSION = 11;
 
 export type Language = 'es' | 'en';
 export type TileColor = 'green' | 'yellow' | 'gray';
@@ -92,7 +92,8 @@ export const SCORING = {
   greenAfterYellowSeconds: 5,
   greenAfterHintSeconds: 5,
   penaltyOnRivalSolveSeconds: 5,
-  attemptPenalty: 2,
+  /** v1.1: −4 per attempt after the first (was −2); the solve floor of 40 stays. */
+  attemptPenalty: 4,
   positionBonus: [20, 15, 10] as const,
   hintKeptBonus: 10,
   solveBonus: 40,

@@ -230,7 +230,7 @@ describe('WordRush game flow (socket.io integration)', () => {
       attempt: 2,
       position: 1,
       solveBonus: 40,
-      attemptPenalty: -2,
+      attemptPenalty: -4,
       positionBonus: 20,
       hintBonus: 10,
       greens: 5,
@@ -239,7 +239,7 @@ describe('WordRush game flow (socket.io integration)', () => {
       yellowPoints: 0,
     });
     expect(anaLine.timePoints).toBe(Math.round((solve.secondsLeft / 60) * 100));
-    expect(anaLine.roundPoints).toBe(anaLine.timePoints + 40 - 2 + 20 + 10);
+    expect(anaLine.roundPoints).toBe(anaLine.timePoints + 40 - 4 + 20 + 10);
 
     const brunoLine = endA.breakdown.find((b) => b.playerId === joined.playerId)!;
     expect(brunoLine).toMatchObject({

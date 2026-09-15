@@ -10,7 +10,7 @@ and almost all of them come from the clock.
 |---|---|
 | You solve the word | **+40**, flat |
 | Time left when you solve | 1 point for every 1 % of the **initial time** you have left |
-| Each attempt after the first | −2 (v1.1: **−4**, with a solve floor of 40 — `06-v1.1.md`) |
+| Each attempt after the first | −4 (−2 until 2026-09-15) |
 | First, second and third to solve | +20, +15, +10 |
 | You finish the round still holding your hint | +10 |
 | You do not solve, you have greens at the end | **8 per green** |
@@ -33,11 +33,13 @@ the room's clock. On screen it is shown as "te sobró 72 %" ("you had 72 % left"
 With the letter bonuses it is possible to go over 100 %. That is deliberate: whoever solves
 fast and also hunted down a lot of new letters ends up above everyone else.
 
-### Why attempts count so little
-The −2 penalty exists only so that two players with the same time left do not tie because
-one threw in an extra word. The aim is to promote speed and chaos, not caution. At −2 an
-eighth attempt costs 14 points, less than a tenth of a decent round: trying another word
-is always better than sitting on the clock.
+### Why attempts count a little, not a lot
+The penalty exists so that two players with the same time left do not tie because one
+threw in an extra word, and so that words are not free. It was −2 until 2026-09-15, when
+the eighth attempt cost 14 points — attempts were nearly free and people sprayed words.
+At −4 the eighth attempt costs 28, still under a fifth of a decent round: trying another
+word remains better than sitting on the clock, but it is a decision now. The solve bonus
+stays the floor, so no amount of attempts can push a solve under 40.
 
 ### Why a flat +40 for solving instead of a floor and a cap
 The old rules protected the same idea with two moving parts: a floor of 30 points for
@@ -50,7 +52,7 @@ the lobby reads as a list of bonuses instead of a list of limits.
 
 The solve bonus is also the minimum a solve can score: the attempt penalty never eats into
 it. Without that, a solve on attempt 8 with the clock at zero and the hint spent would score
-40 − 14 = 26, under the 36 of a perfect consolation (4 greens + 1 yellow). With the minimum,
+40 − 28 = 12, under the 36 of a perfect consolation (4 greens + 1 yellow). With the minimum,
 the worst possible solve is 40 and solving always beats not solving. This is an invariant of
 the formula, not a line in the scoring card.
 
@@ -83,19 +85,19 @@ Ana solves on attempt 3, second in the room, with 94 s. Her clock freezes there.
 |---|---|
 | Time left: 94 of the 90 initial = 104 % | 104 |
 | Solved the word | +40 |
-| Two attempts after the first | −4 |
+| Two attempts after the first | −8 |
 | Second to solve | +15 |
 | Hint kept | +10 |
-| **Round total** | **165** |
+| **Round total** | **161** |
 
 If Ana had used the hint at second 0 (marking the O in yellow), the green O on attempt 3
 would give 5 and not 10, and she loses the +10 for the hint. She would end with 89 s → 99 points
-for time → 150 total. Using the hint cost her 15 points, but it could have saved her an attempt.
+for time → 146 total. Using the hint cost her 15 points, but it could have saved her an attempt.
 
 Carla solves on attempt 5, at second 70, fourth in the room, with three −5 penalties and 35 s
-paid by letters. Final clock 40 → 44 %. Total: 44 + 40 − 8 + 0 + 10 = **86**.
+paid by letters. Final clock 40 → 44 %. Total: 44 + 40 − 16 + 0 + 10 = **78**.
 
-Elena solves on attempt 6 with 12 s left, fifth: 13 + 40 − 10 + 0 + 10 = **53**.
+Elena solves on attempt 6 with 12 s left, fifth: 13 + 40 − 20 + 0 + 10 = **43**.
 
 Fito does not solve but finishes with 4 greens: 4 × 8 = **32**. Gaby, with 2 greens and one
 yellow she never placed: 16 + 4 = **20**. Hugo, who found nothing: **0**.
@@ -104,11 +106,11 @@ yellow she never placed: 16 + 4 = **20**. Hugo, who found nothing: **0**.
 
 | Pos | Player | Solved | Attempt | Time left | Solve | Attempts | Position | Hint | Greens | Yellows | Round |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Bruno | yes, 1st | 2 | 111 % | +40 | −2 | +20 | +10 | | | 179 |
-| 2 | Ana | yes, 2nd | 3 | 104 % | +40 | −4 | +15 | +10 | | | 165 |
-| 3 | Diego | yes, 3rd | 4 | 78 % | +40 | −6 | +10 | used | | | 122 |
-| 4 | Carla | yes, 4th | 5 | 44 % | +40 | −8 | | +10 | | | 86 |
-| 5 | Elena | yes, 5th | 6 | 13 % | +40 | −10 | | +10 | | | 53 |
+| 1 | Bruno | yes, 1st | 2 | 111 % | +40 | −4 | +20 | +10 | | | 177 |
+| 2 | Ana | yes, 2nd | 3 | 104 % | +40 | −8 | +15 | +10 | | | 161 |
+| 3 | Diego | yes, 3rd | 4 | 78 % | +40 | −12 | +10 | used | | | 116 |
+| 4 | Carla | yes, 4th | 5 | 44 % | +40 | −16 | | +10 | | | 78 |
+| 5 | Elena | yes, 5th | 6 | 13 % | +40 | −20 | | +10 | | | 43 |
 | 6 | Fito | no | | | | | | | 4 | 0 | 32 |
 | 7 | Gaby | no | | | | | | | 2 | 1 | 20 |
 | 8 | Hugo | no | | | | | | | 0 | 0 | 0 |

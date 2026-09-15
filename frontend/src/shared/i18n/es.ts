@@ -54,7 +54,7 @@ export const es = {
     feature2Title: '−5 s al resto',
     feature2Body: 'Cuando alguien acierta, todos los que siguen jugando pierden 5 s.',
     feature3Title: 'El reloj puntúa',
-    feature3Body: 'Un punto por cada 1 % de tiempo que te sobre. Los intentos casi no pesan.',
+    feature3Body: 'Un punto por cada 1 % de tiempo que te sobre. Cada intento de más resta 4.',
     footer: 'Sin cuenta. Sin descargas. Un enlace y a jugar.',
     createTitle: 'Crear sala',
     createSubtitle: 'Tú fijas las reglas. Los demás entran con el código.',

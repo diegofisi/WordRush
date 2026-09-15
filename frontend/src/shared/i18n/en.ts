@@ -69,7 +69,7 @@ export const en: Dictionary = {
     feature2Title: '−5 s to the rest',
     feature2Body: 'When someone solves, everyone still playing loses 5 s.',
     feature3Title: 'The clock scores',
-    feature3Body: 'One point per 1% of time you have left. Attempts barely matter.',
+    feature3Body: 'One point per 1% of time you have left. Every extra attempt costs 4.',
     footer: 'No account. No downloads. One link and play.',
     createTitle: 'Create room',
     createSubtitle: 'You set the rules. Everyone else joins with the code.',
