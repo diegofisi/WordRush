@@ -6,14 +6,21 @@ import type { BossFrame } from '@shared/contract';
 import type { BrainIdle, BrainReady, BrainRequest, BrainResponse } from './brain.worker';
 
 /**
- * Owns the worker thread the brain runs on, and turns its messages into
- * promises. One question at a time: the fly takes a single decision per turn
- * and queueing keeps the thread's memory footprint to one simulation.
+ * Owns the two worker threads the brain runs on, and turns their messages into
+ * promises.
+ *
+ * One thread decides: one question at a time, the fly takes a single decision
+ * per turn and queueing keeps that thread's footprint to one simulation. The
+ * other thread streams: the live slices for the panel. They were one thread
+ * until 2026-09-14, when a decision (about seven seconds of wall time) froze
+ * the panel for its whole length, and with her turns 9 s apart the panel was
+ * frozen more than it moved. Each thread loads its own copy of the connectome.
  */
 @Injectable()
 export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(BrainWorkerService.name);
   private worker: Worker | null = null;
+  private streamer: Worker | null = null;
   private nextId = 1;
   private readonly pending = new Map<number, (response: BrainResponse) => void>();
   private booting: Promise<BrainReady | null> | null = null;
@@ -32,8 +39,9 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
 
   /** Turns the live stream on or off, optionally pointing it at a board. */
   stream(on: boolean, board?: Omit<BrainIdle, 'idle' | 'on'>): void {
-    if (!this.worker || !this.info) return;
-    this.worker.postMessage({ idle: true, on, ...board } satisfies BrainIdle);
+    const target = this.streamer ?? this.worker;
+    if (!target || !this.info) return;
+    target.postMessage({ idle: true, on, ...board } satisfies BrainIdle);
   }
 
   /** Null until the brain has loaded; the fly falls back to her policy until then. */
@@ -48,7 +56,9 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
 
   onModuleDestroy(): void {
     void this.worker?.terminate();
+    void this.streamer?.terminate();
     this.worker = null;
+    this.streamer = null;
     this.pending.clear();
   }
 
@@ -79,71 +89,94 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
     }
 
     this.booting = new Promise<BrainReady | null>((resolve) => {
-      const options = file.endsWith('.ts')
-        ? { workerData: { silenced }, execArgv: ['-r', 'ts-node/register'] }
-        : { workerData: { silenced } };
-      let worker: Worker;
-      try {
-        worker = new Worker(file, options);
-      } catch (error) {
-        this.logger.error(`Brain worker failed to start: ${String(error)}`);
-        resolve(null);
-        return;
-      }
-      this.worker = worker;
-
-      worker.on('message', (message: BrainReady | BrainResponse | BossFrame) => {
-        if ('biologicalMs' in message && 'cloud' in message) {
-          // A live slice: the only message that carries a cloud bitset.
-          this.onFrame?.(message);
-          return;
-        }
-        if ('ready' in message) {
-          this.info = message;
-          this.logger.log(
-            `Brain online: ${message.neurons.toLocaleString()} neurons, ` +
-              `${message.edges.toLocaleString()} synapses, loaded in ${message.loadMs} ms` +
-              (silenced ? ' [SILENCED: control condition]' : ''),
-          );
-          resolve(message);
-          return;
-        }
-        const settle = this.pending.get(message.id);
-        if (settle) {
-          this.pending.delete(message.id);
-          settle(message);
-        }
-      });
-      worker.on('error', (error: unknown) => {
-        this.logger.error(
-          `Brain worker died: ${error instanceof Error ? error.message : String(error)}`,
-        );
-        this.info = null;
-        this.worker = null;
-        for (const settle of this.pending.values()) {
-          settle({
-            id: -1,
-            rates: [],
-            biologicalMs: 0,
-            wallMs: 0,
-            spikes: 0,
-            telemetry: {
-              raster: [],
-              voltage: [],
-              populations: [],
-              excitatory: 0,
-              inhibitory: 0,
-              cloud: [],
-              stimulus: [],
-            },
-          });
-        }
-        this.pending.clear();
-        resolve(null);
-      });
-      worker.unref();
+      const decide = this.spawn(file, 'decide', silenced, resolve);
+      if (!decide) return;
+      this.worker = decide;
+      // The panel's thread. If it fails to start the stream simply stays off;
+      // she still plays.
+      this.streamer = this.spawn(file, 'stream', silenced, null);
     });
     return this.booting;
+  }
+
+  /**
+   * One thread. `settle` is the boot promise's resolver and belongs to the
+   * deciding thread only: the service is online when that one is, and a
+   * missing stream thread is a dark panel, not a fly that will not move.
+   */
+  private spawn(
+    file: string,
+    role: 'decide' | 'stream',
+    silenced: boolean,
+    settle: ((ready: BrainReady | null) => void) | null,
+  ): Worker | null {
+    const options = file.endsWith('.ts')
+      ? { workerData: { silenced, role }, execArgv: ['-r', 'ts-node/register'] }
+      : { workerData: { silenced, role } };
+    let worker: Worker;
+    try {
+      worker = new Worker(file, options);
+    } catch (error) {
+      this.logger.error(`Brain ${role} thread failed to start: ${String(error)}`);
+      settle?.(null);
+      return null;
+    }
+
+    worker.on('message', (message: BrainReady | BrainResponse | BossFrame) => {
+      if ('biologicalMs' in message && 'cloud' in message) {
+        // A live slice: the only message that carries a cloud bitset.
+        this.onFrame?.(message);
+        return;
+      }
+      if ('ready' in message) {
+        if (role === 'decide') this.info = message;
+        this.logger.log(
+          `Brain ${role} thread online: ${message.neurons.toLocaleString()} neurons, ` +
+            `${message.edges.toLocaleString()} synapses, loaded in ${message.loadMs} ms` +
+            (silenced ? ' [SILENCED: control condition]' : ''),
+        );
+        settle?.(message);
+        return;
+      }
+      const pending = this.pending.get(message.id);
+      if (pending) {
+        this.pending.delete(message.id);
+        pending(message);
+      }
+    });
+    worker.on('error', (error: unknown) => {
+      this.logger.error(
+        `Brain ${role} thread died: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      if (role === 'stream') {
+        this.streamer = null;
+        return;
+      }
+      this.info = null;
+      this.worker = null;
+      for (const pending of this.pending.values()) {
+        pending({
+          id: -1,
+          rates: [],
+          biologicalMs: 0,
+          wallMs: 0,
+          spikes: 0,
+          telemetry: {
+            raster: [],
+            voltage: [],
+            populations: [],
+            excitatory: 0,
+            inhibitory: 0,
+            cloud: [],
+            stimulus: [],
+          },
+        });
+      }
+      this.pending.clear();
+      settle?.(null);
+    });
+    worker.unref();
+    return worker;
   }
 
   /**

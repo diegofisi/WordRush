@@ -367,15 +367,20 @@ Each of her turns:
    **her clock**: solve before she does and take 8 s off it each time; she is
    beaten when it runs out, not when her attempts do.
 
-   Her pace is bounded by computation, not biology: a decision is 960 ms of
-   simulated brain, and simulating it costs about 7 s of wall time on the
-   development machine. The think time is drawn uniformly between 3 and 6 s
-   per turn, counted from the tick that starts it, plus 3 s of typing; since
-   the brain's 7 s sit inside it, the low end starts the next turn the moment
-   she answers and the high end holds her 2 s more. A word every **7 to 9 s**,
-   spread so the room cannot count her down. 5 s was asked for and is not
-   reachable: going faster means a shorter read-out window (900 ms, calibrated
-   in `07`) or a faster machine.
+   Her pace is the balance knob that is left, and it is bounded below by
+   computation, not biology: a decision is 960 ms of simulated brain, and
+   simulating it costs about 7 s of wall time on the development machine, so
+   the floor is a word every ~9 s. That floor was played on 2026-09-14 and she
+   solved by her third word with the round barely begun — with the filter her
+   third or fourth word is the likely answer at any pace, so the pace is what
+   gives the room its time. The think time is now drawn uniformly between
+   **10 and 15 s** per turn, counted from the tick that starts it, plus 3 s of
+   typing: a word every **13 to 18 s**, her fifth at about 75 s, and the
+   spread means the room cannot count her down.
+
+   The live stream has its own thread since the same day: a decision blocks
+   its thread for those 7 s, and while decisions and stream shared one the
+   panel froze for every decision.
 
 What is honest to say about her, and what her page says: she is a real brain
 choosing among words the game has already narrowed; her choice is real and
