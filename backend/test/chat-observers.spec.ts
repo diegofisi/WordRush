@@ -77,6 +77,7 @@ describe('Chat and observers (socket.io integration)', () => {
       name: 'Ana',
       settings: {
         language: 'es',
+        game: 'wordle',
         mode: 'normal',
         wordLength: 5,
         initialSeconds: 60,

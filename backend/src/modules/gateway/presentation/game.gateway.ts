@@ -14,6 +14,7 @@ import {
   type ChatHistoryAck,
   type GuessAck,
   type HintAck,
+  type PhraseAck,
   type SessionAck,
 } from '@shared/contract';
 import { CLOCK, type Clock } from '@shared/domain/clock';
@@ -23,9 +24,11 @@ import { ChatSendDto } from '@modules/chat/application/dtos/chat.dto';
 import { ChatHistoryUseCase } from '@modules/chat/application/use-cases/chat-history.use-case';
 import { SendChatUseCase } from '@modules/chat/application/use-cases/send-chat.use-case';
 import { GuessDto } from '@modules/game/application/dtos/guess.dto';
+import { PhraseSendDto } from '@modules/game/application/dtos/phrase.dto';
 import { SettleRoundUseCase } from '@modules/game/application/use-cases/settle-round.use-case';
 import { StartGameUseCase } from '@modules/game/application/use-cases/start-game.use-case';
 import { SubmitGuessUseCase } from '@modules/game/application/use-cases/submit-guess.use-case';
+import { SubmitPhraseUseCase } from '@modules/game/application/use-cases/submit-phrase.use-case';
 import { UseHintUseCase } from '@modules/game/application/use-cases/use-hint.use-case';
 import { ReactionDto } from '@modules/reactions/application/dtos/reaction.dto';
 import { SendReactionUseCase } from '@modules/reactions/application/use-cases/send-reaction.use-case';
@@ -109,6 +112,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     private readonly settleRound: SettleRoundUseCase,
     private readonly startGame: StartGameUseCase,
     private readonly submitGuess: SubmitGuessUseCase,
+    private readonly submitPhrase: SubmitPhraseUseCase,
     private readonly useHint: UseHintUseCase,
     private readonly sendReaction: SendReactionUseCase,
     private readonly sendChat: SendChatUseCase,
@@ -265,6 +269,18 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       throw new DomainException('cooldown');
     }
     return { ok: true, ...this.submitGuess.execute(roomCode, playerId, dto.word) };
+  }
+
+  @SubscribeMessage('game:phrase')
+  onPhrase(
+    @ConnectedSocket() client: GameSocket,
+    @MessageBody() dto: PhraseSendDto,
+  ): Ack<PhraseAck> {
+    const { roomCode, playerId } = this.requireSession(client);
+    if (!this.limiter.allow(client.id, 'game:phrase', GUESS_LIMIT, this.clock.now())) {
+      throw new DomainException('cooldown');
+    }
+    return { ok: true, ...this.submitPhrase.execute(roomCode, playerId, dto.text) };
   }
 
   @SubscribeMessage('game:hint')

@@ -9,9 +9,12 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 14;
+export const CONTRACT_VERSION = 15;
 
 export type Language = 'es' | 'en';
+/** docs/context/06-v1.1.md -> Guess the phrase: the second game on the same rooms. */
+export type GameKind = 'wordle' | 'phrase';
+export const GAME_KINDS: readonly GameKind[] = ['wordle', 'phrase'];
 export type TileColor = 'green' | 'yellow' | 'gray';
 export type Emote =
   | 'love'
@@ -120,12 +123,30 @@ export const SCORING = {
   pointsPerYellowUnsolved: 4,
 } as const;
 
+/** docs/context/06-v1.1.md -> Guess the phrase. */
+export const PHRASE_RULES = {
+  /** Words a player may type per round; running out does not end the round. */
+  words: 6,
+  /** Phrase sends per round (per team in team mode); spending them all ends it. */
+  sends: 5,
+  sendPenalty: 5,
+  completeBonus: 80,
+  /** The uncovered share when the phrase is not completed: up to this at 100 %. */
+  uncoveredMaxPoints: 20,
+  /** Seconds per occurrence revealed by a typed word. */
+  secondsPerOccurrence: 2,
+  /** Every word typed costs this (teams: every member's words). */
+  wordPenalty: 4,
+} as const;
+
 // ---------------------------------------------------------------------------
 // Shared shapes
 // ---------------------------------------------------------------------------
 
 export interface RoomSettings {
   language: Language;
+  /** Which game the room plays: Wordle words, or guess the phrase. */
+  game: GameKind;
   /** Normal (everyone for themselves) or two teams. */
   mode: GameMode;
   wordLength: WordLength;
@@ -179,6 +200,35 @@ export interface LobbyState {
 }
 
 /**
+ * Phrase game: the phrase as slots, one array per word. Letters found are
+ * shown; unknown ones are null. The layout (word lengths) is public from the
+ * first second, the letters come only from what the player types.
+ */
+export type PhraseLetters = (string | null)[][];
+/** What a rival sees of somebody's phrase: where they have a letter, never which. */
+export type PhraseMask = boolean[][];
+
+/** The phrase game as the player (or their team) sees it. */
+export interface PhraseSelf {
+  letters: PhraseLetters;
+  /** Occurrences uncovered and the phrase's letter count. */
+  found: number;
+  total: number;
+  /** Failed sends so far, out of `PHRASE_RULES.sends`. */
+  sendsUsed: number;
+  completed: boolean;
+}
+
+/** The phrase game as everybody sees somebody else's progress. */
+export interface PhraseProgress {
+  mask: PhraseMask;
+  found: number;
+  total: number;
+  sendsUsed: number;
+  completed: boolean;
+}
+
+/**
  * What everyone sees about a player during a round: colours only, never
  * letters. In team mode the clock and `finished` are the team's.
  */
@@ -198,6 +248,8 @@ export interface PlayerProgress {
   yellows: number;
   /** Seconds lost to rivals' solves this round. */
   penaltySeconds: number;
+  /** Phrase game only; null in Wordle. */
+  phrase: PhraseProgress | null;
 }
 
 /** The player's own rows, letters included. */
@@ -237,6 +289,8 @@ export interface SelfState {
   hintUsed: boolean;
   hint: HintReveal | null;
   penaltySeconds: number;
+  /** Phrase game only; null in Wordle. */
+  phrase: PhraseSelf | null;
 }
 
 /** A team during the round: its shared clock, hint and solve. */
@@ -252,6 +306,8 @@ export interface TeamRoundState {
   penaltySeconds: number;
   /** Words sent by every member after each one's first: the penalty base. */
   attemptsAfterFirst: number;
+  /** Phrase game: the team's shared phrase progress; null in Wordle. */
+  phrase: PhraseProgress | null;
 }
 
 /** A teammate's board, letters included: teammates see each other live. */
@@ -264,6 +320,9 @@ export interface RoundInfo {
   round: number;
   totalRounds: number;
   mode: GameMode;
+  game: GameKind;
+  /** Phrase game: the length of every word of the phrase; null in Wordle. */
+  phraseWords: number[] | null;
   /** Letters per word and attempts this round, from the room settings. */
   wordLength: WordLength;
   maxAttempts: number;
@@ -303,6 +362,11 @@ export interface RoundBreakdown {
   /** Answer slots known but never turned green; only pays when not solved. */
   yellows: number;
   yellowPoints: number;
+  /** Phrase game: share of the phrase uncovered (0 in Wordle). */
+  phrasePercent: number;
+  uncoveredPoints: number;
+  sendsFailed: number;
+  sendPenalty: number;
   roundPoints: number;
 }
 
@@ -332,6 +396,12 @@ export interface TeamRoundBreakdown {
   attemptPenalty: number;
   positionBonus: number;
   hintBonus: number;
+  /** Phrase game: every member's words, the share uncovered, the failed sends. */
+  wordsSent: number;
+  phrasePercent: number;
+  uncoveredPoints: number;
+  sendsFailed: number;
+  sendPenalty: number;
   roundPoints: number;
 }
 
@@ -358,7 +428,11 @@ export interface RoundEndPayload {
   round: number;
   totalRounds: number;
   mode: GameMode;
+  game: GameKind;
+  /** Wordle: the answer. Phrase game: empty (see `phrase`). */
   word: string;
+  /** Phrase game: the whole phrase, revealed to everybody now. */
+  phrase: string | null;
   /** Every seated player's board with letters (docs/context/06-v1.1.md -> Room management). */
   boards: PlayerBoard[];
   /** Per player in the normal mode; empty in team mode (points are the team's). */
@@ -415,6 +489,10 @@ export type ErrorCode =
   | 'not_observer'
   /** Joining under a name the host kicked less than `kickRejoinSeconds` ago. */
   | 'kicked'
+  /** Phrase game: the text sent does not fit the phrase's words. */
+  | 'phrase_shape'
+  /** Phrase game: the sends of the round are spent. */
+  | 'no_sends_left'
   | 'session_expired'
   | 'internal';
 
@@ -450,6 +528,11 @@ export interface RejoinPayload {
 
 export interface GuessPayload {
   word: string;
+}
+
+/** Phrase game: one try at the whole phrase (docs/context/06-v1.1.md). */
+export interface PhraseSendPayload {
+  text: string;
 }
 
 export interface ReactionPayload {
@@ -541,6 +624,20 @@ export interface GuessAck {
   solved: boolean;
   finished: boolean;
   solvedPosition: number | null;
+  /** Phrase game: the phrase after this word; null in Wordle. */
+  phrase: PhraseSelf | null;
+}
+
+export interface PhraseAck {
+  correct: boolean;
+  /** Failed sends so far, out of `PHRASE_RULES.sends`. */
+  sendsUsed: number;
+  /** On a miss: per word, per letter, true where the sent letter is wrong. */
+  wrong: boolean[][] | null;
+  secondsLeft: number;
+  at: number;
+  finished: boolean;
+  solvedPosition: number | null;
 }
 
 export interface HintAck extends HintReveal {
@@ -566,6 +663,7 @@ export interface ClientToServerEvents {
   'team:reset-games': (ack?: (r: EmptyAck) => void) => void;
   'game:guess': (payload: GuessPayload, ack: (r: Ack<GuessAck>) => void) => void;
   'game:hint': (ack: (r: Ack<HintAck>) => void) => void;
+  'game:phrase': (payload: PhraseSendPayload, ack: (r: Ack<PhraseAck>) => void) => void;
   'reaction:send': (payload: ReactionPayload, ack?: (r: EmptyAck) => void) => void;
   'chat:send': (payload: ChatSendPayload, ack?: (r: EmptyAck) => void) => void;
   'chat:history': (ack: (r: Ack<ChatHistoryAck>) => void) => void;
@@ -588,6 +686,12 @@ export interface PenaltyPayload {
   seconds: number;
   /** New clocks of every player that was penalised. */
   clocks: { playerId: string; secondsLeft: number; at: number }[];
+}
+
+/** Phrase game: somebody sent the phrase; a hit also arrives as `player:solved`. */
+export interface PhraseAttemptPayload {
+  playerId: string;
+  correct: boolean;
 }
 
 export interface SolvedPayload {
@@ -623,6 +727,7 @@ export interface ServerToClientEvents {
   'player:progress': (progress: PlayerProgress) => void;
   'player:solved': (payload: SolvedPayload) => void;
   'player:hint': (payload: HintUsedPayload) => void;
+  'phrase:attempt': (payload: PhraseAttemptPayload) => void;
   /** Team mode: a teammate's board with letters, to their teammates only. */
   'teammate:progress': (payload: TeammateRows) => void;
   /** Team mode: the team's hint, to every member (the spender included). */

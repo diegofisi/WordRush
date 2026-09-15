@@ -20,6 +20,7 @@ class FakeClock implements Clock {
 
 const SETTINGS: RoomSettings = {
   language: 'en',
+  game: 'wordle',
   mode: 'normal',
   wordLength: 5,
   initialSeconds: 120,
@@ -56,6 +57,8 @@ describe('RestartRoomUseCase', () => {
       totalRounds: 3,
       mode: 'normal',
       word: 'ahora',
+      game: 'wordle',
+      phrase: null,
       boards: [],
       breakdown: [],
       standings: [],

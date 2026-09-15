@@ -78,6 +78,7 @@ describe('WordRush game flow (socket.io integration)', () => {
       name: '  Ana ',
       settings: {
         language: 'es',
+        game: 'wordle',
         mode: 'normal',
         wordLength: 5,
         initialSeconds: 60,
@@ -299,6 +300,7 @@ describe('WordRush game flow (socket.io integration)', () => {
       name: 'Ana',
       settings: {
         language: 'es',
+        game: 'wordle',
         mode: 'normal',
         wordLength: 6,
         initialSeconds: 60,
@@ -341,6 +343,7 @@ describe('WordRush game flow (socket.io integration)', () => {
   it('throttles room creation per socket, spending the budget on failed attempts too', async () => {
     const settings = {
       language: 'es' as const,
+      game: 'wordle' as const,
       mode: 'normal' as const,
       wordLength: 5 as const,
       initialSeconds: 60,

@@ -7,10 +7,13 @@ import {
   IRoomRepository,
   ROOM_REPOSITORY,
 } from '@modules/rooms/domain/interfaces/room-repository.interface';
+import { phrasePercent } from '../../domain/services/phrase';
 import {
   computeStandings,
   computeTeamStandings,
+  scorePhraseRound,
   scoreRound,
+  scoreTeamPhraseRound,
   scoreTeamRound,
 } from '../../domain/services/scoring';
 import { RoundSchedulerService } from '../services/round-scheduler.service';
@@ -34,13 +37,34 @@ export class EndRoundUseCase {
   ) {}
 
   execute(room: Room, now: number): RoundEndPayload {
-    const { initialSeconds, hintEnabled, rounds, mode } = room.settings;
+    const { initialSeconds, hintEnabled, rounds, mode, game } = room.settings;
     const teamMode = mode === 'teams';
+    const phrase = room.phrase;
+    const phraseGame = game === 'phrase' && phrase !== null;
     // Team mode: points are the team's; the per-player table stays empty.
     const breakdown = teamMode
       ? []
       : room.players.map((player) => {
           const round = player.round;
+          if (phraseGame) {
+            const progress = round?.phrase;
+            const result = scorePhraseRound(
+              {
+                playerId: player.id,
+                name: player.name,
+                completed: progress?.completed ?? false,
+                position: round?.solvedPosition ?? null,
+                secondsLeftAtSolve: round?.frozenSecondsLeft ?? 0,
+                wordsSent: progress?.wordsSent ?? 0,
+                sendsFailed: progress?.sendsUsed ?? 0,
+                percent: progress ? phrasePercent(phrase, progress.found) : 0,
+              },
+              initialSeconds,
+            );
+            player.totalPoints += result.roundPoints;
+            player.totalAttempts += result.attempt;
+            return result;
+          }
           const result = scoreRound(
             {
               playerId: player.id,
@@ -78,6 +102,27 @@ export class EndRoundUseCase {
     const teams = room.teams.map((team) => {
       const round = team.round;
       const solver = round?.solverId ? room.findPlayer(round.solverId) : undefined;
+      if (phraseGame) {
+        const progress = round?.phrase;
+        const result = scoreTeamPhraseRound(
+          {
+            team: team.id,
+            name: team.name,
+            color: team.color,
+            completed: progress?.completed ?? false,
+            solverId: round?.solverId ?? null,
+            solverName: solver?.name ?? null,
+            position: round?.solvedPosition ?? null,
+            secondsLeftAtSolve: round?.frozenSecondsLeft ?? 0,
+            wordsSent: progress?.wordsSent ?? 0,
+            sendsFailed: progress?.sendsUsed ?? 0,
+            percent: progress ? phrasePercent(phrase, progress.found) : 0,
+          },
+          initialSeconds,
+        );
+        team.totalPoints += result.roundPoints;
+        return result;
+      }
       const result = scoreTeamRound(
         {
           team: team.id,
@@ -131,7 +176,9 @@ export class EndRoundUseCase {
       round: room.currentRound,
       totalRounds: rounds,
       mode,
+      game,
       word: room.word ?? '',
+      phrase: phrase?.display ?? null,
       // The word is public from here on: every board can show its letters.
       boards: room.players.map((player) => ({
         playerId: player.id,

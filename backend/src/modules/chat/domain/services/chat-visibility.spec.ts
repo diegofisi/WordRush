@@ -9,6 +9,7 @@ const T0 = 1_000_000;
 
 const settings = (mode: 'normal' | 'teams') => ({
   language: 'es' as const,
+  game: 'wordle' as const,
   mode,
   wordLength: 5 as const,
   initialSeconds: 60,

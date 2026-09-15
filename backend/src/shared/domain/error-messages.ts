@@ -23,6 +23,8 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   chat_not_allowed: 'You cannot write in that channel right now',
   not_observer: 'Only an observer can do that',
   kicked: 'The host removed you from this room; you may come back in a moment',
+  phrase_shape: 'The text does not fit the words of the phrase',
+  no_sends_left: 'No phrase sends left this round',
   session_expired: 'Your session has expired',
   internal: 'Unexpected server error',
 };

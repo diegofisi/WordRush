@@ -29,10 +29,14 @@ export class UseHintUseCase {
     const player = room?.findPlayer(playerId);
     if (!room || !player) throw new DomainException('not_in_room');
     const round = player.round;
+    if (room.status !== 'playing' || !round) throw new DomainException('not_in_round');
+    // No hint in the phrase game: every green already reveals a letter.
+    if (!room.settings.hintEnabled || room.settings.game === 'phrase') {
+      throw new DomainException('hint_unavailable');
+    }
     const answer = room.word;
-    if (room.status !== 'playing' || !round || !answer) throw new DomainException('not_in_round');
+    if (!answer) throw new DomainException('not_in_round');
     if (round.finished || round.team?.finished) throw new DomainException('already_finished');
-    if (!room.settings.hintEnabled) throw new DomainException('hint_unavailable');
     // One per player, or one per team: `hintUsed` reads the team's in team mode.
     if (round.hintUsed) throw new DomainException('hint_already_used');
 

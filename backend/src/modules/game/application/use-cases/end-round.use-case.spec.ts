@@ -34,13 +34,18 @@ describe('EndRoundUseCase', () => {
     events = [];
     bus.subscribe((e) => events.push(e));
     scheduler = new RoundSchedulerService();
-    const startRound = new StartRoundUseCase({ pick: () => ANSWER }, bus);
+    const startRound = new StartRoundUseCase(
+      { pick: () => ANSWER },
+      { pick: () => 'mas vale tarde que nunca' },
+      bus,
+    );
     useCase = new EndRoundUseCase(rooms, clock, bus, scheduler, startRound);
 
     room = Room.create(
       'ABCD',
       {
         language: 'es',
+        game: 'wordle',
         mode: 'normal',
         wordLength: 5,
         initialSeconds: 60,

@@ -74,6 +74,7 @@ describe('Team mode (socket.io integration)', () => {
       name: 'Ana',
       settings: {
         language: 'es',
+        game: 'wordle',
         mode: 'teams',
         wordLength: 5,
         initialSeconds: 60,

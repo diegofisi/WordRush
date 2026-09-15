@@ -18,6 +18,7 @@ class FakeClock implements Clock {
 
 const settings = {
   language: 'es' as const,
+  game: 'wordle' as const,
   mode: 'normal' as const,
   wordLength: 5 as const,
   initialSeconds: 60,

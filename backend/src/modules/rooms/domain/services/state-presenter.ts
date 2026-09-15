@@ -1,4 +1,4 @@
-import { attemptsFor } from '@shared/contract';
+import { attemptsFor, PHRASE_RULES } from '@shared/contract';
 import type {
   FullState,
   PlayerProgress,
@@ -8,6 +8,14 @@ import type {
   TeammateRows,
   TeamRoundState,
 } from '@shared/contract';
+import type { ParsedPhrase } from '@modules/game/domain/services/phrase';
+import {
+  foundCount,
+  phraseLetters,
+  phraseMask,
+  phraseShape,
+} from '@modules/game/domain/services/phrase';
+import type { PhraseProgress as PhraseProgressEntity } from '../entities/phrase-progress.entity';
 import type { Player } from '../entities/player.entity';
 import type { Room } from '../entities/room.entity';
 import type { Team } from '../entities/team.entity';
@@ -16,7 +24,33 @@ import type { Team } from '../entities/team.entity';
  * Pure mappers from the aggregate to the contract shapes. Colours only for
  * rivals, letters only in the caller's own `SelfState`, never the word.
  */
-export function toPlayerProgress(player: Player, now: number): PlayerProgress {
+function toPhraseSelf(phrase: ParsedPhrase | null, progress: PhraseProgressEntity | null) {
+  if (!phrase || !progress) return null;
+  return {
+    letters: phraseLetters(phrase, progress.found),
+    found: foundCount(phrase, progress.found),
+    total: phrase.total,
+    sendsUsed: progress.sendsUsed,
+    completed: progress.completed,
+  };
+}
+
+function toPhraseProgress(phrase: ParsedPhrase | null, progress: PhraseProgressEntity | null) {
+  if (!phrase || !progress) return null;
+  return {
+    mask: phraseMask(phrase, progress.found),
+    found: foundCount(phrase, progress.found),
+    total: phrase.total,
+    sendsUsed: progress.sendsUsed,
+    completed: progress.completed,
+  };
+}
+
+export function toPlayerProgress(
+  player: Player,
+  now: number,
+  phrase: ParsedPhrase | null = null,
+): PlayerProgress {
   const round = player.round;
   return {
     playerId: player.id,
@@ -30,10 +64,15 @@ export function toPlayerProgress(player: Player, now: number): PlayerProgress {
     greens: round?.greens ?? 0,
     yellows: round?.yellows ?? 0,
     penaltySeconds: round?.penaltySeconds ?? 0,
+    phrase: toPhraseProgress(phrase, round?.phrase ?? null),
   };
 }
 
-export function toSelfState(player: Player, now: number): SelfState {
+export function toSelfState(
+  player: Player,
+  now: number,
+  phrase: ParsedPhrase | null = null,
+): SelfState {
   const round = player.round;
   return {
     rows: round ? round.rows.map((r) => ({ word: r.word, colors: [...r.colors] })) : [],
@@ -44,10 +83,15 @@ export function toSelfState(player: Player, now: number): SelfState {
     hintUsed: round?.hintUsed ?? false,
     hint: round?.hint ? { ...round.hint } : null,
     penaltySeconds: round?.penaltySeconds ?? 0,
+    phrase: toPhraseSelf(phrase, round?.phrase ?? null),
   };
 }
 
-export function toTeamRoundState(team: Team, now: number): TeamRoundState {
+export function toTeamRoundState(
+  team: Team,
+  now: number,
+  phrase: ParsedPhrase | null = null,
+): TeamRoundState {
   const round = team.round;
   return {
     id: team.id,
@@ -60,6 +104,7 @@ export function toTeamRoundState(team: Team, now: number): TeamRoundState {
     hintUsed: round?.hintUsed ?? false,
     penaltySeconds: round?.penaltySeconds ?? 0,
     attemptsAfterFirst: round?.attemptsAfterFirst ?? 0,
+    phrase: toPhraseProgress(phrase, round?.phrase ?? null),
   };
 }
 
@@ -84,6 +129,7 @@ function observerSelf(room: Room, now: number): SelfState {
     hintUsed: false,
     hint: null,
     penaltySeconds: 0,
+    phrase: null,
   };
 }
 
@@ -99,15 +145,20 @@ export function toRoundState(room: Room, player: Player, now: number): RoundStat
     round: room.currentRound,
     totalRounds: room.settings.rounds,
     mode: room.settings.mode,
+    game: room.settings.game,
+    phraseWords: room.phrase ? phraseShape(room.phrase) : null,
     wordLength: room.settings.wordLength,
-    maxAttempts: attemptsFor(room.settings.wordLength),
+    // Phrase game: six words a round, whatever the length.
+    maxAttempts:
+      room.settings.game === 'phrase' ? PHRASE_RULES.words : attemptsFor(room.settings.wordLength),
     initialSeconds: room.settings.initialSeconds,
     startedAt: room.roundStartedAt,
-    hintAvailable: room.settings.hintEnabled,
+    // No hint in the phrase game: every green already reveals a letter.
+    hintAvailable: room.settings.hintEnabled && room.settings.game === 'wordle',
     role: player.role,
-    me: player.isObserver ? observerSelf(room, now) : toSelfState(player, now),
-    players: room.players.map((p) => toPlayerProgress(p, now)),
-    teams: room.teams.map((team) => toTeamRoundState(team, now)),
+    me: player.isObserver ? observerSelf(room, now) : toSelfState(player, now, room.phrase),
+    players: room.players.map((p) => toPlayerProgress(p, now, room.phrase)),
+    teams: room.teams.map((team) => toTeamRoundState(team, now, room.phrase)),
     myTeam: player.isObserver ? null : player.team,
     teammates,
   };

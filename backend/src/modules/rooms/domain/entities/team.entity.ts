@@ -1,4 +1,5 @@
 import type { HintReveal, TeamColor, TeamId, TeamPublic } from '@shared/contract';
+import type { PhraseProgress } from './phrase-progress.entity';
 import type { FinishReason, HintPick, PositionCharge } from './player-round.entity';
 
 /**
@@ -21,6 +22,8 @@ export class TeamRound {
   penaltySeconds = 0;
   /** Words sent by every member, the penalty base (each member's first is free). */
   attemptsAfterFirst = 0;
+  /** Phrase game: the team's shared phrase progress. */
+  phrase: PhraseProgress | null = null;
   readonly charges: PositionCharge[];
 
   constructor(startedAt: number, initialSeconds: number, wordLength: number) {

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { SCORING } from '@shared/contract';
 import { RoomEventsBus } from '@shared/events/room-events.bus';
 import { Player } from '@modules/rooms/domain/entities/player.entity';
 import { Room } from '@modules/rooms/domain/entities/room.entity';
@@ -48,7 +49,7 @@ export class RoundLifecycleService {
     this.bus.publish({
       roomCode: room.code,
       event: 'team:clocks',
-      payload: room.teams.map((team) => toTeamRoundState(team, now)),
+      payload: room.teams.map((team) => toTeamRoundState(team, now, room.phrase)),
     });
   }
 
@@ -84,8 +85,52 @@ export class RoundLifecycleService {
     this.bus.publish({
       roomCode: room.code,
       event: 'player:progress',
-      payload: toPlayerProgress(player, now),
+      payload: toPlayerProgress(player, now, room.phrase),
     });
+  }
+
+  /** `player:solved`, then -5 s to everyone still playing, then `time:penalty`. */
+  announceSolve(room: Room, solver: Player, now: number): void {
+    const solverRound = solver.round;
+    if (!solverRound) return;
+    this.bus.publish({
+      roomCode: room.code,
+      event: 'player:solved',
+      payload: {
+        playerId: solver.id,
+        position: solverRound.solvedPosition ?? room.solvedCount,
+        attempt: solverRound.attempt,
+        secondsLeft: solverRound.secondsLeft(now),
+      },
+    });
+
+    const penalty = SCORING.penaltyOnRivalSolveSeconds;
+    const clocks: { playerId: string; secondsLeft: number; at: number }[] = [];
+    if (room.teams.length > 0) {
+      // One hit on the rival team's clock, reported for each of its members.
+      for (const team of room.teams) {
+        if (team.id === solver.team || !team.round || team.round.finished) continue;
+        team.round.applyPenalty(penalty);
+        for (const rival of room.members(team.id)) {
+          clocks.push({ playerId: rival.id, secondsLeft: team.round.secondsLeft(now), at: now });
+        }
+      }
+    } else {
+      for (const rival of room.players) {
+        const r = rival.round;
+        if (rival.id === solver.id || !r || r.solved || r.finished) continue;
+        r.applyPenalty(penalty);
+        clocks.push({ playerId: rival.id, secondsLeft: r.secondsLeft(now), at: now });
+      }
+    }
+    this.bus.publish({
+      roomCode: room.code,
+      event: 'time:penalty',
+      payload: { fromPlayerId: solver.id, seconds: penalty, clocks },
+    });
+    this.publishTeamClocks(room, now);
+    // A penalty can push a clock past its deadline: settle those right away.
+    this.finishTimedOut(room, now);
   }
 
   isRoundOver(room: Room): boolean {

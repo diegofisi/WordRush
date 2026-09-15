@@ -9,6 +9,7 @@ import { SettleRoundUseCase } from './application/use-cases/settle-round.use-cas
 import { StartGameUseCase } from './application/use-cases/start-game.use-case';
 import { StartRoundUseCase } from './application/use-cases/start-round.use-case';
 import { SubmitGuessUseCase } from './application/use-cases/submit-guess.use-case';
+import { SubmitPhraseUseCase } from './application/use-cases/submit-phrase.use-case';
 import { TickRoomsUseCase } from './application/use-cases/tick-rooms.use-case';
 import { UseHintUseCase } from './application/use-cases/use-hint.use-case';
 
@@ -23,9 +24,16 @@ import { UseHintUseCase } from './application/use-cases/use-hint.use-case';
     EndRoundUseCase,
     TickRoomsUseCase,
     SubmitGuessUseCase,
+    SubmitPhraseUseCase,
     UseHintUseCase,
     SettleRoundUseCase,
   ],
-  exports: [StartGameUseCase, SubmitGuessUseCase, UseHintUseCase, SettleRoundUseCase],
+  exports: [
+    StartGameUseCase,
+    SubmitGuessUseCase,
+    SubmitPhraseUseCase,
+    UseHintUseCase,
+    SettleRoundUseCase,
+  ],
 })
 export class GameModule {}

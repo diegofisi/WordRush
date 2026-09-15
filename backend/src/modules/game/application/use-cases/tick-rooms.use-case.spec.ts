@@ -23,6 +23,7 @@ class FakeClock implements Clock {
 
 const settings = {
   language: 'es' as const,
+  game: 'wordle' as const,
   mode: 'normal' as const,
   wordLength: 5 as const,
   initialSeconds: 60,
@@ -62,7 +63,11 @@ describe('TickRoomsUseCase', () => {
     const clock = new FakeClock();
     const bus = new RoomEventsBus();
     const scheduler = new RoundSchedulerService();
-    const startRound = new StartRoundUseCase({ pick: () => ANSWER }, bus);
+    const startRound = new StartRoundUseCase(
+      { pick: () => ANSWER },
+      { pick: () => 'mas vale tarde que nunca' },
+      bus,
+    );
     const endRound = new EndRoundUseCase(rooms, clock, bus, scheduler, startRound);
     lifecycle = new RoundLifecycleService(bus, endRound);
     useCase = new TickRoomsUseCase(rooms, lifecycle);

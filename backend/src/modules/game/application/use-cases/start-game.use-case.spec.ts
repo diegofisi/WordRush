@@ -30,7 +30,11 @@ describe('StartGameUseCase', () => {
   beforeEach(() => {
     rooms = new InMemoryRoomRepository();
     const bus = new RoomEventsBus();
-    const startRound = new StartRoundUseCase({ pick: () => ANSWER }, bus);
+    const startRound = new StartRoundUseCase(
+      { pick: () => ANSWER },
+      { pick: () => 'mas vale tarde que nunca' },
+      bus,
+    );
     useCase = new StartGameUseCase(rooms, new FakeClock(), startRound);
 
     // Capacity 8: the host may start well below it.
@@ -38,6 +42,7 @@ describe('StartGameUseCase', () => {
       'ABCD',
       {
         language: 'es',
+        game: 'wordle',
         mode: 'normal',
         wordLength: 5,
         initialSeconds: 60,

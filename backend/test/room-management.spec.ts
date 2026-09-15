@@ -65,6 +65,7 @@ describe('Room management (socket.io integration)', () => {
       name: 'Ana',
       settings: {
         language: 'es',
+        game: 'wordle',
         mode: 'normal',
         wordLength: 5,
         initialSeconds: 60,
@@ -139,9 +140,7 @@ describe('Room management (socket.io integration)', () => {
     const end = waitFor(ana, 'round:end');
     const solve = await ana.emitWithAck('game:guess', { word: ANSWER });
     if (!solve.ok) throw new Error(solve.message);
-    // Bruno and Carla2 stop playing so the round closes: the host kicks them out
-    // of the round by leaving? No: they simply run out through the host's kick of
-    // Bruno and Carla2 leaving.
+    // Carla2 leaves and Bruno is kicked: nobody is left playing, the round closes.
     await carla.emitWithAck('room:leave');
     expect(await ana.emitWithAck('room:kick', { playerId: joinedB.playerId })).toEqual({
       ok: true,

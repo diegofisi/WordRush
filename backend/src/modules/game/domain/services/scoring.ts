@@ -1,4 +1,5 @@
 import {
+  PHRASE_RULES,
   SCORING,
   type RoundBreakdown,
   type Standing,
@@ -48,6 +49,10 @@ export function scoreRound(
     greenPoints: 0,
     yellows: result.yellows,
     yellowPoints: 0,
+    phrasePercent: 0,
+    uncoveredPoints: 0,
+    sendsFailed: 0,
+    sendPenalty: 0,
     roundPoints: 0,
   };
 
@@ -150,6 +155,11 @@ export function scoreTeamRound(
     attemptPenalty: 0,
     positionBonus: 0,
     hintBonus: 0,
+    wordsSent: 0,
+    phrasePercent: 0,
+    uncoveredPoints: 0,
+    sendsFailed: 0,
+    sendPenalty: 0,
     roundPoints: 0,
   };
   if (!result.solved) return base;
@@ -185,4 +195,141 @@ export function computeTeamStandings(teams: TeamStandingInput[]): TeamStanding[]
       prev !== undefined && prev.total === team.total && prev.roundsWon === team.roundsWon;
     return { ...team, rank: tied ? index : index + 1 };
   });
+}
+
+// ---------------------------------------------------------------------------
+// Guess the phrase (docs/context/06-v1.1.md)
+// ---------------------------------------------------------------------------
+
+/** What a player ends a phrase round with. */
+export interface PhraseRoundResult {
+  playerId: string;
+  name: string;
+  completed: boolean;
+  /** 1st, 2nd... to complete; null otherwise. */
+  position: number | null;
+  secondsLeftAtSolve: number;
+  wordsSent: number;
+  sendsFailed: number;
+  /** Share of the phrase uncovered, 0-100. */
+  percent: number;
+}
+
+/** The uncovered share: up to `uncoveredMaxPoints` at 100 %, only when not completed. */
+const uncoveredPoints = (percent: number) =>
+  Math.round((percent / 100) * PHRASE_RULES.uncoveredMaxPoints);
+
+/**
+ * One player, the phrase game: +80 for the phrase, the clock's percentage,
+ * the completion order bonus, −4 per word typed, −5 per failed send; the
+ * completion bonus is the floor of a completed round (like Wordle's 40).
+ * Without the phrase: the uncovered share minus the failed sends, never
+ * below 0.
+ */
+export function scorePhraseRound(
+  result: PhraseRoundResult,
+  initialSeconds: number,
+): RoundBreakdown {
+  const base: RoundBreakdown = {
+    playerId: result.playerId,
+    name: result.name,
+    solved: result.completed,
+    attempt: result.wordsSent,
+    position: result.completed ? result.position : null,
+    timeLeftPercent: null,
+    timePoints: 0,
+    solveBonus: 0,
+    attemptPenalty: -PHRASE_RULES.wordPenalty * result.wordsSent,
+    positionBonus: 0,
+    hintBonus: 0,
+    greens: 0,
+    greenPoints: 0,
+    yellows: 0,
+    yellowPoints: 0,
+    phrasePercent: result.percent,
+    uncoveredPoints: 0,
+    sendsFailed: result.sendsFailed,
+    sendPenalty: -PHRASE_RULES.sendPenalty * result.sendsFailed,
+    roundPoints: 0,
+  };
+  if (!result.completed) {
+    base.attemptPenalty = 0;
+    base.uncoveredPoints = uncoveredPoints(result.percent);
+    base.roundPoints = Math.max(0, base.uncoveredPoints + base.sendPenalty);
+    return base;
+  }
+  const percent = Math.round((result.secondsLeftAtSolve / initialSeconds) * 100);
+  base.timeLeftPercent = percent;
+  base.timePoints = percent;
+  base.solveBonus = PHRASE_RULES.completeBonus;
+  const position = result.position ?? 0;
+  base.positionBonus =
+    position >= 1 && position <= SCORING.positionBonus.length
+      ? SCORING.positionBonus[position - 1]
+      : 0;
+  base.roundPoints = Math.max(
+    PHRASE_RULES.completeBonus,
+    base.timePoints + base.solveBonus + base.attemptPenalty + base.positionBonus + base.sendPenalty,
+  );
+  return base;
+}
+
+export interface TeamPhraseRoundResult {
+  team: TeamId;
+  name: string;
+  color: TeamColor;
+  completed: boolean;
+  solverId: string | null;
+  solverName: string | null;
+  position: number | null;
+  secondsLeftAtSolve: number;
+  /** Every member's words. */
+  wordsSent: number;
+  sendsFailed: number;
+  percent: number;
+}
+
+/** One team, the phrase game: as the player formula, +20 to the first team only. */
+export function scoreTeamPhraseRound(
+  result: TeamPhraseRoundResult,
+  initialSeconds: number,
+): TeamRoundBreakdown {
+  const base: TeamRoundBreakdown = {
+    team: result.team,
+    name: result.name,
+    color: result.color,
+    solved: result.completed,
+    solverId: result.solverId,
+    solverName: result.solverName,
+    position: result.completed ? result.position : null,
+    timeLeftPercent: null,
+    timePoints: 0,
+    solveBonus: 0,
+    attemptsAfterFirst: 0,
+    attemptPenalty: -PHRASE_RULES.wordPenalty * result.wordsSent,
+    positionBonus: 0,
+    hintBonus: 0,
+    wordsSent: result.wordsSent,
+    phrasePercent: result.percent,
+    uncoveredPoints: 0,
+    sendsFailed: result.sendsFailed,
+    sendPenalty: -PHRASE_RULES.sendPenalty * result.sendsFailed,
+    roundPoints: 0,
+  };
+  if (!result.completed) {
+    base.attemptPenalty = 0;
+    base.uncoveredPoints = uncoveredPoints(result.percent);
+    base.roundPoints = Math.max(0, base.uncoveredPoints + base.sendPenalty);
+    return base;
+  }
+  const percent = Math.round((result.secondsLeftAtSolve / initialSeconds) * 100);
+  base.timeLeftPercent = percent;
+  base.timePoints = percent;
+  base.solveBonus = PHRASE_RULES.completeBonus;
+  base.positionBonus = result.position === 1 ? SCORING.teamFirstBonus : 0;
+  base.roundPoints = Math.max(
+    PHRASE_RULES.completeBonus,
+    base.timePoints + base.solveBonus + base.attemptPenalty + base.positionBonus + base.sendPenalty,
+  );
+  return base;
 }

@@ -1,6 +1,8 @@
 import { Logger, Module } from '@nestjs/common';
 import { resolveFixedWord } from './domain/services/fixed-word';
 import { IWordList, WORD_LIST } from './domain/interfaces/word-list.interface';
+import { PHRASE_BANK } from './domain/interfaces/phrase-bank.interface';
+import { JsonPhraseBank } from './infrastructure/repositories/json-phrase-bank.repository';
 import { IWordPicker, WORD_PICKER } from './domain/interfaces/word-picker.interface';
 import { JsonWordListRepository } from './infrastructure/repositories/json-word-list.repository';
 import { FixedWordPicker } from './infrastructure/services/fixed-word.picker';
@@ -19,7 +21,8 @@ function createWordPicker(wordList: IWordList): IWordPicker {
   providers: [
     { provide: WORD_LIST, useClass: JsonWordListRepository },
     { provide: WORD_PICKER, inject: [WORD_LIST], useFactory: createWordPicker },
+    { provide: PHRASE_BANK, useClass: JsonPhraseBank },
   ],
-  exports: [WORD_LIST, WORD_PICKER],
+  exports: [WORD_LIST, WORD_PICKER, PHRASE_BANK],
 })
 export class WordsModule {}

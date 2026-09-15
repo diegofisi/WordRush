@@ -1,4 +1,5 @@
 import type { HintKind, HintReveal, OwnRow } from '@shared/contract';
+import type { PhraseProgress } from './phrase-progress.entity';
 import type { TeamRound } from './team.entity';
 
 /** Time ledger entry for one position of the answer (0..wordLength-1). */
@@ -38,6 +39,8 @@ export class PlayerRound {
   solvedPosition: number | null = null;
   finished = false;
   finishReason: FinishReason | null = null;
+  /** Phrase game, normal mode: my own progress (the team's in team mode). */
+  ownPhrase: PhraseProgress | null = null;
   private ownHintUsed = false;
   private ownHint: HintReveal | null = null;
   private ownPenaltySeconds = 0;
@@ -65,6 +68,11 @@ export class PlayerRound {
 
   get hintUsed(): boolean {
     return this.team ? this.team.hintUsed : this.ownHintUsed;
+  }
+
+  /** Phrase game: the progress that counts, mine or the team's. */
+  get phrase(): PhraseProgress | null {
+    return this.team ? this.team.phrase : this.ownPhrase;
   }
 
   get hint(): HintReveal | null {

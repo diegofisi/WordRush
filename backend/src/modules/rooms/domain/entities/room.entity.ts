@@ -9,6 +9,7 @@ import {
   type RoundEndPayload,
   type TeamId,
 } from '@shared/contract';
+import type { ParsedPhrase } from '@modules/game/domain/services/phrase';
 import type { Player } from './player.entity';
 import { Team } from './team.entity';
 
@@ -25,6 +26,9 @@ export class Room {
   /** The answer of the current round. Never emitted before `round:end`. */
   word: string | null = null;
   readonly usedWords: string[] = [];
+  /** Phrase game: the phrase of the current round; null in Wordle. */
+  phrase: ParsedPhrase | null = null;
+  readonly usedPhrases: string[] = [];
   roundStartedAt = 0;
   solvedCount = 0;
   lastRoundEnd: RoundEndPayload | null = null;
@@ -248,6 +252,8 @@ export class Room {
     this.currentRound = 0;
     this.word = null;
     this.usedWords.length = 0;
+    this.phrase = null;
+    this.usedPhrases.length = 0;
     this.roundStartedAt = 0;
     this.solvedCount = 0;
     this.lastRoundEnd = null;

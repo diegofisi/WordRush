@@ -44,6 +44,7 @@ describe('RejoinRoomUseCase', () => {
       'ABCD',
       {
         language: 'es',
+        game: 'wordle',
         mode: 'normal',
         wordLength: 5,
         initialSeconds: 60,

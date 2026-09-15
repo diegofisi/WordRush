@@ -6,6 +6,7 @@ import { toFullState } from './state-presenter';
 
 const SETTINGS: RoomSettings = {
   language: 'es',
+  game: 'wordle',
   mode: 'normal',
   wordLength: 5,
   initialSeconds: 60,
@@ -19,6 +20,8 @@ const roundEnd = (): RoundEndPayload => ({
   totalRounds: 3,
   mode: 'normal',
   word: 'ahora',
+  game: 'wordle',
+  phrase: null,
   boards: [],
   breakdown: [],
   standings: [],
