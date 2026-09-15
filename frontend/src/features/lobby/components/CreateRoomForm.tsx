@@ -4,7 +4,13 @@ import { Input } from '@/shared/components/ui/Input';
 import { Segmented } from '@/shared/components/ui/Segmented';
 import { Stepper } from '@/shared/components/ui/Stepper';
 import { Toggle } from '@/shared/components/ui/Toggle';
-import { ROOM_LIMITS, WORD_LENGTHS, type Language, type WordLength } from '@/shared/contract';
+import {
+  ROOM_LIMITS,
+  WORD_LENGTHS,
+  type GameMode,
+  type Language,
+  type WordLength,
+} from '@/shared/contract';
 import type { Dictionary } from '@/shared/i18n';
 
 import type { CreateRoomForm as CreateRoomFormValues } from '../api/create-room/create-room.dto';
@@ -73,6 +79,18 @@ export const CreateRoomForm = ({
       />
     </div>
 
+    <div className="flex flex-col gap-2">
+      <span className="label">{t.lobby.mode}</span>
+      <Segmented<GameMode>
+        label={t.lobby.mode}
+        value={values.mode}
+        onChange={(mode) => onChange({ mode })}
+        options={[
+          { value: 'normal', label: t.lobby.modeNormal },
+          { value: 'teams', label: t.lobby.modeTeams },
+        ]}
+      />
+    </div>
     <div className="flex flex-col gap-2">
       <span className="label">{t.home.wordLength}</span>
       <Segmented<WordLength>

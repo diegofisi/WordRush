@@ -8,21 +8,31 @@ interface WaitingCardProps {
   outcome: Exclude<MyOutcome, 'playing'>;
   solvedPosition: number | null;
   timePercent: number;
+  /** Team mode: who solved it for us (`team-solved`). */
+  solverName?: string | null;
 }
 
 /** Calm state shown instead of the keyboard once I am done with the round. */
-export const WaitingCard = ({ t, outcome, solvedPosition, timePercent }: WaitingCardProps) => {
+export const WaitingCard = ({
+  t,
+  outcome,
+  solvedPosition,
+  timePercent,
+  solverName = null,
+}: WaitingCardProps) => {
   const detail =
     outcome === 'solved'
       ? t.game.waitingSolved(solvedPosition ?? 0, timePercent)
-      : outcome === 'out-of-attempts'
+      : outcome === 'team-solved'
+        ? t.game.waitingTeamSolved(solverName ?? '?', timePercent)
+        : outcome === 'out-of-attempts'
         ? t.game.waitingOutOfAttempts
         : t.game.waitingOutOfTime;
   return (
     <Card
       role="status"
       className={`flex w-full max-w-130 flex-col items-center gap-1.5 px-5 py-4 text-center animate-fade-in ${
-        outcome === 'solved' ? 'border-green/40 bg-green-soft' : ''
+        outcome === 'solved' || outcome === 'team-solved' ? 'border-green/40 bg-green-soft' : ''
       }`}
     >
       <span className="font-display text-xl font-bold tracking-[-0.02em]">

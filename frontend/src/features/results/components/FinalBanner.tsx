@@ -5,6 +5,10 @@ interface FinalBannerProps {
   t: Dictionary;
   winnerName: string;
   winnerIsMe: boolean;
+  /** Team mode: the winner is a team (mine or the rival one). */
+  winnerIsTeam?: boolean;
+  /** Team mode: both teams level on points and rounds won. */
+  tie?: boolean;
   isHost: boolean;
   restarting: boolean;
   onPlayAgain: () => void;
@@ -22,6 +26,8 @@ export const FinalBanner = ({
   t,
   winnerName,
   winnerIsMe,
+  winnerIsTeam = false,
+  tie = false,
   isHost,
   restarting,
   onPlayAgain,
@@ -31,7 +37,15 @@ export const FinalBanner = ({
     <div className="flex min-w-0 flex-col gap-0.5">
       <span className="label">{t.results.gameOver}</span>
       <span className="font-display text-2xl font-extrabold tracking-[-0.02em]">
-        {winnerIsMe ? t.results.youWin : t.results.winner(winnerName)}
+        {tie
+          ? t.results.teamTie
+          : winnerIsTeam
+            ? winnerIsMe
+              ? t.results.yourTeamWins
+              : t.results.teamWinner(winnerName)
+            : winnerIsMe
+              ? t.results.youWin
+              : t.results.winner(winnerName)}
       </span>
     </div>
     {isHost ? (

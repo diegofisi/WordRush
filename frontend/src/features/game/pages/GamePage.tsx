@@ -6,6 +6,7 @@ import { RoomContext } from '@/shared/components/layout/RoomContext';
 import { TopBar } from '@/shared/components/layout/TopBar';
 import { useIsDesktopGame } from '@/shared/hooks/useMediaQuery';
 import { useT } from '@/shared/i18n';
+import { teamLabel } from '@/shared/lib/teamColor';
 
 import { useUseHint } from '../api/use-hint/useUseHint';
 import { HintButton } from '../components/HintButton';
@@ -36,6 +37,7 @@ const GameTopBarActions = () => {
       ) : null}
       <HintButton
         t={t}
+        team={round.mode === 'teams'}
         state={hintState}
         pending={pending}
         disabled={status !== 'playing' || me.finished}
@@ -54,6 +56,8 @@ export const GamePage = () => {
   const connection = useSessionStore((state) => state.connection);
   const round = useGameStore((state) => state.round);
   const settings = useGameStore((state) => state.settings);
+  const teamInfo = useGameStore((state) => state.teamInfo);
+  const [teamA, teamB] = teamInfo;
 
   // From the three-column breakpoint up (the same 1100 px as `useIsDesktopGame`)
   // the game owns exactly one viewport. `flex-none` + `h-dvh` is what makes that
@@ -71,6 +75,17 @@ export const GamePage = () => {
               code={session.roomCode}
               parts={[
                 round ? t.common.roundOf(round.round, round.totalRounds) : null,
+                // Team mode: the rounds won so far, by team name.
+                round?.mode === 'teams' && teamA && teamB ? (
+                  <span className="font-semibold text-ink">
+                    {t.game.roundsWonHeader(
+                      teamLabel(t, teamA),
+                      teamA.roundsWon,
+                      teamB.roundsWon,
+                      teamLabel(t, teamB),
+                    )}
+                  </span>
+                ) : null,
                 settings ? (
                   <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-bold text-accent">
                     {t.common.language[settings.language]}

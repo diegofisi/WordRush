@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { PageLoading } from '@/shared/components/ui/PageState';
 import { useT } from '@/shared/i18n';
+import { teamLabel } from '@/shared/lib/teamColor';
 import { gamePath, lobbyPath, PATHS } from '@/shared/routes/paths';
 import { toast } from '@/shared/stores/useToastStore';
 
@@ -13,6 +14,8 @@ import { BreakdownTable } from '../components/BreakdownTable';
 import { FinalBanner } from '../components/FinalBanner';
 import { RoundHeader } from '../components/RoundHeader';
 import { StandingsList } from '../components/StandingsList';
+import { TeamBreakdownCards } from '../components/TeamBreakdownCards';
+import { TeamStandingsList } from '../components/TeamStandingsList';
 import { toRoundResultsViewModel } from '../models/results.model';
 import { useResultsStore } from '../stores/useResultsStore';
 
@@ -28,6 +31,7 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
   const latestRoundStarted = useResultsStore((state) => state.latestRoundStarted);
   const roomStatus = useResultsStore((state) => state.roomStatus);
   const hostId = useResultsStore((state) => state.hostId);
+  const myTeam = useResultsStore((state) => state.myTeam);
   const myId = useSessionStore((state) => state.session?.playerId ?? null);
   const initialSeconds = useSessionStore(
     (state) => state.snapshot?.lobby.settings.initialSeconds ?? null,
@@ -56,8 +60,8 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
   }, [roomStatus, roomCode, navigate]);
 
   const results = useMemo(
-    () => (roundEnd ? toRoundResultsViewModel(roundEnd, myId, gameEnd) : null),
-    [roundEnd, myId, gameEnd],
+    () => (roundEnd ? toRoundResultsViewModel(roundEnd, myId, gameEnd, myTeam) : null),
+    [roundEnd, myId, gameEnd, myTeam],
   );
 
   if (!results) return <PageLoading title={t.results.waitingForRound} />;
@@ -73,16 +77,38 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
     void leaveRoom();
   };
 
+  const teamMode = results.mode === 'teams';
   const winner = results.standings[0] ?? null;
+  const winningTeam = results.teamStandings[0] ?? null;
+  // Two teams on the same total and the same rounds won: nobody wins.
+  const teamTie =
+    teamMode &&
+    results.teamStandings.length === 2 &&
+    results.teamStandings[0]?.total === results.teamStandings[1]?.total &&
+    results.teamStandings[0]?.roundsWon === results.teamStandings[1]?.roundsWon;
+  const banner = teamMode
+    ? winningTeam
+      ? {
+          name: teamLabel(t, { id: winningTeam.team, name: winningTeam.name }),
+          isMe: winningTeam.isMine,
+          team: true,
+          tie: teamTie,
+        }
+      : null
+    : winner
+      ? { name: winner.name, isMe: winner.isMe, team: false, tie: false }
+      : null;
 
   return (
     <div className="grid flex-1 grid-cols-1 gap-6 px-4 py-6 sm:px-7 lg:grid-cols-[minmax(0,1fr)_380px]">
       <div className="flex min-w-0 flex-col gap-4.5">
-        {results.isFinal && winner ? (
+        {results.isFinal && banner ? (
           <FinalBanner
             t={t}
-            winnerName={winner.name}
-            winnerIsMe={winner.isMe}
+            winnerName={banner.name}
+            winnerIsMe={banner.isMe}
+            winnerIsTeam={banner.team}
+            tie={banner.tie}
             isHost={hostId !== null && hostId === myId}
             restarting={restarting}
             onPlayAgain={() => void playAgain()}
@@ -90,18 +116,31 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
           />
         ) : null}
         <RoundHeader t={t} results={results} />
-        <BreakdownTable t={t} rows={results.rows} />
+        {teamMode ? (
+          <TeamBreakdownCards t={t} teams={results.teamRows} />
+        ) : (
+          <BreakdownTable t={t} rows={results.rows} />
+        )}
         {initialSeconds !== null ? (
           <p className="m-0 text-[13px] text-ink-3">{t.results.timeNote(initialSeconds)}</p>
         ) : null}
       </div>
-      <StandingsList
-        t={t}
-        standings={results.standings}
-        title={results.isFinal ? t.results.finalTable : t.results.accumulated}
-        subtitle={t.results.afterRounds(results.round, results.totalRounds)}
-        showDetails={results.isFinal}
-      />
+      {teamMode ? (
+        <TeamStandingsList
+          t={t}
+          standings={results.teamStandings}
+          title={results.isFinal ? t.results.finalTable : t.results.accumulated}
+          subtitle={t.results.afterRounds(results.round, results.totalRounds)}
+        />
+      ) : (
+        <StandingsList
+          t={t}
+          standings={results.standings}
+          title={results.isFinal ? t.results.finalTable : t.results.accumulated}
+          subtitle={t.results.afterRounds(results.round, results.totalRounds)}
+          showDetails={results.isFinal}
+        />
+      )}
     </div>
   );
 };

@@ -9,6 +9,7 @@ import { useNow } from '@/shared/hooks/useNow';
 import { useToastSafeBottom } from '@/shared/hooks/useToastSafeBottom';
 import { useT } from '@/shared/i18n';
 import { percentOf, secondsLeftAt } from '@/shared/lib/format';
+import { otherTeam } from '@/shared/lib/teamColor';
 import { resultsPath } from '@/shared/routes/paths';
 import { toast } from '@/shared/stores/useToastStore';
 
@@ -19,9 +20,15 @@ import { GameDesktop } from '../components/GameDesktop';
 import { GameMobile } from '../components/GameMobile';
 import { countGreenPositions, deriveKeyStates } from '../helpers/keyboard';
 import { computeScorePreview } from '../helpers/scorePreview';
+import { computeTeamScorePreview } from '../helpers/teamScorePreview';
 import { usePhysicalKeyboard } from '../hooks/usePhysicalKeyboard';
-import { toRivalViewModel } from '../models/game.model';
-import type { GameViewProps, MyOutcome } from '../models/game-view.model';
+import {
+  toRivalTeamViewModel,
+  toRivalViewModel,
+  toTeammateViewModel,
+  type RivalViewModel,
+} from '../models/game.model';
+import type { GameViewProps, MyOutcome, TeamViewProps } from '../models/game-view.model';
 import { LOW_TIME_THRESHOLD, useGameStore } from '../stores/useGameStore';
 
 /** Clears the phone keyboard block (3 rows + the emote row) for the toasts. */
@@ -45,6 +52,10 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const me = useGameStore((state) => state.me);
   const players = useGameStore((state) => state.players);
   const left = useGameStore((state) => state.left);
+  const teamInfo = useGameStore((state) => state.teamInfo);
+  const teams = useGameStore((state) => state.teams);
+  const myTeam = useGameStore((state) => state.myTeam);
+  const teammateRows = useGameStore((state) => state.teammates);
   const solvedCount = useGameStore((state) => state.solvedCount);
   const feed = useGameStore((state) => state.feed);
   const sticker = useGameStore((state) => state.sticker);
@@ -66,6 +77,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
 
   const playing = status === 'playing' && Boolean(round && me);
   const now = useNow(100, playing || status === 'ended');
+  const teamMode = round?.mode === 'teams';
 
   // The server decides when a round ends; we only follow it to the results screen.
   useEffect(() => {
@@ -76,6 +88,8 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     () =>
       Object.values(players)
         .filter((player) => player.playerId !== myId)
+        // Team mode: teammates are not rivals; they get their own panel.
+        .filter((player) => !teamMode || roster[player.playerId]?.team !== myTeam)
         .map((player) =>
           toRivalViewModel(
             player,
@@ -96,7 +110,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
           if (second.status === 'left') return -1;
           return 0;
         }),
-    [players, myId, roster, left, round?.initialSeconds, round?.maxAttempts],
+    [players, myId, roster, left, round?.initialSeconds, round?.maxAttempts, teamMode, myTeam],
   );
 
   const rivalClocks = useMemo(() => {
@@ -108,13 +122,15 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   }, [rivals, now]);
 
   // "Hugo tiene menos de 15 s" is derived from the ticking clocks, once per rival.
+  // In team mode the rival clock is the team's; the panel shows it in red.
   useEffect(() => {
+    if (teamMode) return;
     for (const rival of rivals) {
       if (rival.status === 'playing' && (rivalClocks[rival.id] ?? Infinity) < LOW_TIME_THRESHOLD) {
         announceLowTime(rival.id);
       }
     }
-  }, [rivals, rivalClocks, announceLowTime]);
+  }, [rivals, rivalClocks, announceLowTime, teamMode]);
 
   const keyStates = useMemo(
     () => deriveKeyStates(me?.rows ?? [], me?.hint ?? null),
@@ -183,12 +199,15 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     );
   }
 
+  const myTeamState = myTeam ? teams[myTeam] : undefined;
   const outcome: MyOutcome = me.solved
     ? 'solved'
     : me.finished
-      ? me.rows.length >= round.maxAttempts
-        ? 'out-of-attempts'
-        : 'out-of-time'
+      ? teamMode && myTeamState?.solved
+        ? 'team-solved'
+        : me.rows.length >= round.maxAttempts
+          ? 'out-of-attempts'
+          : 'out-of-time'
       : 'playing';
   const secondsLeft = me.finished ? me.secondsLeft : secondsLeftAt(me, now);
   const percent = percentOf(secondsLeft, round.initialSeconds);
@@ -210,6 +229,72 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     // which answer slot a yellow tile pointed at, nor the hint's position).
     yellows: myProgress?.yellows ?? 0,
   });
+
+  let team: TeamViewProps | null = null;
+  if (teamMode && myTeam && myTeamState) {
+    const header = (id: typeof myTeam) => {
+      const info = teamInfo.find((entry) => entry.id === id);
+      return {
+        id,
+        name: info?.name ?? '',
+        color: info?.color ?? (id === 'a' ? 'violet' : 'gold'),
+        roundsWon: info?.roundsWon ?? 0,
+      };
+    };
+    const rivalId = otherTeam(myTeam);
+    const rivalState = teams[rivalId];
+    const rivalMembers: RivalViewModel[] = rivals.filter(
+      (rival) => roster[rival.id]?.team === rivalId,
+    );
+    const teammateIds = new Set([
+      ...Object.keys(teammateRows),
+      ...Object.keys(roster).filter((id) => id !== myId && roster[id]?.team === myTeam),
+    ]);
+    const teammates = [...teammateIds]
+      .filter((id) => id !== myId)
+      .map((id) =>
+        toTeammateViewModel(
+          id,
+          teammateRows[id] ?? [],
+          roster[id],
+          myTeamState.solverId,
+          id in left,
+        ),
+      )
+      .sort((first, second) => Number(second.isSolver) - Number(first.isSolver));
+    const solvedTeams = Object.values(teams).filter((entry) => entry?.solved).length;
+    team = {
+      mine: header(myTeam),
+      solverName: myTeamState.solverId ? (roster[myTeamState.solverId]?.name ?? '?') : null,
+      teammates,
+      rival:
+        rivalState && rivalMembers.length > 0
+          ? toRivalTeamViewModel(
+              header(rivalId),
+              rivalState,
+              rivalMembers,
+              rivalState.solverId ? (roster[rivalState.solverId]?.name ?? '?') : null,
+              round.initialSeconds,
+            )
+          : null,
+      rivalClock:
+        rivalState && !rivalState.finished
+          ? secondsLeftAt(rivalState, now)
+          : (rivalState?.secondsLeft ?? 0),
+      preview: computeTeamScorePreview({
+        secondsLeft,
+        initialSeconds: round.initialSeconds,
+        attemptsAfterFirst: myTeamState.attemptsAfterFirst,
+        myAttempts: me.rows.length,
+        solved: myTeamState.solved,
+        solvedPosition: myTeamState.solvedPosition,
+        finished: myTeamState.finished,
+        solvedTeams,
+        hintEnabled: round.hintAvailable,
+        hintUsed: myTeamState.hintUsed,
+      }),
+    };
+  }
 
   const view: GameViewProps = {
     t,
@@ -245,6 +330,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     feed,
     sticker,
     preview,
+    team,
     hintState: !round.hintAvailable ? 'off' : me.hintUsed ? 'used' : 'available',
     hintPending,
     emoteCooldownSeconds: Math.max(0, Math.ceil((emotePausedUntil - now) / 1000)),

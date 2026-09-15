@@ -17,6 +17,8 @@ const tones: Record<Tone, string> = {
   yellow: 'bg-yellow text-tile-ink-dark',
   ink: 'bg-ink text-on-ink',
   red: 'bg-red text-white',
+  blue: 'bg-team-blue text-white',
+  pink: 'bg-team-pink text-white',
 };
 
 export const Avatar = ({ name, tone = 'neutral', size = 30, className }: AvatarProps) => (

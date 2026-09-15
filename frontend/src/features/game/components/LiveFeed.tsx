@@ -67,6 +67,13 @@ const Body = ({ t, event }: { t: Dictionary; event: TextFeedEvent }) => {
           {name} {t.game.feedNewHost}
         </span>
       );
+    case 'team-finished':
+      return (
+        <span>
+          <strong className="text-ink">{event.teamName}</strong>{' '}
+          {event.reason === 'time' ? t.game.feedTeamOutOfTime : t.game.feedTeamOutOfAttempts}
+        </span>
+      );
   }
 };
 

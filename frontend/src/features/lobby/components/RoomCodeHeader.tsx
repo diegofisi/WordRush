@@ -86,6 +86,14 @@ export const RoomCodeHeader = ({
             onClick={edit}
             title={isHost ? t.lobby.changeRules : undefined}
           />
+          {settings.mode === 'teams' ? (
+            <Chip
+              value={t.lobby.modeTeams}
+              mono={false}
+              onClick={edit}
+              title={isHost ? t.lobby.changeRules : undefined}
+            />
+          ) : null}
           <Chip
             value={String(settings.wordLength)}
             caption={t.lobby.lettersChip}

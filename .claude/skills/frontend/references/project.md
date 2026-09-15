@@ -70,7 +70,7 @@ chapter for its principles, not for its API.
 | Kind | Path | Slices |
 |---|---|---|
 | **core** | `src/core/` | `session` — player identity (name, playerId, roomCode, token in `localStorage` under `wordrush.session`), the socket connection and its lifecycle |
-| **features** | `src/features/` | `lobby` (create room form, join by code, waiting room), `game` (clock, board, keyboard with Ñ, rivals panel, live feed, hint, emotes, score preview), `results` (round breakdown, accumulated table, final table) |
+| **features** | `src/features/` | `lobby` (create room form, join by code, waiting room, team slots in team mode), `game` (clock, board, keyboard with Ñ, rivals panel or team panel, live feed, hint, emotes, score preview), `results` (round breakdown or team cards, accumulated table, final table) |
 
 `src/shared/`:
 
@@ -107,7 +107,8 @@ endpoint** and never gets a React Query hook:
 - `useLobbyStore` — `lobby:update`, `round:start`.
 - `useGameStore` — `round:start`, `player:progress`, `player:solved`,
   `player:hint`, `player:left`, `time:penalty`, `reaction:show`, `round:end`,
-  `game:end`, `lobby:update`.
+  `game:end`, `lobby:update`; team mode adds `teammate:progress` (a teammate's
+  rows with letters), `team:hint` (the team's reveal) and `team:clocks`.
 - `useResultsStore` — `round:end`, `game:end`, `round:start`, `lobby:update`.
 
 Each store's `bind()` is guarded by a module-level flag so the listeners attach

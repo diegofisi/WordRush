@@ -1,9 +1,20 @@
-import { type Emote, type GainKind, type PlayerProgress, type TileColor } from '@/shared/contract';
+import {
+  type Emote,
+  type GainKind,
+  type OwnRow,
+  type PlayerProgress,
+  type TeamColor,
+  type TeamId,
+  type TeamRoundState,
+  type TileColor,
+} from '@/shared/contract';
 import { percentOf } from '@/shared/lib/format';
 
 export interface RosterEntry {
   name: string;
   connected: boolean;
+  /** Team mode only. */
+  team: TeamId | null;
 }
 
 export type RivalStatus = 'playing' | 'solved' | 'out-of-attempts' | 'out-of-time' | 'left';
@@ -25,6 +36,36 @@ export interface RivalViewModel {
   greens: number;
 }
 
+/** A teammate: letters included, they play the same word with me. */
+export interface TeammateViewModel {
+  id: string;
+  name: string;
+  connected: boolean;
+  rows: OwnRow[];
+  /** They are the one who solved it for the team. */
+  isSolver: boolean;
+  hasLeft: boolean;
+}
+
+export interface TeamHeaderViewModel {
+  id: TeamId;
+  name: string;
+  color: TeamColor;
+  roundsWon: number;
+}
+
+/** The rival team during the round: one clock, colours-only members. */
+export interface RivalTeamViewModel extends TeamHeaderViewModel {
+  secondsLeft: number;
+  at: number;
+  solved: boolean;
+  solvedPosition: number | null;
+  solverName: string | null;
+  finished: boolean;
+  timePercent: number | null;
+  members: RivalViewModel[];
+}
+
 export type FeedEvent = {
   id: number;
   atSeconds: number;
@@ -41,6 +82,8 @@ export type FeedEvent = {
   | { kind: 'out-of-time' }
   | { kind: 'left' }
   | { kind: 'new-host' }
+  /** Team mode: a whole team ran out of time or attempts. */
+  | { kind: 'team-finished'; teamName: string; reason: 'attempts' | 'time' }
 );
 
 /** Everything the feed still renders as one line; stickers are their own block. */
@@ -102,3 +145,36 @@ export const toRivalViewModel = (
     greens: progress.greens,
   };
 };
+
+export const toTeammateViewModel = (
+  playerId: string,
+  rows: OwnRow[],
+  roster: RosterEntry | undefined,
+  solverId: string | null,
+  hasLeft = false,
+): TeammateViewModel => ({
+  id: playerId,
+  name: roster?.name ?? '?',
+  connected: hasLeft ? false : (roster?.connected ?? true),
+  rows: rows.map((row) => ({ word: row.word, colors: [...row.colors] })),
+  isSolver: solverId === playerId,
+  hasLeft,
+});
+
+export const toRivalTeamViewModel = (
+  header: TeamHeaderViewModel,
+  state: TeamRoundState,
+  members: RivalViewModel[],
+  solverName: string | null,
+  initialSeconds: number,
+): RivalTeamViewModel => ({
+  ...header,
+  secondsLeft: state.secondsLeft,
+  at: state.at,
+  solved: state.solved,
+  solvedPosition: state.solvedPosition,
+  solverName,
+  finished: state.finished,
+  timePercent: state.solved ? percentOf(state.secondsLeft, initialSeconds) : null,
+  members,
+});

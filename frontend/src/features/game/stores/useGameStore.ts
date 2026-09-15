@@ -10,11 +10,15 @@ import {
   type GuessAck,
   type HintAck,
   type LobbyState,
+  type OwnRow,
   type PlayerProgress,
   type RoomSettings,
   type RoundInfo,
   type RoundState,
   type SelfState,
+  type TeamId,
+  type TeamPublic,
+  type TeamRoundState,
 } from '@/shared/contract';
 
 import { toast } from '@/shared/stores/useToastStore';
@@ -52,6 +56,13 @@ interface GameState {
   players: Record<string, PlayerProgress>;
   /** Players who gave up their seat this round: id -> name, kept for the panel. */
   left: Record<string, string>;
+  /** Team mode: both teams' names, colours and rounds won (from the lobby). */
+  teamInfo: TeamPublic[];
+  /** Team mode: the shared clocks and solves this round, keyed by team id. */
+  teams: Partial<Record<TeamId, TeamRoundState>>;
+  myTeam: TeamId | null;
+  /** Team mode: my teammates' boards with letters, keyed by player id. */
+  teammates: Record<string, OwnRow[]>;
   solvedCount: number;
   feed: FeedEvent[];
   /** Newest sticker from anyone (me included); the phone overlay reads it. */
@@ -99,6 +110,7 @@ const emptyAnnounced = (): Announced => ({ greens: [], lowTime: [], finished: []
 const roundInfoOf = (round: RoundState): RoundInfo => ({
   round: round.round,
   totalRounds: round.totalRounds,
+  mode: round.mode,
   initialSeconds: round.initialSeconds,
   startedAt: round.startedAt,
   hintAvailable: round.hintAvailable,
@@ -108,12 +120,20 @@ const roundInfoOf = (round: RoundState): RoundInfo => ({
 
 /** Roster entries rebuilt from the players who left, so their names survive. */
 const leftRoster = (left: Record<string, string>): Record<string, RosterEntry> =>
-  Object.fromEntries(Object.entries(left).map(([id, name]) => [id, { name, connected: false }]));
+  Object.fromEntries(
+    Object.entries(left).map(([id, name]) => [id, { name, connected: false, team: null }]),
+  );
 
 const rosterOf = (lobby: LobbyState): Record<string, RosterEntry> =>
   Object.fromEntries(
-    lobby.players.map((player) => [player.id, { name: player.name, connected: player.connected }]),
+    lobby.players.map((player) => [
+      player.id,
+      { name: player.name, connected: player.connected, team: player.team },
+    ]),
   );
+
+const teamsOf = (teams: TeamRoundState[]): Partial<Record<TeamId, TeamRoundState>> =>
+  Object.fromEntries(teams.map((team) => [team.id, team]));
 
 const initialState: GameState = {
   status: 'idle',
@@ -124,6 +144,10 @@ const initialState: GameState = {
   me: null,
   players: {},
   left: {},
+  teamInfo: [],
+  teams: {},
+  myTeam: null,
+  teammates: {},
   solvedCount: 0,
   feed: [],
   sticker: null,
@@ -163,6 +187,9 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       me: round.me,
       players: Object.fromEntries(round.players.map((player) => [player.playerId, player])),
       left: {},
+      teams: teamsOf(round.teams),
+      myTeam: round.myTeam,
+      teammates: Object.fromEntries(round.teammates.map((mate) => [mate.playerId, mate.rows])),
       solvedCount: round.players.filter((player) => player.solved).length,
       feed: [],
       sticker: null,
@@ -178,12 +205,22 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
     set({
       settings: snapshot.lobby.settings,
       roster: rosterOf(snapshot.lobby),
+      teamInfo: snapshot.lobby.teams,
       myId: useSessionStore.getState().session?.playerId ?? null,
     });
     if (snapshot.round) {
       applyRound(snapshot.round, snapshot.lobby.status === 'playing' ? 'playing' : 'ended');
     } else {
-      set({ status: 'idle', round: null, me: null, players: {}, left: {} });
+      set({
+        status: 'idle',
+        round: null,
+        me: null,
+        players: {},
+        left: {},
+        teams: {},
+        myTeam: null,
+        teammates: {},
+      });
     }
   };
 
@@ -220,9 +257,11 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       pushFeed({ kind: 'greens', playerId: progress.playerId, greens: progress.greens });
     }
     // Whoever left already has their own feed line; do not also call it a timeout.
+    // In team mode a member stops when their team does; the team line says so.
     if (
       progress.finished &&
       !progress.solved &&
+      get().round?.mode !== 'teams' &&
       !(progress.playerId in left) &&
       !announced.finished.includes(progress.playerId)
     ) {
@@ -254,6 +293,44 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
         if (round.round === 1) playSound('gameStarted');
       });
       socket.on('player:progress', onProgress);
+      // Team mode: a teammate's board, letters included.
+      socket.on('teammate:progress', (payload) =>
+        set((state) => ({ teammates: { ...state.teammates, [payload.playerId]: payload.rows } })),
+      );
+      // Team mode: the hint is the team's; a teammate spent it, my board shows it.
+      socket.on('team:hint', (reveal) =>
+        set((state) => (state.me ? { me: { ...state.me, hintUsed: true, hint: reveal } } : {})),
+      );
+      socket.on('team:clocks', (teams) => {
+        const { myTeam, teams: before } = get();
+        for (const team of teams) {
+          const previous = before[team.id];
+          if (team.finished && !team.solved && !(previous?.finished && !previous.solved)) {
+            const info = get().teamInfo.find((entry) => entry.id === team.id);
+            pushFeed({
+              kind: 'team-finished',
+              playerId: '',
+              teamName: info?.name.trim() || getT().lobby.teamDefault(team.id),
+              reason: team.secondsLeft <= 0 ? 'time' : 'attempts',
+            });
+          }
+        }
+        const mine = teams.find((team) => team.id === myTeam);
+        set((state) => ({
+          teams: teamsOf(teams),
+          me:
+            state.me && mine
+              ? {
+                  ...state.me,
+                  secondsLeft: mine.secondsLeft,
+                  at: mine.at,
+                  finished: mine.finished,
+                  hintUsed: mine.hintUsed,
+                  penaltySeconds: mine.penaltySeconds,
+                }
+              : state.me,
+        }));
+      });
       socket.on('player:solved', (payload) => {
         set((state) => ({ solvedCount: Math.max(state.solvedCount, payload.position) }));
         pushFeed({ kind: 'solved', playerId: payload.playerId, position: payload.position });
@@ -302,8 +379,16 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
           set((state) => (state.sticker?.id === id ? { sticker: null } : {}));
         }, STICKER_MS);
       });
-      socket.on('round:end', () => {
-        set({ status: 'ended', draft: '' });
+      socket.on('round:end', (payload) => {
+        set((state) => ({
+          status: 'ended',
+          draft: '',
+          // The rounds-won counter in the header follows the round that just ended.
+          teamInfo: state.teamInfo.map((team) => {
+            const standing = payload.teamStandings.find((entry) => entry.team === team.id);
+            return standing ? { ...team, roundsWon: standing.roundsWon } : team;
+          }),
+        }));
         playSound('roundEnded');
       });
       socket.on('game:end', () => set({ status: 'ended', draft: '' }));
@@ -313,6 +398,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
           // and the feed can still show who they were.
           roster: { ...leftRoster(state.left), ...rosterOf(lobby) },
           settings: lobby.settings,
+          teamInfo: lobby.teams,
         })),
       );
       socket.on('player:left', (payload) => {
@@ -321,7 +407,11 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
           left: { ...state.left, [payload.playerId]: payload.name },
           roster: {
             ...state.roster,
-            [payload.playerId]: { name: payload.name, connected: false },
+            [payload.playerId]: {
+              name: payload.name,
+              connected: false,
+              team: state.roster[payload.playerId]?.team ?? null,
+            },
           },
         }));
         pushFeed({ kind: 'left', playerId: payload.playerId });

@@ -11,12 +11,14 @@ import { toast } from '@/shared/stores/useToastStore';
 import { useLeaveRoom } from '../api/leave-room/useLeaveRoom';
 import { useSetReady } from '../api/set-ready/useSetReady';
 import { useStartGame } from '../api/start-game/useStartGame';
+import { useTeamActions } from '../api/team/useTeamActions';
 import { useUpdateSettings } from '../api/update-settings/useUpdateSettings';
 import { LobbyActions } from '../components/LobbyActions';
 import { PlayerSlots } from '../components/PlayerSlots';
 import { RoomCodeHeader } from '../components/RoomCodeHeader';
 import { RoomSettingsDialog } from '../components/RoomSettingsDialog';
 import { ScoringCard } from '../components/ScoringCard';
+import { TeamSlots } from '../components/TeamSlots';
 import { useLobbyStore } from '../stores/useLobbyStore';
 
 export const LobbyContainer = () => {
@@ -28,6 +30,7 @@ export const LobbyContainer = () => {
   const { startGame, pending: starting } = useStartGame();
   const { leaveRoom } = useLeaveRoom();
   const { updateSettings, pending: saving } = useUpdateSettings();
+  const teamActions = useTeamActions();
   const [rulesOpen, setRulesOpen] = useState(false);
 
   // Pushed transitions (round:start, or a lobby:update with a new status) move everyone along.
@@ -70,6 +73,11 @@ export const LobbyContainer = () => {
     toast.success(t.lobby.rulesSaved);
   };
 
+  // Team actions only fail in ways worth a toast; success redraws from the server.
+  const report = (result: { ok: boolean; error?: { code: string } }) => {
+    if (!result.ok && result.error) toast.error(result.error.code as never);
+  };
+
   const leave = () => {
     navigate(PATHS.home, { replace: true });
     void leaveRoom();
@@ -87,7 +95,22 @@ export const LobbyContainer = () => {
           onCopyLink={() => void copyLink()}
           onChangeRules={() => setRulesOpen(true)}
         />
-        <PlayerSlots t={t} players={lobby.players} capacity={lobby.settings.capacity} />
+        {lobby.mode === 'teams' ? (
+          <TeamSlots
+            t={t}
+            teams={lobby.teams}
+            capacity={lobby.settings.capacity}
+            playerCount={lobby.playerCount}
+            isHost={lobby.isHost}
+            pending={teamActions.pending}
+            onJoin={(team) => void teamActions.joinTeam(team).then(report)}
+            onAssign={(playerId, team) => void teamActions.assignTeam(playerId, team).then(report)}
+            onCustomize={(team, patch) => void teamActions.customizeTeam(team, patch).then(report)}
+            onResetGames={() => void teamActions.resetGames().then(report)}
+          />
+        ) : (
+          <PlayerSlots t={t} players={lobby.players} capacity={lobby.settings.capacity} />
+        )}
         <LobbyActions
           t={t}
           isHost={lobby.isHost}

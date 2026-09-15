@@ -8,6 +8,7 @@ import { Toggle } from '@/shared/components/ui/Toggle';
 import {
   ROOM_LIMITS,
   WORD_LENGTHS,
+  type GameMode,
   type Language,
   type RoomSettings,
   type WordLength,
@@ -101,6 +102,18 @@ export const RoomSettingsDialog = ({
           />
         </div>
 
+        <div className="flex flex-col gap-2">
+          <span className="label">{t.lobby.mode}</span>
+          <Segmented<GameMode>
+            label={t.lobby.mode}
+            value={values.mode}
+            onChange={(mode) => patch({ mode })}
+            options={[
+              { value: 'normal', label: t.lobby.modeNormal },
+              { value: 'teams', label: t.lobby.modeTeams },
+            ]}
+          />
+        </div>
         <div className="flex flex-col gap-2">
           <span className="label">{t.home.wordLength}</span>
           <Segmented<WordLength>

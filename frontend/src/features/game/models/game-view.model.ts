@@ -2,13 +2,17 @@ import type { Emote, HintReveal, Language, OwnRow, RoundInfo } from '@/shared/co
 import type { Dictionary } from '@/shared/i18n';
 
 import type { ScorePreview } from '../helpers/scorePreview';
+import type { TeamScorePreview } from '../helpers/teamScorePreview';
 import type {
   FeedEvent,
   GainChip,
   HintButtonState,
   KeyState,
+  RivalTeamViewModel,
   RivalViewModel,
   StickerFlash,
+  TeamHeaderViewModel,
+  TeammateViewModel,
 } from './game.model';
 
 export interface ClockViewModel {
@@ -19,7 +23,21 @@ export interface ClockViewModel {
   low: boolean;
 }
 
-export type MyOutcome = 'playing' | 'solved' | 'out-of-attempts' | 'out-of-time';
+/** `team-solved`: a teammate found the word, so I am done too. */
+export type MyOutcome = 'playing' | 'solved' | 'out-of-attempts' | 'out-of-time' | 'team-solved';
+
+/** Team mode only (docs/context/06-v1.1.md -> Teams): my team and the rival one. */
+export interface TeamViewProps {
+  mine: TeamHeaderViewModel;
+  /** Who solved it for us; null until then. */
+  solverName: string | null;
+  teammates: TeammateViewModel[];
+  /** Null while the other team has nobody in it. */
+  rival: RivalTeamViewModel | null;
+  /** Derived seconds left of the rival team's clock at the current tick. */
+  rivalClock: number;
+  preview: TeamScorePreview;
+}
 
 /** Everything the desktop and phone layouts need, already derived. */
 export interface GameViewProps {
@@ -50,6 +68,8 @@ export interface GameViewProps {
   /** Newest sticker from anyone; only the phone layout shows it (overlay). */
   sticker: StickerFlash | null;
   preview: ScorePreview;
+  /** Present in team mode only; the layouts swap the rivals panel and score card. */
+  team: TeamViewProps | null;
   hintState: HintButtonState;
   hintPending: boolean;
   /** Seconds left of the emote burst pause; 0 while the player may react. */

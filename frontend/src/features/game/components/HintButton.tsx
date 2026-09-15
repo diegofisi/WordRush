@@ -11,6 +11,8 @@ interface HintButtonProps {
   disabled: boolean;
   onClick: () => void;
   compact?: boolean;
+  /** Team mode: the one hint is the team's. */
+  team?: boolean;
 }
 
 /**
@@ -24,6 +26,7 @@ export const HintButton = ({
   disabled,
   onClick,
   compact = false,
+  team = false,
 }: HintButtonProps) => {
   const inactive = state !== 'available' || disabled || pending;
   const caption =
@@ -45,7 +48,7 @@ export const HintButton = ({
       )}
     >
       <HintIcon size={20} />
-      <span>{t.common.hint}</span>
+      <span>{team && !compact ? t.game.teamHint : t.common.hint}</span>
       {!compact ? <span className="font-medium text-yellow-mid">{caption}</span> : null}
     </button>
   );

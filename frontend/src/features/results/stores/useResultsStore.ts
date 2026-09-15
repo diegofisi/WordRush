@@ -8,6 +8,7 @@ import type {
   LobbyState,
   RoomStatus,
   RoundEndPayload,
+  TeamId,
 } from '@/shared/contract';
 
 interface ResultsState {
@@ -26,6 +27,8 @@ interface ResultsState {
   roomStatus: RoomStatus | null;
   /** Who may press "play again"; it can change if the host leaves the results. */
   hostId: string | null;
+  /** Team mode: my team, from the latest lobby state. */
+  myTeam: TeamId | null;
 }
 
 interface ResultsActions {
@@ -42,12 +45,17 @@ const initialState: ResultsState = {
   latestRoundStarted: null,
   roomStatus: null,
   hostId: null,
+  myTeam: null,
 };
 
-const fromLobby = (lobby: LobbyState) => ({
-  roomStatus: lobby.status,
-  hostId: lobby.players.find((player) => player.isHost)?.id ?? null,
-});
+const fromLobby = (lobby: LobbyState) => {
+  const myId = useSessionStore.getState().session?.playerId ?? null;
+  return {
+    roomStatus: lobby.status,
+    hostId: lobby.players.find((player) => player.isHost)?.id ?? null,
+    myTeam: lobby.players.find((player) => player.id === myId)?.team ?? null,
+  };
+};
 
 export const useResultsStore = create<ResultsState & ResultsActions>((set) => {
   const hydrate = (snapshot: FullState) => {
@@ -57,7 +65,11 @@ export const useResultsStore = create<ResultsState & ResultsActions>((set) => {
       roundEnd,
       gameEnd:
         finished && roundEnd
-          ? { standings: roundEnd.standings, rounds: roundEnd.totalRounds }
+          ? {
+              standings: roundEnd.standings,
+              teamStandings: roundEnd.teamStandings,
+              rounds: roundEnd.totalRounds,
+            }
           : null,
       // The snapshot's nextRoundIn was computed when the round ended; it is only an estimate here.
       nextRoundAt:

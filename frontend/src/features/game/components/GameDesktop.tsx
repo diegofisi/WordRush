@@ -7,6 +7,8 @@ import { Keyboard } from './Keyboard';
 import { LiveFeed } from './LiveFeed';
 import { RivalsPanel } from './RivalsPanel';
 import { ScorePreviewCard } from './ScorePreviewCard';
+import { TeamPanel } from './TeamPanel';
+import { TeamScoreCard } from './TeamScoreCard';
 import { WaitingCard } from './WaitingCard';
 
 /** Three-column game (Main.dc.html): rivals · clock/board/keyboard · feed/score/emotes. */
@@ -17,14 +19,24 @@ export const GameDesktop = (props: GameViewProps) => {
   // pinning the row to the viewport keeps every column scrolling inside itself.
   return (
     <div className="grid min-h-0 flex-1 grid-cols-[300px_minmax(0,1fr)_320px] grid-rows-[minmax(0,1fr)] gap-6 px-7 py-5">
-      <RivalsPanel
-        t={t}
-        wordLength={props.round.wordLength}
-        rivals={props.rivals}
-        rivalClocks={props.rivalClocks}
-        solvedCount={props.solvedCount}
-        lowTimeThreshold={LOW_TIME_THRESHOLD}
-      />
+      {props.team ? (
+        <TeamPanel
+          t={t}
+          wordLength={props.round.wordLength}
+          team={props.team}
+          lowTimeThreshold={LOW_TIME_THRESHOLD}
+          colorLabels={props.tileLabels}
+        />
+      ) : (
+        <RivalsPanel
+          t={t}
+          wordLength={props.round.wordLength}
+          rivals={props.rivals}
+          rivalClocks={props.rivalClocks}
+          solvedCount={props.solvedCount}
+          lowTimeThreshold={LOW_TIME_THRESHOLD}
+        />
+      )}
 
       <div className="flex min-h-0 flex-col items-center justify-between gap-4">
         <Clock
@@ -66,13 +78,18 @@ export const GameDesktop = (props: GameViewProps) => {
             outcome={props.outcome}
             solvedPosition={props.solvedPosition}
             timePercent={props.clock.percent}
+            solverName={props.team?.solverName}
           />
         )}
       </div>
 
       <div className="flex min-h-0 flex-col gap-4">
         <LiveFeed t={t} feed={props.feed} />
-        <ScorePreviewCard t={t} preview={props.preview} outcome={props.outcome} />
+        {props.team ? (
+          <TeamScoreCard t={t} preview={props.team.preview} outcome={props.outcome} />
+        ) : (
+          <ScorePreviewCard t={t} preview={props.preview} outcome={props.outcome} />
+        )}
         <div className="flex justify-center">
           <EmotePicker t={t} cooldownSeconds={props.emoteCooldownSeconds} onEmote={props.onEmote} />
         </div>

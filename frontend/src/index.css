@@ -56,6 +56,12 @@
   --accent: #6c4cf1;
   --accent-hover: #4f33c9;
   --accent-soft: #f7f4ff;
+  --team-blue: #2f7de1;
+  --team-blue-ink: #1f5fb0;
+  --team-blue-soft: #eaf2fd;
+  --team-pink: #d94f8c;
+  --team-pink-ink: #b0326b;
+  --team-pink-soft: #fdeef5;
   --shadow: 0 4px 12px rgba(28, 26, 23, 0.1);
   --shadow-lg: 0 12px 32px rgba(28, 26, 23, 0.14);
 }
@@ -101,6 +107,12 @@
   --accent: #8b72ff;
   --accent-hover: #a996ff;
   --accent-soft: #2a2440;
+  --team-blue: #4f95ea;
+  --team-blue-ink: #8fbcf4;
+  --team-blue-soft: #16273d;
+  --team-pink: #e0669e;
+  --team-pink-ink: #f19cc4;
+  --team-pink-soft: #3a1f2d;
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
 }
@@ -141,6 +153,12 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
+  --color-team-blue: var(--team-blue);
+  --color-team-blue-ink: var(--team-blue-ink);
+  --color-team-blue-soft: var(--team-blue-soft);
+  --color-team-pink: var(--team-pink);
+  --color-team-pink-ink: var(--team-pink-ink);
+  --color-team-pink-soft: var(--team-pink-soft);
   --color-white: #ffffff;
   --color-tile-ink-dark: #1c1a17;
 

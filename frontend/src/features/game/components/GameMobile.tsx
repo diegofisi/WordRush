@@ -12,6 +12,8 @@ import { PenaltyChip } from './PenaltyChip';
 import { RivalStrip } from './RivalStrip';
 import { ScorePreviewCard } from './ScorePreviewCard';
 import { StickerOverlay } from './StickerOverlay';
+import { TeamScoreCard } from './TeamScoreCard';
+import { TeamStrip } from './TeamStrip';
 import { WaitingCard } from './WaitingCard';
 
 /** Phone game (GameMobile.dc.html): clock + actions, rival strip, last event, board, keyboard, emotes. */
@@ -51,6 +53,7 @@ export const GameMobile = (props: GameViewProps) => {
           <HintButton
             compact
             t={t}
+            team={props.team !== null}
             state={props.hintState}
             pending={props.hintPending}
             disabled={props.outcome !== 'playing'}
@@ -65,7 +68,15 @@ export const GameMobile = (props: GameViewProps) => {
         </div>
       ) : null}
 
-      {props.rivals.length > 0 ? (
+      {props.team ? (
+        <TeamStrip
+          t={t}
+          wordLength={props.round.wordLength}
+          team={props.team}
+          lowTimeThreshold={LOW_TIME_THRESHOLD}
+          colorLabels={props.tileLabels}
+        />
+      ) : props.rivals.length > 0 ? (
         <RivalStrip
           t={t}
           wordLength={props.round.wordLength}
@@ -118,8 +129,13 @@ export const GameMobile = (props: GameViewProps) => {
               outcome={props.outcome}
               solvedPosition={props.solvedPosition}
               timePercent={props.clock.percent}
+              solverName={props.team?.solverName}
             />
-            <ScorePreviewCard t={t} preview={props.preview} outcome={props.outcome} />
+            {props.team ? (
+              <TeamScoreCard t={t} preview={props.team.preview} outcome={props.outcome} />
+            ) : (
+              <ScorePreviewCard t={t} preview={props.preview} outcome={props.outcome} />
+            )}
           </>
         )}
         <div className="flex justify-end">

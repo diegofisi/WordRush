@@ -6,7 +6,7 @@ const MAX_ATTEMPTS = attemptsFor(5);
 
 import { toRivalViewModel, type RosterEntry } from './game.model';
 
-const roster: RosterEntry = { name: 'Ana', connected: true };
+const roster: RosterEntry = { name: 'Ana', connected: true, team: null };
 
 const progress = (over: Partial<PlayerProgress> = {}): PlayerProgress => ({
   playerId: 'p1',

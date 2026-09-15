@@ -17,6 +17,7 @@ import { JoinRoomForm } from '../components/JoinRoomForm';
 const defaultValues = (name: string, uiLang: 'es' | 'en'): CreateRoomFormValues => ({
   name,
   language: uiLang,
+  mode: 'normal',
   wordLength: DEFAULT_WORD_LENGTH,
   initialSeconds: 90,
   rounds: 3,

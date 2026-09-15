@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 11;
+export const CONTRACT_VERSION = 12;
 
 export type Language = 'es' | 'en';
 export type TileColor = 'green' | 'yellow' | 'gray';
@@ -43,6 +43,16 @@ export const DEFAULT_WORD_LENGTH: WordLength = 5;
 /** Attempts per round grow with the word: 8 / 9 / 10. */
 export const ATTEMPTS_BY_LENGTH: Record<WordLength, number> = { 5: 8, 6: 9, 7: 10 };
 export const attemptsFor = (length: WordLength): number => ATTEMPTS_BY_LENGTH[length];
+
+/**
+ * Teams (docs/context/06-v1.1.md -> Teams). Two teams, any split; one clock,
+ * one hint and one score per team; members keep their own boards.
+ */
+export type GameMode = 'normal' | 'teams';
+export type TeamId = 'a' | 'b';
+export const TEAM_IDS: readonly TeamId[] = ['a', 'b'];
+export type TeamColor = 'violet' | 'gold' | 'green' | 'red' | 'blue' | 'pink';
+export const TEAM_COLORS: readonly TeamColor[] = ['violet', 'gold', 'green', 'red', 'blue', 'pink'];
 /** Picker order: the 5x4 grid reads row by row in this order. */
 export const EMOTES: readonly Emote[] = [
   'love',
@@ -95,6 +105,8 @@ export const SCORING = {
   /** v1.1: −4 per attempt after the first (was −2); the solve floor of 40 stays. */
   attemptPenalty: 4,
   positionBonus: [20, 15, 10] as const,
+  /** Team mode: only the first team to solve gets a position bonus. */
+  teamFirstBonus: 20,
   hintKeptBonus: 10,
   solveBonus: 40,
   pointsPerGreenUnsolved: 8,
@@ -107,6 +119,8 @@ export const SCORING = {
 
 export interface RoomSettings {
   language: Language;
+  /** Normal (everyone for themselves) or two teams. */
+  mode: GameMode;
   wordLength: WordLength;
   initialSeconds: number;
   rounds: number;
@@ -120,6 +134,19 @@ export interface PlayerPublic {
   isHost: boolean;
   ready: boolean;
   connected: boolean;
+  /** Null in the normal mode. */
+  team: TeamId | null;
+}
+
+export interface TeamPublic {
+  id: TeamId;
+  /** Empty until the members name it; the client shows a default then. */
+  name: string;
+  color: TeamColor;
+  /** Rounds won in the current game. */
+  roundsWon: number;
+  /** Games won in this room; survives "play again" until the host resets it. */
+  gamesWon: number;
 }
 
 export interface LobbyState {
@@ -127,9 +154,14 @@ export interface LobbyState {
   status: RoomStatus;
   settings: RoomSettings;
   players: PlayerPublic[];
+  /** Both teams in team mode; empty otherwise. */
+  teams: TeamPublic[];
 }
 
-/** What everyone sees about a player during a round: colours only, never letters. */
+/**
+ * What everyone sees about a player during a round: colours only, never
+ * letters. In team mode the clock and `finished` are the team's.
+ */
 export interface PlayerProgress {
   playerId: string;
   rows: TileColor[][];
@@ -187,9 +219,31 @@ export interface SelfState {
   penaltySeconds: number;
 }
 
+/** A team during the round: its shared clock, hint and solve. */
+export interface TeamRoundState {
+  id: TeamId;
+  secondsLeft: number;
+  at: number;
+  solved: boolean;
+  solvedPosition: number | null;
+  solverId: string | null;
+  finished: boolean;
+  hintUsed: boolean;
+  penaltySeconds: number;
+  /** Words sent by every member after each one's first: the penalty base. */
+  attemptsAfterFirst: number;
+}
+
+/** A teammate's board, letters included: teammates see each other live. */
+export interface TeammateRows {
+  playerId: string;
+  rows: OwnRow[];
+}
+
 export interface RoundInfo {
   round: number;
   totalRounds: number;
+  mode: GameMode;
   /** Letters per word and attempts this round, from the room settings. */
   wordLength: WordLength;
   maxAttempts: number;
@@ -201,6 +255,11 @@ export interface RoundInfo {
 export interface RoundState extends RoundInfo {
   me: SelfState;
   players: PlayerProgress[];
+  /** Team mode only; empty otherwise. */
+  teams: TeamRoundState[];
+  myTeam: TeamId | null;
+  /** My teammates' boards with letters; empty in the normal mode. */
+  teammates: TeammateRows[];
 }
 
 export interface RoundBreakdown {
@@ -234,18 +293,54 @@ export interface Standing {
   rank: number;
 }
 
+/** docs/context/06-v1.1.md -> Team scoring, one team. */
+export interface TeamRoundBreakdown {
+  team: TeamId;
+  name: string;
+  color: TeamColor;
+  solved: boolean;
+  solverId: string | null;
+  solverName: string | null;
+  position: number | null;
+  timeLeftPercent: number | null;
+  timePoints: number;
+  solveBonus: number;
+  /** Every member's attempts after their first, −4 each. */
+  attemptsAfterFirst: number;
+  attemptPenalty: number;
+  positionBonus: number;
+  hintBonus: number;
+  roundPoints: number;
+}
+
+export interface TeamStanding {
+  team: TeamId;
+  name: string;
+  color: TeamColor;
+  total: number;
+  roundsWon: number;
+  gamesWon: number;
+  rank: number;
+}
+
 export interface RoundEndPayload {
   round: number;
   totalRounds: number;
+  mode: GameMode;
   word: string;
+  /** Per player in the normal mode; empty in team mode (points are the team's). */
   breakdown: RoundBreakdown[];
   standings: Standing[];
+  /** Team mode only; empty otherwise. */
+  teams: TeamRoundBreakdown[];
+  teamStandings: TeamStanding[];
   /** Seconds until the next round starts automatically; 0 when the game ended. */
   nextRoundIn: number;
 }
 
 export interface GameEndPayload {
   standings: Standing[];
+  teamStandings: TeamStanding[];
   rounds: number;
 }
 
@@ -278,6 +373,8 @@ export type ErrorCode =
   | 'cooldown'
   | 'not_in_room'
   | 'already_in_room'
+  /** Team actions outside team mode, or on a team the player is not in. */
+  | 'not_in_team'
   | 'session_expired'
   | 'internal';
 
@@ -324,6 +421,21 @@ export interface UpdateSettingsPayload {
   settings: RoomSettings;
 }
 
+/** Any player moves themselves; the host moves anybody. Lobby only. */
+export interface JoinTeamPayload {
+  team: TeamId;
+}
+export interface AssignTeamPayload {
+  playerId: string;
+  team: TeamId;
+}
+/** Members rename or recolour their own team. Lobby only. */
+export interface CustomizeTeamPayload {
+  team: TeamId;
+  name?: string;
+  color?: TeamColor;
+}
+
 export interface SessionAck {
   roomCode: string;
   playerId: string;
@@ -358,6 +470,11 @@ export interface ClientToServerEvents {
   /** Host-only, finished-game only: reset the room to a fresh lobby and play again. */
   'room:restart': (ack?: (r: EmptyAck) => void) => void;
   'room:update-settings': (payload: UpdateSettingsPayload, ack?: (r: EmptyAck) => void) => void;
+  'team:join': (payload: JoinTeamPayload, ack?: (r: EmptyAck) => void) => void;
+  'team:assign': (payload: AssignTeamPayload, ack?: (r: EmptyAck) => void) => void;
+  'team:customize': (payload: CustomizeTeamPayload, ack?: (r: EmptyAck) => void) => void;
+  /** Host-only: the games-won counters back to zero. */
+  'team:reset-games': (ack?: (r: EmptyAck) => void) => void;
   'game:guess': (payload: GuessPayload, ack: (r: Ack<GuessAck>) => void) => void;
   'game:hint': (ack: (r: Ack<HintAck>) => void) => void;
   'reaction:send': (payload: ReactionPayload, ack?: (r: EmptyAck) => void) => void;
@@ -406,6 +523,12 @@ export interface ServerToClientEvents {
   'player:progress': (progress: PlayerProgress) => void;
   'player:solved': (payload: SolvedPayload) => void;
   'player:hint': (payload: HintUsedPayload) => void;
+  /** Team mode: a teammate's board with letters, to their teammates only. */
+  'teammate:progress': (payload: TeammateRows) => void;
+  /** Team mode: the team's hint, to every member (the spender included). */
+  'team:hint': (payload: HintReveal) => void;
+  /** Team mode: the shared clocks after anything moved them. */
+  'team:clocks': (payload: TeamRoundState[]) => void;
   'player:left': (payload: PlayerLeftPayload) => void;
   'time:penalty': (payload: PenaltyPayload) => void;
   'round:end': (payload: RoundEndPayload) => void;

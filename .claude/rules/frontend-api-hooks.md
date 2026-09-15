@@ -14,7 +14,8 @@ paths:
   only from `@/core/session/lib/socket`, and only from `api/` or `stores/`.
 - **Pushed events** (`lobby:update`, `round:start`, `player:progress`,
   `player:solved`, `player:hint`, `player:left`, `time:penalty`,
-  `reaction:show`, `round:end`, `game:end`, `session:replaced`) are
+  `reaction:show`, `round:end`, `game:end`, `session:replaced`, and in team
+  mode `teammate:progress`, `team:hint`, `team:clocks`) are
   store-driven: subscribe once in the store's `bind()` action, map the DTO
   there, and never turn one into an `api/` hook.
 - `bind()` is guarded by a module-level flag so StrictMode's double-invoke
