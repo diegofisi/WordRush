@@ -35,16 +35,19 @@ import { BossMemoryService, type BossMemory } from '../services/boss-memory.serv
  */
 export const BOSS_CADENCE = {
   /**
-   * How long a turn takes her, flat, counted from the tick that starts it.
+   * How long a turn takes her, drawn uniformly between these two, counted from
+   * the tick that starts it.
    *
    * The biology is 960 ms of simulated brain per decision; what costs about
    * seven seconds of wall time is simulating it, 138,639 neurons at 0.1 ms
-   * steps. Those seconds are inside this value, so with 6 s the word lands
-   * when the brain answers (~7 s) and the next turn starts 3 s of typing
-   * later: a word every ~9 s, which is the floor on this machine. Pacing is
-   * not help; it is reaction time.
+   * steps. Those seconds are inside this value: a think below them changes
+   * nothing, so the low end (3 s + 3 s of typing) starts the next turn the
+   * moment the brain answers, and the high end holds her 2 s longer. A word
+   * every 7 to 9 s, the 7 being the floor on this machine, and the spread so
+   * the room cannot count her down. Pacing is not help; it is reaction time.
    */
-  thinkMs: 6000,
+  thinkMinMs: 3000,
+  thinkMaxMs: 6000,
   /** She types the word out rather than submitting it instantly. */
   typeMsPerLetter: 600,
   /** How soon to look again when the brain has not answered at all. */
@@ -194,10 +197,14 @@ export class BossPlayTurnUseCase {
     announce(word);
     this.guess(room, bot, word, answer, memory, now);
 
-    // A flat pace. It used to be scaled by the policy's confidence, and that
-    // confidence was invented by the policy, so the timing was telling the room
-    // something no neuron had said.
-    memory.nextMoveAt = now + BOSS_CADENCE.thinkMs + BOSS_CADENCE.typeMsPerLetter * word.length;
+    // A pace with a spread in it and nothing else. It used to be scaled by the
+    // policy's confidence, and that confidence was invented by the policy, so
+    // the timing was telling the room something no neuron had said. The draw
+    // comes from the round's own generator, so a replayed round paces the same.
+    const think =
+      BOSS_CADENCE.thinkMinMs +
+      memory.random() * (BOSS_CADENCE.thinkMaxMs - BOSS_CADENCE.thinkMinMs);
+    memory.nextMoveAt = now + think + BOSS_CADENCE.typeMsPerLetter * word.length;
     return true;
   }
 

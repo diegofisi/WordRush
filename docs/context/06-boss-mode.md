@@ -359,11 +359,13 @@ Each of her turns:
 
    Her pace is bounded by computation, not biology: a decision is 960 ms of
    simulated brain, and simulating it costs about 7 s of wall time on the
-   development machine. `thinkMs` is 6 s counted from the tick that starts the
-   turn, so the word lands when the brain answers (~7 s) and the next turn
-   begins after 3 s of typing: a word every ~9 s, about nine in a 90 s round.
-   Going faster means a shorter read-out window (900 ms, calibrated in `07`)
-   or a faster machine.
+   development machine. The think time is drawn uniformly between 3 and 6 s
+   per turn, counted from the tick that starts it, plus 3 s of typing; since
+   the brain's 7 s sit inside it, the low end starts the next turn the moment
+   she answers and the high end holds her 2 s more. A word every **7 to 9 s**,
+   spread so the room cannot count her down. 5 s was asked for and is not
+   reachable: going faster means a shorter read-out window (900 ms, calibrated
+   in `07`) or a faster machine.
 
 What is honest to say about her, and what her page says: she is a real brain
 choosing among words the game has already narrowed; her choice is real and

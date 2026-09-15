@@ -98,9 +98,11 @@ describe('Boss mode (socket.io integration)', () => {
     expect(round.boss!.startSeconds).toBe(bossClockSeconds(SETTINGS.initialSeconds));
     expect(round.boss!.damageSeconds).toBe(0);
 
-    // She guesses without anybody asking her to.
+    // She guesses without anybody asking her to. A decision is about 7 s of
+    // wall time on the one brain thread, and a fly from an earlier room may
+    // still have one in flight when this one starts, so the wait is generous.
     const progress = await new Promise<{ playerId: string; attempt: number }>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('the fly never played')), 8000);
+      const timer = setTimeout(() => reject(new Error('the fly never played')), 25000);
       ana.on('player:progress', (p) => {
         if (p.playerId === bot!.id && p.attempt > 0) {
           clearTimeout(timer);
@@ -111,7 +113,7 @@ describe('Boss mode (socket.io integration)', () => {
     expect(progress.attempt).toBeGreaterThan(0);
 
     ana.disconnect();
-  }, 20000);
+  }, 40000);
 
   it('streams live brain frames while the instrument is watching', async () => {
     const ana = await connect();
@@ -133,7 +135,8 @@ describe('Boss mode (socket.io integration)', () => {
 
     // The panel opens: frames start, and they carry every live column the
     // decision network draws, not just the descending rates.
-    const framePromise = waitFor(ana, 'boss:frame', 10000);
+    // The watch request queues behind whatever decision the thread is in.
+    const framePromise = waitFor(ana, 'boss:frame', 25000);
     const watched = await ana.emitWithAck('boss:watch', { watching: true });
     expect(watched.ok).toBe(true);
 
@@ -145,7 +148,7 @@ describe('Boss mode (socket.io integration)', () => {
     expect(first.cloud.length).toBeGreaterThan(0);
 
     // Two slices in a row must differ: a frozen panel is the bug this covers.
-    const second = await waitFor(ana, 'boss:frame', 10000);
+    const second = await waitFor(ana, 'boss:frame', 25000);
     const moved =
       second.cloud !== first.cloud ||
       second.descending.some((hz, i) => hz !== first.descending[i]) ||
@@ -154,7 +157,7 @@ describe('Boss mode (socket.io integration)', () => {
 
     await ana.emitWithAck('boss:watch', { watching: false });
     ana.disconnect();
-  }, 30000);
+  }, 60000);
 
   it('sends a human solve at the fly and never at a teammate', async () => {
     const ana = await connect();
