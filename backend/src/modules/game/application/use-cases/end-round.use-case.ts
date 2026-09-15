@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ROOM_LIMITS, type RoundEndPayload } from '@shared/contract';
+import { ROOM_LIMITS, type RoundEndPayload, type TeamStanding } from '@shared/contract';
 import { CLOCK, type Clock } from '@shared/domain/clock';
 import { RoomEventsBus } from '@shared/events/room-events.bus';
 import { Room } from '@modules/rooms/domain/entities/room.entity';
@@ -7,7 +7,12 @@ import {
   IRoomRepository,
   ROOM_REPOSITORY,
 } from '@modules/rooms/domain/interfaces/room-repository.interface';
-import { computeStandings, scoreRound } from '../../domain/services/scoring';
+import {
+  computeStandings,
+  computeTeamStandings,
+  scoreRound,
+  scoreTeamRound,
+} from '../../domain/services/scoring';
 import { RoundSchedulerService } from '../services/round-scheduler.service';
 import { StartRoundUseCase } from './start-round.use-case';
 
@@ -29,38 +34,83 @@ export class EndRoundUseCase {
   ) {}
 
   execute(room: Room, now: number): RoundEndPayload {
-    const { initialSeconds, hintEnabled, rounds } = room.settings;
+    const { initialSeconds, hintEnabled, rounds, mode } = room.settings;
+    const teamMode = mode === 'teams';
+    // Team mode: points are the team's; the per-player table stays empty.
+    const breakdown = teamMode
+      ? []
+      : room.players.map((player) => {
+          const round = player.round;
+          const result = scoreRound(
+            {
+              playerId: player.id,
+              name: player.name,
+              solved: round?.solved ?? false,
+              attempt: round?.attempt ?? 0,
+              position: round?.solvedPosition ?? null,
+              secondsLeftAtSolve: round?.frozenSecondsLeft ?? 0,
+              hintUsed: round?.hintUsed ?? false,
+              greens: round?.greens ?? 0,
+              yellows: round?.yellows ?? 0,
+            },
+            initialSeconds,
+            hintEnabled,
+          );
+          player.totalPoints += result.roundPoints;
+          player.totalAttempts += result.attempt;
+          if (round?.hintUsed) player.hintsUsed += 1;
+          return result;
+        });
 
-    const breakdown = room.players.map((player) => {
-      const round = player.round;
-      const result = scoreRound(
+    const standings = teamMode
+      ? []
+      : computeStandings(
+          room.players.map((p) => ({
+            playerId: p.id,
+            name: p.name,
+            total: p.totalPoints,
+            attempts: p.totalAttempts,
+            hintsUsed: p.hintsUsed,
+          })),
+        );
+
+    // Team mode (docs/context/06-v1.1.md -> Team scoring).
+    const teams = room.teams.map((team) => {
+      const round = team.round;
+      const solver = round?.solverId ? room.findPlayer(round.solverId) : undefined;
+      const result = scoreTeamRound(
         {
-          playerId: player.id,
-          name: player.name,
+          team: team.id,
+          name: team.name,
+          color: team.color,
           solved: round?.solved ?? false,
-          attempt: round?.attempt ?? 0,
+          solverId: round?.solverId ?? null,
+          solverName: solver?.name ?? null,
           position: round?.solvedPosition ?? null,
           secondsLeftAtSolve: round?.frozenSecondsLeft ?? 0,
           hintUsed: round?.hintUsed ?? false,
-          greens: round?.greens ?? 0,
-          yellows: round?.yellows ?? 0,
+          attemptsAfterFirst: round?.attemptsAfterFirst ?? 0,
         },
         initialSeconds,
         hintEnabled,
       );
-      player.totalPoints += result.roundPoints;
-      player.totalAttempts += result.attempt;
-      if (round?.hintUsed) player.hintsUsed += 1;
+      team.totalPoints += result.roundPoints;
       return result;
     });
-
-    const standings = computeStandings(
-      room.players.map((p) => ({
-        playerId: p.id,
-        name: p.name,
-        total: p.totalPoints,
-        attempts: p.totalAttempts,
-        hintsUsed: p.hintsUsed,
+    if (teams.length > 0) {
+      // The round goes to the team with the most points; a tie goes to nobody.
+      const best = Math.max(...teams.map((t) => t.roundPoints));
+      const winners = teams.filter((t) => t.roundPoints === best);
+      if (winners.length === 1) room.team(winners[0].team).roundsWon += 1;
+    }
+    const teamStandings: TeamStanding[] = computeTeamStandings(
+      room.teams.map((team) => ({
+        team: team.id,
+        name: team.name,
+        color: team.color,
+        total: team.totalPoints,
+        roundsWon: team.roundsWon,
+        gamesWon: team.gamesWon,
       })),
     );
 
@@ -71,9 +121,12 @@ export class EndRoundUseCase {
     const payload: RoundEndPayload = {
       round: room.currentRound,
       totalRounds: rounds,
+      mode,
       word: room.word ?? '',
       breakdown,
       standings,
+      teams,
+      teamStandings,
       nextRoundIn: isLast ? 0 : ROOM_LIMITS.betweenRoundsSeconds,
     };
 
@@ -84,10 +137,18 @@ export class EndRoundUseCase {
     if (isLast) {
       room.status = 'finished';
       room.finishedAt = now;
+      // The game goes to the team with the most points; the counter outlives the game.
+      if (teamStandings.length > 0) {
+        const [first, second] = teamStandings;
+        if (first && (!second || second.total < first.total)) {
+          room.team(first.team).gamesWon += 1;
+          first.gamesWon += 1;
+        }
+      }
       this.bus.publish({
         roomCode: room.code,
         event: 'game:end',
-        payload: { standings, rounds },
+        payload: { standings, teamStandings, rounds },
       });
       this.logger.log(
         abandoned && room.currentRound < rounds

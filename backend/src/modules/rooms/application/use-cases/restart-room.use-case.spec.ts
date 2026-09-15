@@ -20,6 +20,7 @@ class FakeClock implements Clock {
 
 const SETTINGS: RoomSettings = {
   language: 'en',
+  mode: 'normal',
   wordLength: 5,
   initialSeconds: 120,
   rounds: 3,
@@ -53,9 +54,12 @@ describe('RestartRoomUseCase', () => {
     room.lastRoundEnd = {
       round: 3,
       totalRounds: 3,
+      mode: 'normal',
       word: 'ahora',
       breakdown: [],
       standings: [],
+      teams: [],
+      teamStandings: [],
       nextRoundIn: 0,
     };
     for (const player of room.players) {

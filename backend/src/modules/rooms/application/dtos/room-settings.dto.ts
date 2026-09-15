@@ -2,6 +2,7 @@ import { IsBoolean, IsIn, IsInt, Max, Min } from 'class-validator';
 import {
   ROOM_LIMITS,
   WORD_LENGTHS,
+  type GameMode,
   type Language,
   type RoomSettings,
   type WordLength,
@@ -10,6 +11,8 @@ import {
 export class RoomSettingsDto implements RoomSettings {
   @IsIn(['es', 'en'])
   language!: Language;
+  @IsIn(['normal', 'teams'])
+  mode!: GameMode;
   @IsIn(WORD_LENGTHS)
   wordLength!: WordLength;
 

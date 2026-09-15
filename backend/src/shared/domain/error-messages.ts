@@ -19,6 +19,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   cooldown: 'Too fast, wait a moment',
   not_in_room: 'You are not in a room',
   already_in_room: 'You are already in another room; leave it first',
+  not_in_team: 'That team action needs team mode and a seat in that team.',
   session_expired: 'Your session has expired',
   internal: 'Unexpected server error',
 };

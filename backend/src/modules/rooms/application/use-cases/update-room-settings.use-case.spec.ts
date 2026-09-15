@@ -17,6 +17,7 @@ class FakeClock implements Clock {
 
 const BASE: RoomSettings = {
   language: 'es',
+  mode: 'normal',
   wordLength: 5,
   initialSeconds: 90,
   rounds: 3,
@@ -53,6 +54,7 @@ describe('UpdateRoomSettingsUseCase', () => {
   it('lets the host rewrite every setting and broadcasts the new lobby', () => {
     useCase.execute('ABCD', 'host', {
       language: 'en',
+      mode: 'normal',
       wordLength: 5,
       initialSeconds: 60,
       rounds: 5,
@@ -62,6 +64,7 @@ describe('UpdateRoomSettingsUseCase', () => {
 
     expect(room.settings).toEqual({
       language: 'en',
+      mode: 'normal',
       wordLength: 5,
       initialSeconds: 60,
       rounds: 5,

@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { RoomEventsBus } from '@shared/events/room-events.bus';
 import { PlayerRound } from '@modules/rooms/domain/entities/player-round.entity';
+import { TeamRound } from '@modules/rooms/domain/entities/team.entity';
 import { Room } from '@modules/rooms/domain/entities/room.entity';
 import { toRoundState } from '@modules/rooms/domain/services/state-presenter';
 import { IWordPicker, WORD_PICKER } from '@modules/words/domain/interfaces/word-picker.interface';
@@ -28,9 +29,12 @@ export class StartRoundUseCase {
     room.nextRoundAt = null;
     room.touch(now);
 
+    // Team mode: one clock, ledger and hint per team, shared by its members.
+    for (const team of room.teams) team.round = new TeamRound(now, initialSeconds, wordLength);
     for (const player of room.players) {
       player.ready = false;
-      player.round = new PlayerRound(now, initialSeconds, wordLength);
+      const team = room.teamOf(player);
+      player.round = new PlayerRound(now, initialSeconds, wordLength, team?.round ?? null);
     }
 
     // `me` differs per player, so the payload is addressed socket by socket.

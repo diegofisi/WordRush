@@ -1,4 +1,12 @@
-import { SCORING, type RoundBreakdown, type Standing } from '@shared/contract';
+import {
+  SCORING,
+  type RoundBreakdown,
+  type Standing,
+  type TeamColor,
+  type TeamId,
+  type TeamRoundBreakdown,
+  type TeamStanding,
+} from '@shared/contract';
 
 /** What a player ends the round with; the input of the points formula. */
 export interface RoundResult {
@@ -99,4 +107,82 @@ export function computeStandings(players: StandingInput[]): Standing[] {
     standings.push({ ...p, rank: tiedWithPrev ? prev.rank : index + 1 });
   });
   return standings;
+}
+
+/** What a team ends the round with (docs/context/06-v1.1.md -> Team scoring). */
+export interface TeamRoundResult {
+  team: TeamId;
+  name: string;
+  color: TeamColor;
+  solved: boolean;
+  solverId: string | null;
+  solverName: string | null;
+  /** 1st or 2nd team to solve; null when not solved. */
+  position: number | null;
+  secondsLeftAtSolve: number;
+  hintUsed: boolean;
+  /** Every member's attempts after their first. */
+  attemptsAfterFirst: number;
+}
+
+/**
+ * One team, one score: +40 for the solve, the team clock's percentage, +20 to
+ * the first team only, −4 per attempt of every member after their first, +10
+ * for the hint kept. Floor 40 on a solve; 0 without one.
+ */
+export function scoreTeamRound(
+  result: TeamRoundResult,
+  initialSeconds: number,
+  hintEnabled: boolean,
+): TeamRoundBreakdown {
+  const base: TeamRoundBreakdown = {
+    team: result.team,
+    name: result.name,
+    color: result.color,
+    solved: result.solved,
+    solverId: result.solverId,
+    solverName: result.solverName,
+    position: result.solved ? result.position : null,
+    timeLeftPercent: null,
+    timePoints: 0,
+    solveBonus: 0,
+    attemptsAfterFirst: result.attemptsAfterFirst,
+    attemptPenalty: 0,
+    positionBonus: 0,
+    hintBonus: 0,
+    roundPoints: 0,
+  };
+  if (!result.solved) return base;
+  const percent = Math.round((result.secondsLeftAtSolve / initialSeconds) * 100);
+  base.timeLeftPercent = percent;
+  base.timePoints = percent;
+  base.solveBonus = SCORING.solveBonus;
+  base.attemptPenalty = -SCORING.attemptPenalty * result.attemptsAfterFirst;
+  base.positionBonus = result.position === 1 ? SCORING.teamFirstBonus : 0;
+  base.hintBonus = hintEnabled && !result.hintUsed ? SCORING.hintKeptBonus : 0;
+  base.roundPoints = Math.max(
+    SCORING.solveBonus,
+    base.timePoints + base.solveBonus + base.attemptPenalty + base.positionBonus + base.hintBonus,
+  );
+  return base;
+}
+
+export interface TeamStandingInput {
+  team: TeamId;
+  name: string;
+  color: TeamColor;
+  total: number;
+  roundsWon: number;
+  gamesWon: number;
+}
+
+/** Points desc, then rounds won; equal on both = same rank. */
+export function computeTeamStandings(teams: TeamStandingInput[]): TeamStanding[] {
+  const sorted = [...teams].sort((a, b) => b.total - a.total || b.roundsWon - a.roundsWon);
+  return sorted.map((team, index) => {
+    const prev = sorted[index - 1];
+    const tied =
+      prev !== undefined && prev.total === team.total && prev.roundsWon === team.roundsWon;
+    return { ...team, rank: tied ? index : index + 1 };
+  });
 }

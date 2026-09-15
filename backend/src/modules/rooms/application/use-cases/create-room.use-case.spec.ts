@@ -17,6 +17,7 @@ const dto: CreateRoomDto = {
   name: 'ana',
   settings: {
     language: 'es',
+    mode: 'normal',
     wordLength: 5,
     initialSeconds: 60,
     rounds: 3,

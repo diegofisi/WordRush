@@ -5,9 +5,12 @@ import type {
   RoundEndPayload,
   RoundState,
   SelfState,
+  TeammateRows,
+  TeamRoundState,
 } from '@shared/contract';
 import type { Player } from '../entities/player.entity';
 import type { Room } from '../entities/room.entity';
+import type { Team } from '../entities/team.entity';
 
 /**
  * Pure mappers from the aggregate to the contract shapes. Colours only for
@@ -44,10 +47,44 @@ export function toSelfState(player: Player, now: number): SelfState {
   };
 }
 
+export function toTeamRoundState(team: Team, now: number): TeamRoundState {
+  const round = team.round;
+  return {
+    id: team.id,
+    secondsLeft: round?.secondsLeft(now) ?? 0,
+    at: now,
+    solved: round?.solved ?? false,
+    solvedPosition: round?.solvedPosition ?? null,
+    solverId: round?.solverId ?? null,
+    finished: round?.finished ?? false,
+    hintUsed: round?.hintUsed ?? false,
+    penaltySeconds: round?.penaltySeconds ?? 0,
+    attemptsAfterFirst: round?.attemptsAfterFirst ?? 0,
+  };
+}
+
+/** A teammate's board with letters: only teammates ever receive this. */
+export function toTeammateRows(player: Player): TeammateRows {
+  return {
+    playerId: player.id,
+    rows: player.round
+      ? player.round.rows.map((r) => ({ word: r.word, colors: [...r.colors] }))
+      : [],
+  };
+}
+
 export function toRoundState(room: Room, player: Player, now: number): RoundState {
+  const teammates =
+    player.team === null
+      ? []
+      : room
+          .members(player.team)
+          .filter((p) => p.id !== player.id)
+          .map(toTeammateRows);
   return {
     round: room.currentRound,
     totalRounds: room.settings.rounds,
+    mode: room.settings.mode,
     wordLength: room.settings.wordLength,
     maxAttempts: attemptsFor(room.settings.wordLength),
     initialSeconds: room.settings.initialSeconds,
@@ -55,6 +92,9 @@ export function toRoundState(room: Room, player: Player, now: number): RoundStat
     hintAvailable: room.settings.hintEnabled,
     me: toSelfState(player, now),
     players: room.players.map((p) => toPlayerProgress(p, now)),
+    teams: room.teams.map((team) => toTeamRoundState(team, now)),
+    myTeam: player.team,
+    teammates,
   };
 }
 

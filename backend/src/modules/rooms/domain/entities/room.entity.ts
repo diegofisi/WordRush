@@ -1,5 +1,13 @@
-import type { LobbyState, RoomSettings, RoomStatus, RoundEndPayload } from '@shared/contract';
+import {
+  TEAM_IDS,
+  type LobbyState,
+  type RoomSettings,
+  type RoomStatus,
+  type RoundEndPayload,
+  type TeamId,
+} from '@shared/contract';
 import type { Player } from './player.entity';
+import { Team } from './team.entity';
 
 /**
  * Aggregate root: a room with its players, settings and the state of the
@@ -21,6 +29,8 @@ export class Room {
   nextRoundAt: number | null = null;
   /** Epoch ms at which the last player was removed; only set on an empty room. */
   emptiedAt: number | null = null;
+  /** Both teams in team mode; empty in the normal mode. */
+  readonly teams: Team[] = [];
 
   private constructor(
     readonly code: string,
@@ -31,7 +41,45 @@ export class Room {
   }
 
   static create(code: string, settings: RoomSettings, now: number): Room {
-    return new Room(code, settings, now);
+    const room = new Room(code, settings, now);
+    if (settings.mode === 'teams') room.formTeams();
+    return room;
+  }
+
+  // ------------------------------------------------------------- teams
+
+  /** Creates the two teams and seats everybody; a no-op when they exist. */
+  formTeams(): void {
+    if (this.teams.length > 0) return;
+    for (const id of TEAM_IDS) this.teams.push(new Team(id));
+    for (const player of this.players) if (!player.team) this.autoAssign(player);
+  }
+
+  /** Back to the normal mode: no teams, no seats in them. */
+  dissolveTeams(): void {
+    this.teams.length = 0;
+    for (const player of this.players) player.team = null;
+  }
+
+  team(id: TeamId): Team {
+    const team = this.teams.find((t) => t.id === id);
+    if (!team) throw new Error(`Room ${this.code} has no team ${id}`);
+    return team;
+  }
+
+  teamOf(player: Player): Team | null {
+    return player.team ? (this.teams.find((t) => t.id === player.team) ?? null) : null;
+  }
+
+  members(id: TeamId): Player[] {
+    return this.players.filter((p) => p.team === id);
+  }
+
+  /** The smaller team, the first on a tie: any split is legal, this is only a default. */
+  autoAssign(player: Player): void {
+    if (this.teams.length === 0) return;
+    const [a, b] = TEAM_IDS;
+    player.team = this.members(b).length < this.members(a).length ? b : a;
   }
 
   get host(): Player | undefined {
@@ -61,6 +109,7 @@ export class Room {
 
   addPlayer(player: Player): void {
     this.players.push(player);
+    if (this.settings.mode === 'teams') this.autoAssign(player);
   }
 
   /**
@@ -104,6 +153,7 @@ export class Room {
     this.nextRoundAt = null;
     this.emptiedAt = null;
     for (const player of this.players) player.resetForNewGame(now);
+    for (const team of this.teams) team.resetForNewGame();
     this.touch(now);
   }
 
@@ -114,6 +164,8 @@ export class Room {
    */
   updateSettings(next: RoomSettings): void {
     Object.assign(this.settings, next);
+    if (next.mode === 'teams') this.formTeams();
+    else this.dissolveTeams();
   }
 
   /**
@@ -133,6 +185,7 @@ export class Room {
       status: this.status,
       settings: { ...this.settings },
       players: this.players.map((p) => p.toPublic()),
+      teams: this.teams.map((t) => t.toPublic()),
     };
   }
 }

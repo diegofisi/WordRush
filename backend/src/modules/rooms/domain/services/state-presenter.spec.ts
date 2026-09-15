@@ -6,6 +6,7 @@ import { toFullState } from './state-presenter';
 
 const SETTINGS: RoomSettings = {
   language: 'es',
+  mode: 'normal',
   wordLength: 5,
   initialSeconds: 60,
   rounds: 3,
@@ -16,9 +17,12 @@ const SETTINGS: RoomSettings = {
 const roundEnd = (): RoundEndPayload => ({
   round: 1,
   totalRounds: 3,
+  mode: 'normal',
   word: 'ahora',
   breakdown: [],
   standings: [],
+  teams: [],
+  teamStandings: [],
   nextRoundIn: 12,
 });
 

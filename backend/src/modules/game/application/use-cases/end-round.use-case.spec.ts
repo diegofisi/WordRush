@@ -41,6 +41,7 @@ describe('EndRoundUseCase', () => {
       'ABCD',
       {
         language: 'es',
+        mode: 'normal',
         wordLength: 5,
         initialSeconds: 60,
         rounds: 3,

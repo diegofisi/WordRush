@@ -1,4 +1,5 @@
 import type { HintKind, HintReveal, OwnRow } from '@shared/contract';
+import type { TeamRound } from './team.entity';
 
 /** Time ledger entry for one position of the answer (0..wordLength-1). */
 export interface PositionCharge {
@@ -7,7 +8,8 @@ export interface PositionCharge {
   hinted: boolean;
 }
 
-export type FinishReason = 'solved' | 'attempts' | 'timeout' | 'left';
+/** `team`: a teammate solved, or the team's clock or attempts ran out. */
+export type FinishReason = 'solved' | 'attempts' | 'timeout' | 'left' | 'team';
 
 /**
  * What the hint picker resolved. For a letter hint the position stays on the
@@ -23,6 +25,10 @@ export interface HintPick {
  * Everything a player accumulates during one round: rows, clock, ledger and
  * hint state. The clock is a deadline in epoch ms; `secondsLeft` is derived
  * from it until the round is finished for this player, when it freezes.
+ *
+ * In team mode the clock, the ledger, the hint and the penalties are the
+ * team's (`TeamRound`), and this object delegates to it: the rows and the
+ * finished flag stay per player.
  */
 export class PlayerRound {
   readonly rows: OwnRow[] = [];
@@ -32,22 +38,41 @@ export class PlayerRound {
   solvedPosition: number | null = null;
   finished = false;
   finishReason: FinishReason | null = null;
-  hintUsed = false;
-  hint: HintReveal | null = null;
-  penaltySeconds = 0;
-  readonly charges: PositionCharge[];
+  private ownHintUsed = false;
+  private ownHint: HintReveal | null = null;
+  private ownPenaltySeconds = 0;
+  private readonly ownCharges: PositionCharge[];
 
   constructor(
     startedAt: number,
     initialSeconds: number,
     readonly wordLength: number,
+    /** Team mode: the round of the player's team. */
+    readonly team: TeamRound | null = null,
   ) {
     this.deadlineAt = startedAt + initialSeconds * 1000;
-    this.charges = Array.from({ length: wordLength }, () => ({
+    this.ownCharges = Array.from({ length: wordLength }, () => ({
       yellow: false,
       green: false,
       hinted: false,
     }));
+  }
+
+  /** The time ledger: the team's in team mode (paid once per position for everybody). */
+  get charges(): PositionCharge[] {
+    return this.team ? this.team.charges : this.ownCharges;
+  }
+
+  get hintUsed(): boolean {
+    return this.team ? this.team.hintUsed : this.ownHintUsed;
+  }
+
+  get hint(): HintReveal | null {
+    return this.team ? this.team.hint : this.ownHint;
+  }
+
+  get penaltySeconds(): number {
+    return this.team ? this.team.penaltySeconds : this.ownPenaltySeconds;
   }
 
   get attempt(): number {
@@ -69,28 +94,38 @@ export class PlayerRound {
   }
 
   secondsLeft(now: number): number {
+    if (this.team) return this.team.secondsLeft(now);
     if (this.frozenSecondsLeft !== null) return this.frozenSecondsLeft;
     return Math.max(0, Math.round(((this.deadlineAt - now) / 1000) * 100) / 100);
   }
 
   isOutOfTime(now: number): boolean {
+    if (this.team) return !this.finished && this.team.isOutOfTime(now);
     return !this.finished && this.deadlineAt <= now;
   }
 
   /** Positive = bonus (deadline moves forward), negative = penalty. */
   addSeconds(seconds: number): void {
-    this.deadlineAt += seconds * 1000;
+    if (this.team) this.team.addSeconds(seconds);
+    else this.deadlineAt += seconds * 1000;
   }
 
   applyPenalty(seconds: number): void {
-    this.penaltySeconds += seconds;
+    if (this.team) {
+      this.team.applyPenalty(seconds);
+      return;
+    }
+    this.ownPenaltySeconds += seconds;
     this.addSeconds(-seconds);
   }
 
-  /** Freezes the clock and marks the round over for this player. */
+  /**
+   * Freezes the clock and marks the round over for this player. In team mode
+   * the team clock keeps running for the others: only the flag is set here.
+   */
   finish(reason: FinishReason, now: number): void {
     if (this.finished) return;
-    this.frozenSecondsLeft = reason === 'timeout' ? 0 : this.secondsLeft(now);
+    if (!this.team) this.frozenSecondsLeft = reason === 'timeout' ? 0 : this.secondsLeft(now);
     this.finished = true;
     this.finishReason = reason;
   }
@@ -106,13 +141,17 @@ export class PlayerRound {
    * later (5 s when placed); a placed slot is green already and earns nothing.
    */
   revealHint(pick: HintPick): void {
-    this.hintUsed = true;
-    this.hint = {
+    if (this.team) {
+      this.team.revealHint(pick);
+      return;
+    }
+    this.ownHintUsed = true;
+    this.ownHint = {
       letter: pick.letter,
       kind: pick.kind,
       position: pick.kind === 'position' ? pick.position : null,
     };
-    const charge = this.charges[pick.position];
+    const charge = this.ownCharges[pick.position];
     charge.hinted = true;
     if (pick.kind === 'position') charge.green = true;
   }

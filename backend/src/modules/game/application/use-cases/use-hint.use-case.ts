@@ -31,8 +31,9 @@ export class UseHintUseCase {
     const round = player.round;
     const answer = room.word;
     if (room.status !== 'playing' || !round || !answer) throw new DomainException('not_in_round');
-    if (round.finished) throw new DomainException('already_finished');
+    if (round.finished || round.team?.finished) throw new DomainException('already_finished');
     if (!room.settings.hintEnabled) throw new DomainException('hint_unavailable');
+    // One per player, or one per team: `hintUsed` reads the team's in team mode.
     if (round.hintUsed) throw new DomainException('hint_already_used');
 
     const now = this.clock.now();
@@ -47,11 +48,23 @@ export class UseHintUseCase {
     round.revealHint(pick);
     room.touch(now);
 
-    this.bus.publish({
-      roomCode: room.code,
-      event: 'player:hint',
-      payload: { usedInRound: room.players.filter((p) => p.round?.hintUsed).length },
-    });
+    const usedInRound =
+      room.teams.length > 0
+        ? room.teams.filter((t) => t.round?.hintUsed).length
+        : room.players.filter((p) => p.round?.hintUsed).length;
+    this.bus.publish({ roomCode: room.code, event: 'player:hint', payload: { usedInRound } });
+    // Team mode: the reveal is the team's; every member's board and keyboard show it.
+    if (player.team !== null && round.hint) {
+      for (const mate of room.members(player.team)) {
+        if (mate.id === player.id || !mate.connected) continue;
+        this.bus.publish({
+          roomCode: room.code,
+          toPlayerId: mate.id,
+          event: 'team:hint',
+          payload: round.hint,
+        });
+      }
+    }
     return {
       letter: pick.letter,
       kind: pick.kind,

@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { RoomEventsBus } from '@shared/events/room-events.bus';
 import { Player } from '@modules/rooms/domain/entities/player.entity';
 import { Room } from '@modules/rooms/domain/entities/room.entity';
-import { toPlayerProgress } from '@modules/rooms/domain/services/state-presenter';
+import {
+  toPlayerProgress,
+  toTeammateRows,
+  toTeamRoundState,
+} from '@modules/rooms/domain/services/state-presenter';
 import { EndRoundUseCase } from '../use-cases/end-round.use-case';
 
 /**
@@ -16,9 +20,16 @@ export class RoundLifecycleService {
     private readonly endRound: EndRoundUseCase,
   ) {}
 
-  /** Marks every player whose deadline passed as finished (time out) and broadcasts it. */
+  /**
+   * Marks every player whose deadline passed as finished (time out) and
+   * broadcasts it. In team mode the deadline is the team's: the team round
+   * closes and every member with it.
+   */
   finishTimedOut(room: Room, now: number): Player[] {
     const timedOut: Player[] = [];
+    for (const team of room.teams) {
+      if (team.round?.isOutOfTime(now)) team.round.finish('timeout', now);
+    }
     for (const player of room.players) {
       const round = player.round;
       if (round && round.isOutOfTime(now)) {
@@ -27,7 +38,46 @@ export class RoundLifecycleService {
       }
     }
     for (const player of timedOut) this.publishProgress(room, player, now);
+    if (timedOut.length > 0) this.publishTeamClocks(room, now);
     return timedOut;
+  }
+
+  /** Team mode: the shared clocks, to the whole room. */
+  publishTeamClocks(room: Room, now: number): void {
+    if (room.teams.length === 0) return;
+    this.bus.publish({
+      roomCode: room.code,
+      event: 'team:clocks',
+      payload: room.teams.map((team) => toTeamRoundState(team, now)),
+    });
+  }
+
+  /** Team mode: a member's board with letters, to their teammates only. */
+  publishTeammateRows(room: Room, player: Player): void {
+    if (player.team === null) return;
+    const payload = toTeammateRows(player);
+    for (const mate of room.members(player.team)) {
+      if (mate.id === player.id || !mate.connected) continue;
+      this.bus.publish({
+        roomCode: room.code,
+        toPlayerId: mate.id,
+        event: 'teammate:progress',
+        payload,
+      });
+    }
+  }
+
+  /**
+   * Team mode: a team whose members have all run out of attempts is done, the
+   * clock notwithstanding. Returns true when the team round just closed.
+   */
+  closeTeamIfSpent(room: Room, player: Player, now: number): boolean {
+    const team = room.teamOf(player);
+    if (!team?.round || team.round.finished) return false;
+    const members = room.members(team.id);
+    if (members.length === 0 || !members.every((m) => m.round?.finished)) return false;
+    team.round.finish('attempts', now);
+    return true;
   }
 
   publishProgress(room: Room, player: Player, now: number): void {
@@ -39,7 +89,14 @@ export class RoundLifecycleService {
   }
 
   isRoundOver(room: Room): boolean {
-    return room.players.length > 0 && room.players.every((p) => p.round?.finished === true);
+    if (room.players.length === 0) return false;
+    if (room.teams.length > 0) {
+      // A team nobody sits in has nothing to finish.
+      return room.teams.every(
+        (team) => room.members(team.id).length === 0 || team.round?.finished === true,
+      );
+    }
+    return room.players.every((p) => p.round?.finished === true);
   }
 
   /** Ends the round if the room is playing and nobody is left in it. */

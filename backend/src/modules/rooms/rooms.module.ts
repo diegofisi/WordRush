@@ -9,6 +9,12 @@ import { MarkDisconnectedUseCase } from './application/use-cases/mark-disconnect
 import { RejoinRoomUseCase } from './application/use-cases/rejoin-room.use-case';
 import { RestartRoomUseCase } from './application/use-cases/restart-room.use-case';
 import { SetReadyUseCase } from './application/use-cases/set-ready.use-case';
+import {
+  AssignTeamUseCase,
+  CustomizeTeamUseCase,
+  JoinTeamUseCase,
+  ResetTeamGamesUseCase,
+} from './application/use-cases/team.use-cases';
 import { UpdateRoomSettingsUseCase } from './application/use-cases/update-room-settings.use-case';
 import { ROOM_REPOSITORY } from './domain/interfaces/room-repository.interface';
 import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-room.repository';
@@ -22,6 +28,10 @@ import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-
     JoinRoomUseCase,
     RejoinRoomUseCase,
     SetReadyUseCase,
+    JoinTeamUseCase,
+    AssignTeamUseCase,
+    CustomizeTeamUseCase,
+    ResetTeamGamesUseCase,
     UpdateRoomSettingsUseCase,
     RestartRoomUseCase,
     LeaveRoomUseCase,
@@ -39,6 +49,10 @@ import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-
     LeaveRoomUseCase,
     MarkDisconnectedUseCase,
     EnsureNotInRoomUseCase,
+    JoinTeamUseCase,
+    AssignTeamUseCase,
+    CustomizeTeamUseCase,
+    ResetTeamGamesUseCase,
   ],
 })
 export class RoomsModule {}

@@ -24,6 +24,11 @@ import { CreateRoomDto } from '@modules/rooms/application/dtos/create-room.dto';
 import { JoinRoomDto } from '@modules/rooms/application/dtos/join-room.dto';
 import { RejoinRoomDto } from '@modules/rooms/application/dtos/rejoin-room.dto';
 import { SetReadyDto } from '@modules/rooms/application/dtos/set-ready.dto';
+import {
+  AssignTeamDto,
+  CustomizeTeamDto,
+  JoinTeamDto,
+} from '@modules/rooms/application/dtos/team.dto';
 import { UpdateRoomSettingsDto } from '@modules/rooms/application/dtos/update-room-settings.dto';
 import {
   CreateRoomUseCase,
@@ -36,6 +41,12 @@ import { MarkDisconnectedUseCase } from '@modules/rooms/application/use-cases/ma
 import { RejoinRoomUseCase } from '@modules/rooms/application/use-cases/rejoin-room.use-case';
 import { RestartRoomUseCase } from '@modules/rooms/application/use-cases/restart-room.use-case';
 import { SetReadyUseCase } from '@modules/rooms/application/use-cases/set-ready.use-case';
+import {
+  AssignTeamUseCase,
+  CustomizeTeamUseCase,
+  JoinTeamUseCase,
+  ResetTeamGamesUseCase,
+} from '@modules/rooms/application/use-cases/team.use-cases';
 import { UpdateRoomSettingsUseCase } from '@modules/rooms/application/use-cases/update-room-settings.use-case';
 import { toFullState } from '@modules/rooms/domain/services/state-presenter';
 import { SessionRegistry } from './session-registry';
@@ -74,6 +85,10 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     private readonly joinRoom: JoinRoomUseCase,
     private readonly rejoinRoom: RejoinRoomUseCase,
     private readonly setReady: SetReadyUseCase,
+    private readonly joinTeam: JoinTeamUseCase,
+    private readonly assignTeam: AssignTeamUseCase,
+    private readonly customizeTeam: CustomizeTeamUseCase,
+    private readonly resetTeamGames: ResetTeamGamesUseCase,
     private readonly updateRoomSettings: UpdateRoomSettingsUseCase,
     private readonly restartRoom: RestartRoomUseCase,
     private readonly leaveRoom: LeaveRoomUseCase,
@@ -152,6 +167,38 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   onReady(@ConnectedSocket() client: GameSocket, @MessageBody() dto: SetReadyDto): EmptyAck {
     const { roomCode, playerId } = this.requireSession(client);
     this.setReady.execute(roomCode, playerId, dto.ready);
+    return OK_EMPTY;
+  }
+
+  // ---------------------------------------------------------------- teams
+  @SubscribeMessage('team:join')
+  onJoinTeam(@ConnectedSocket() client: GameSocket, @MessageBody() dto: JoinTeamDto): EmptyAck {
+    const { roomCode, playerId } = this.requireSession(client);
+    this.joinTeam.execute(roomCode, playerId, dto.team);
+    return OK_EMPTY;
+  }
+
+  @SubscribeMessage('team:assign')
+  onAssignTeam(@ConnectedSocket() client: GameSocket, @MessageBody() dto: AssignTeamDto): EmptyAck {
+    const { roomCode, playerId } = this.requireSession(client);
+    this.assignTeam.execute(roomCode, playerId, dto.playerId, dto.team);
+    return OK_EMPTY;
+  }
+
+  @SubscribeMessage('team:customize')
+  onCustomizeTeam(
+    @ConnectedSocket() client: GameSocket,
+    @MessageBody() dto: CustomizeTeamDto,
+  ): EmptyAck {
+    const { roomCode, playerId } = this.requireSession(client);
+    this.customizeTeam.execute(roomCode, playerId, dto.team, { name: dto.name, color: dto.color });
+    return OK_EMPTY;
+  }
+
+  @SubscribeMessage('team:reset-games')
+  onResetTeamGames(@ConnectedSocket() client: GameSocket): EmptyAck {
+    const { roomCode, playerId } = this.requireSession(client);
+    this.resetTeamGames.execute(roomCode, playerId);
     return OK_EMPTY;
   }
 

@@ -17,6 +17,7 @@ class FakeClock implements Clock {
 
 const settings = {
   language: 'es' as const,
+  mode: 'normal' as const,
   wordLength: 5 as const,
   initialSeconds: 60,
   rounds: 3,

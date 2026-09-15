@@ -1,4 +1,4 @@
-import type { PlayerPublic } from '@shared/contract';
+import type { PlayerPublic, TeamId } from '@shared/contract';
 import type { PlayerRound } from './player-round.entity';
 
 export interface PlayerProps {
@@ -16,6 +16,8 @@ export class Player {
   readonly name: string;
   readonly joinedAt: number;
   isHost: boolean;
+  /** Team mode: which of the two teams; null in the normal mode. */
+  team: TeamId | null = null;
   ready = false;
   connected = true;
   disconnectedAt: number | null = null;
@@ -74,6 +76,7 @@ export class Player {
       isHost: this.isHost,
       ready: this.ready,
       connected: this.connected,
+      team: this.team,
     };
   }
 }
