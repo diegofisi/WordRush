@@ -132,13 +132,13 @@ client never declares a timeout; it waits for the server.
 
 ## Routing shape
 
-Flat router under `AppLayout`: `/` (create / join), `/sala/:code` (lobby),
-`/juego/:code` (game), `/resultados/:code` (results), plus a `*` 404. Path
+Flat router under `AppLayout`: `/` (create / join), `/room/:code` (lobby),
+`/game/:code` (game), `/results/:code` (results), plus a `*` 404. Path
 constants and builders in `shared/routes/paths.ts`, including `pathForStatus()`,
 which maps a room status to its screen. The three room routes sit behind
 `RequireSession`.
 
-A reload on `/juego/:code` re-joins with the stored session; if the server
+A reload on `/game/:code` re-joins with the stored session; if the server
 rejects it, go to `/`. Note the `:code` segment is **not** authoritative: where
 a session exists it wins (`session?.roomCode ?? code`), so the segment is only
 there to be shareable.

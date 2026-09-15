@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { socket } from '@/core/session/lib/socket';
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { getT } from '@/shared/i18n';
+import { playSound } from '@/shared/lib/sound';
 import {
   MAX_ATTEMPTS,
   ROOM_LIMITS,
@@ -246,7 +247,10 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       if (bound) return;
       bound = true;
 
-      socket.on('round:start', (round) => applyRound(round, 'playing'));
+      socket.on('round:start', (round) => {
+        applyRound(round, 'playing');
+        if (round.round === 1) playSound('gameStarted');
+      });
       socket.on('player:progress', onProgress);
       socket.on('player:solved', (payload) => {
         set((state) => ({ solvedCount: Math.max(state.solvedCount, payload.position) }));
@@ -303,7 +307,10 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
           set((state) => (state.sticker?.id === id ? { sticker: null } : {}));
         }, STICKER_MS);
       });
-      socket.on('round:end', () => set({ status: 'ended', draft: '' }));
+      socket.on('round:end', () => {
+        set({ status: 'ended', draft: '' });
+        playSound('roundEnded');
+      });
       socket.on('game:end', () => set({ status: 'ended', draft: '' }));
       socket.on('lobby:update', (lobby) =>
         set((state) => ({

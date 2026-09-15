@@ -13,3 +13,4 @@ Thumbs.db
 
 # Personal Claude Code permissions
 .claude/settings.local.json
+scripts/sources/

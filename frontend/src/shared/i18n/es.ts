@@ -21,6 +21,8 @@ export const es = {
     uiLanguage: 'Idioma de la interfaz',
     themeLight: 'Cambiar a modo claro',
     themeDark: 'Cambiar a modo oscuro',
+    soundOn: 'Activar sonido',
+    soundOff: 'Silenciar el juego',
     copyLink: 'Copiar enlace',
     copied: 'Enlace copiado',
     copyFailed: 'No se pudo copiar',
@@ -115,8 +117,7 @@ export const es = {
     scoringGreens: 'No acertar, por cada letra en verde',
     scoringYellows: 'No acertar, por cada letra en amarillo',
     letterTime: 'Tiempo por letras',
-    letterTimeNote:
-      'Cada letra suma tiempo una vez. Cuando alguien acierta, el resto pierde 5 s.',
+    letterTimeNote: 'Cada letra suma tiempo una vez. Cuando alguien acierta, el resto pierde 5 s.',
     hintOff: 'sin pista',
     shareHint: 'Comparte el enlace o el código para que entren.',
     changeRules: 'Cambiar reglas',

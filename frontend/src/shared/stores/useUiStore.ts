@@ -8,6 +8,7 @@ export type UiLanguage = Language;
 const LANG_KEY = 'wordrush.lang';
 const THEME_KEY = 'wordrush.theme';
 const NAME_KEY = 'wordrush.name';
+const MUTED_KEY = 'wordrush.muted';
 
 const readStorage = (key: string): string | null => {
   try {
@@ -50,6 +51,8 @@ interface UiState {
   theme: Theme;
   /** Last name typed on the home screen, for convenience across visits. */
   rememberedName: string;
+  /** The game's sound cues off; persisted like the theme. */
+  muted: boolean;
 }
 
 interface UiActions {
@@ -57,12 +60,14 @@ interface UiActions {
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
   rememberName: (name: string) => void;
+  toggleMuted: () => void;
 }
 
 const initialState: UiState = {
   lang: getInitialLang(),
   theme: getInitialTheme(),
   rememberedName: readStorage(NAME_KEY) ?? '',
+  muted: readStorage(MUTED_KEY) === '1',
 };
 
 export const useUiStore = create<UiState & UiActions>((set, get) => ({
@@ -81,6 +86,11 @@ export const useUiStore = create<UiState & UiActions>((set, get) => ({
   rememberName: (rememberedName) => {
     writeStorage(NAME_KEY, rememberedName);
     set({ rememberedName });
+  },
+  toggleMuted: () => {
+    const muted = !get().muted;
+    writeStorage(MUTED_KEY, muted ? '1' : '0');
+    set({ muted });
   },
 }));
 

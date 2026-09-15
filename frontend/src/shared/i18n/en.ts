@@ -35,6 +35,8 @@ export const en: Dictionary = {
     uiLanguage: 'Interface language',
     themeLight: 'Switch to light mode',
     themeDark: 'Switch to dark mode',
+    soundOn: 'Turn sound on',
+    soundOff: 'Mute the game',
     copyLink: 'Copy link',
     copied: 'Link copied',
     copyFailed: 'Could not copy',

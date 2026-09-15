@@ -6,6 +6,7 @@ import { useT } from '@/shared/i18n';
 import { lobbyPath } from '@/shared/routes/paths';
 import { toast } from '@/shared/stores/useToastStore';
 import { useUiStore } from '@/shared/stores/useUiStore';
+import { playSound } from '@/shared/lib/sound';
 
 import type { CreateRoomForm as CreateRoomFormValues } from '../api/create-room/create-room.dto';
 import { useCreateRoom } from '../api/create-room/useCreateRoom';
@@ -60,8 +61,10 @@ export const HomeContainer = () => {
   const handleCreate = async () => {
     if (!validName()) return;
     const result = await createRoom(values);
-    if (result.ok) navigate(lobbyPath(result.value.roomCode));
-    else toast.error(result.error.message === 'timeout' ? 'timeout' : result.error.code);
+    if (result.ok) {
+      playSound('roomCreated');
+      navigate(lobbyPath(result.value.roomCode));
+    } else toast.error(result.error.message === 'timeout' ? 'timeout' : result.error.code);
   };
 
   const handleJoin = async () => {
