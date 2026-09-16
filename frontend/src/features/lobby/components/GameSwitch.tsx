@@ -26,7 +26,7 @@ export const GameSwitch = ({ t, game, onChange }: GameSwitchProps) => {
       <span
         aria-hidden="true"
         className={cn(
-          'absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full transition-[transform,background-color] duration-250 ease-[cubic-bezier(0.34,1.4,0.64,1)] motion-reduce:transition-none',
+          'absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full transition-[translate,background-color] duration-300 ease-[cubic-bezier(0.34,1.4,0.64,1)] motion-reduce:transition-none',
           phrase ? 'translate-x-full bg-yellow' : 'translate-x-0 bg-green',
         )}
       />
