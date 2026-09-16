@@ -43,7 +43,7 @@ export const GameSwitch = ({ t, game, onChange }: GameSwitchProps) => {
               'relative z-10 rounded-full px-3 text-[13px] font-bold whitespace-nowrap transition-colors duration-200',
               active
                 ? option === 'phrase'
-                  ? 'text-[#1c1a17]'
+                  ? 'text-tile-ink-dark'
                   : 'text-white'
                 : 'text-ink-2 hover:text-ink',
             )}
