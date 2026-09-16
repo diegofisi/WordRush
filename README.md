@@ -1,4 +1,4 @@
-# WordRush · Multiplayer Wordle
+# WordRush · Multiplayer word race
 
 Guess the word before everyone else. Every new letter adds seconds to your clock, every
 rival solve takes seconds away, and whoever finishes with the most clock wins. Rooms of 2
@@ -137,7 +137,7 @@ letter of its own.
 Answers are **base forms only** (infinitives, singular nouns, masculine singular
 adjectives; in English no plurals or past tenses), in neutral Spanish, the most used words
 of the language, sorted from most to least frequent. The picker favours the head of the
-list. The lists are deliberately far below Wordle's ~2300: no regionalisms, no profanity,
+list. The lists are deliberately far below the ~2300 of the classic daily game: no regionalisms, no profanity,
 no proper nouns, and none of the tail of rare words that appears past the ~900 most used.
 To widen them, change `EN_ANSWERS` / `ES_ANSWERS` in the script and regenerate.
 

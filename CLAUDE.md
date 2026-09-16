@@ -1,4 +1,4 @@
-# WordRush · Multiplayer Wordle
+# WordRush · Multiplayer word race
 
 A game of guessing words of 5, 6 or 7 letters, multiplayer (up to 8, plus 2 observers),
 in Spanish and English, alone or in two teams, where the clock rules: you gain time from

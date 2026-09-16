@@ -72,6 +72,11 @@
 | v1.1 built locally on 2026-09-15 (phases 0–8 of `06-v1.1.md`), tagged `v1.1`, **not deployed** | The user asked for a local build only. |
 | Review of 2026-09-15: a team game needs a connected member in both teams to start; a room whose last seated player leaves is deleted and the observers are told (`room:closed`); only connected observers are seated; a kicked socket is detached before the room hears they left | Found reviewing v1.1 before merging: empty teams and host-less rooms had nobody to play or start. |
 
+## Decisions taken (2026-09-15) — naming
+| Decision | Reason |
+|---|---|
+| The player-facing texts, the page metadata and the public READMEs no longer name the daily game whose format this follows ("Wordle" is a registered trademark); the internal identifier `wordle` for the word game stays in the code and the contract | Avoid a trademark problem; renaming a code identifier changes nothing for players. |
+
 ## Pending decisions
 - **Games surviving a deploy.** Rooms are in memory; every deploy ends every game. Deferred on 2026-09-15 (`06-v1.1.md`).
 - **Name of the game.** "WordRush" is a placeholder.

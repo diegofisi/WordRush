@@ -48,7 +48,7 @@ export const es = {
   home: {
     heroWords: ['AHORA', 'VAMOS', 'RELOJ', 'CINCO', 'JUEGA'],
     headline: 'Adivina primero.\nCada segundo cuenta.',
-    lede: 'Wordle para hasta 8 personas, en español o inglés. Cada letra nueva te suma segundos. Cada acierto ajeno te los quita. Gana quien termina con más reloj.',
+    lede: 'La palabra oculta, para hasta 8 personas, en español o inglés. Cada letra nueva te suma segundos. Cada acierto ajeno te los quita. Gana quien termina con más reloj.',
     feature1Title: 'Letras que dan tiempo',
     feature1Body: 'Amarilla +5 s, verde +10 s. Cada letra cobra una vez por color.',
     feature2Title: '−5 s al resto',

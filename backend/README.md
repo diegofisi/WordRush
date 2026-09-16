@@ -1,6 +1,6 @@
 # WordRush backend
 
-Real-time server for the multiplayer Wordle: NestJS 11 + Socket.IO, rooms in memory,
+Real-time server for the multiplayer word race: NestJS 11 + Socket.IO, rooms in memory,
 no database. The game rules and the scoring formula live in `../docs/context/`; the
 socket contract is `src/shared/contract/index.ts` (frozen, mirrored by the frontend).
 

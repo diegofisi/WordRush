@@ -1,7 +1,7 @@
 # 01 · Concept
 
 ## In one sentence
-A chaotic multiplayer Wordle where what counts most is the time you have left over,
+A chaotic multiplayer word race, in the style of the daily five-letter game, where what counts most is the time you have left over,
 not how many attempts you used.
 
 ## The idea
@@ -9,7 +9,7 @@ not how many attempts you used.
 - Rooms of up to 8 people (plus 2 observers watching a running game). Everyone gets the same word each round.
 - Every player has their own clock. It starts at the time set by whoever created the room.
 - Uncovering new letters adds seconds. Another player solving takes seconds away from you.
-- As in classic Wordle you do not see the other players' letters, but you do see their
+- As in the classic daily game you do not see the other players' letters, but you do see their
   colours and you know how they are doing.
 - There is one hint per player (per team in team mode), emotes and a chat to express yourself, and a final table across rounds.
 
@@ -23,7 +23,7 @@ not how many attempts you used.
    and emote reactions.
 
 ## Who it is for
-Groups of friends who already play Wordle and want to compete in real time, with short,
+Groups of friends who already play the daily word game and want to compete in real time, with short,
 noisy games. Phone and desktop.
 
 ## Name

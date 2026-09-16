@@ -63,7 +63,7 @@ export const en: Dictionary = {
   home: {
     heroWords: ['READY', 'HURRY', 'CLOCK', 'GUESS', 'SOLVE'],
     headline: 'Guess first.\nEvery second counts.',
-    lede: 'Wordle for up to 8 people, in Spanish or English. Every new letter adds seconds. Every rival solve takes them away. Whoever ends with the most clock wins.',
+    lede: 'The hidden word, for up to 8 people, in Spanish or English. Every new letter adds seconds. Every rival solve takes them away. Whoever ends with the most clock wins.',
     feature1Title: 'Letters buy time',
     feature1Body: 'Yellow +5 s, green +10 s. Each letter pays once per colour.',
     feature2Title: '−5 s to the rest',
