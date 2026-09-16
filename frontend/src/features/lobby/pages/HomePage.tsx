@@ -7,6 +7,7 @@ import { TopBar } from '@/shared/components/layout/TopBar';
 import { PageLoading } from '@/shared/components/ui/PageState';
 import { useT } from '@/shared/i18n';
 
+import { GameSwitch } from '../components/GameSwitch';
 import { Hero } from '../components/Hero';
 import { SessionExpiredNotice } from '../components/SessionExpiredNotice';
 import { ActiveGameContainer } from '../containers/ActiveGameContainer';
@@ -59,11 +60,11 @@ export const HomePage = () => {
 
   return (
     <div className="flex flex-1 flex-col">
-      <TopBar bare />
+      <TopBar bare actions={<GameSwitch t={t.home} game={game} onChange={setGame} />} />
       {notice}
       <main className="grid flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_520px]">
         <section className="flex flex-col justify-between gap-10 px-4 pt-4 pb-8 sm:px-8 lg:px-16 lg:pt-6 lg:pb-12">
-          <Hero t={t.home} game={game} onGameChange={setGame} />
+          <Hero t={t.home} game={game} />
           <p className="m-0 text-[13px] text-ink-3">{t.home.footer}</p>
         </section>
         <section className="flex flex-col border-t border-line bg-surface px-4 py-8 sm:px-8 lg:border-t-0 lg:border-l lg:px-12 lg:py-10">

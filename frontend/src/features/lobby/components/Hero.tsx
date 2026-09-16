@@ -1,5 +1,4 @@
 import { LightningIcon } from '@/shared/components/icons/GameIcons';
-import { Segmented } from '@/shared/components/ui/Segmented';
 import type { GameKind } from '@/shared/contract';
 import type { Dictionary } from '@/shared/i18n';
 
@@ -27,9 +26,8 @@ const BACK_WORDS = [1, 3, 0, 2, 4] as const;
 
 interface HeroProps {
   t: Dictionary['home'];
-  /** The game the room will play; the copy below follows it. */
+  /** The game the room will play (chosen in the top bar); the copy follows it. */
   game: GameKind;
-  onGameChange: (game: GameKind) => void;
 }
 
 /** Everything on the hero that depends on the chosen game. */
@@ -62,26 +60,11 @@ const copyFor = (t: Dictionary['home'], game: GameKind) =>
         feature3Figure: '104%',
       };
 
-export const Hero = ({ t, game, onGameChange }: HeroProps) => {
+export const Hero = ({ t, game }: HeroProps) => {
   const copy = copyFor(t, game);
   const [line1, line2] = copy.headline.split('\n');
   return (
     <div className="flex flex-col gap-7">
-      {/* The game is the first choice on the page; the form below keeps the rest. */}
-      <div className="flex flex-col gap-2">
-        <span className="label">{t.game}</span>
-        <Segmented<GameKind>
-          label={t.game}
-          value={game}
-          onChange={onGameChange}
-          className="max-w-100"
-          options={[
-            { value: 'wordle', label: t.gameWordle },
-            { value: 'phrase', label: t.gamePhrase },
-          ]}
-        />
-      </div>
-
       <div className="hero" aria-hidden="true" key={game}>
         {Array.from({ length: 5 }, (_, tileIndex) => (
           <div key={tileIndex} className="hero-flip">
