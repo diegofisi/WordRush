@@ -7,7 +7,6 @@ import { Toggle } from '@/shared/components/ui/Toggle';
 import {
   ROOM_LIMITS,
   WORD_LENGTHS,
-  type GameKind,
   type GameMode,
   type Language,
   type WordLength,
@@ -80,21 +79,6 @@ export const CreateRoomForm = ({
       />
     </div>
 
-    <div className="flex flex-col gap-2">
-      <span className="label">{t.home.game}</span>
-      <Segmented<GameKind>
-        label={t.home.game}
-        value={values.game}
-        onChange={(game) => onChange({ game })}
-        options={[
-          { value: 'wordle', label: t.home.gameWordle },
-          { value: 'phrase', label: t.home.gamePhrase },
-        ]}
-      />
-      {values.game === 'phrase' ? (
-        <span className="text-xs text-ink-3">{t.home.gamePhraseHint}</span>
-      ) : null}
-    </div>
     <div className="flex flex-col gap-2">
       <span className="label">{t.lobby.mode}</span>
       <Segmented<GameMode>

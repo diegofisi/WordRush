@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { DEFAULT_WORD_LENGTH, ROOM_LIMITS } from '@/shared/contract';
+import { DEFAULT_WORD_LENGTH, ROOM_LIMITS, type GameKind } from '@/shared/contract';
 import { useT } from '@/shared/i18n';
 import { lobbyPath } from '@/shared/routes/paths';
 import { toast } from '@/shared/stores/useToastStore';
@@ -26,8 +26,13 @@ const defaultValues = (name: string, uiLang: 'es' | 'en'): CreateRoomFormValues 
   hintEnabled: true,
 });
 
+interface HomeContainerProps {
+  /** Chosen on the hero, above the forms. */
+  game: GameKind;
+}
+
 /** Owns the create/join forms; the name is shared by both actions. */
-export const HomeContainer = () => {
+export const HomeContainer = ({ game }: HomeContainerProps) => {
   const t = useT();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -44,6 +49,10 @@ export const HomeContainer = () => {
 
   const { createRoom, pending: creating } = useCreateRoom();
   const { joinRoom, pending: joining } = useJoinRoom();
+
+  useEffect(() => {
+    setValues((current) => (current.game === game ? current : { ...current, game }));
+  }, [game]);
 
   useEffect(() => {
     const fromUrl = searchParams.get('code');

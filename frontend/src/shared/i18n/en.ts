@@ -70,6 +70,18 @@ export const en: Dictionary = {
     feature2Body: 'When someone solves, everyone still playing loses 5 s.',
     feature3Title: 'The clock scores',
     feature3Body: 'One point per 1% of time you have left. Every extra attempt costs 4.',
+    phraseHeroWords: ['QUOTE', 'WORDS', 'FOUND', 'PIECE', 'SPEAK'],
+    phraseHeadline: 'Uncover the phrase.\nLetter by letter.',
+    phraseLede:
+      'A hidden phrase for up to 8 people, in Spanish or English. Nothing is given: every letter comes from the words you type. Six words, five sends and the clock running.',
+    phraseFeature1Title: 'Green if it is in the phrase',
+    phraseFeature1Body:
+      'Every letter of your word that is in the phrase uncovers all of it: +2 s per occurrence. Grey if it is not.',
+    phraseFeature2Title: '−5 s to the rest',
+    phraseFeature2Body: 'When someone completes the phrase, everyone still playing loses 5 s.',
+    phraseFeature3Title: 'The phrase is worth 80',
+    phraseFeature3Body:
+      'Five sends to complete it, −5 per miss and −4 per word. The clock you have left scores too.',
     footer: 'No account. No downloads. One link and play.',
     createTitle: 'Create room',
     createSubtitle: 'You set the rules. Everyone else joins with the code.',

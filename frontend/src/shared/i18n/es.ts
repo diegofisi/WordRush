@@ -55,6 +55,19 @@ export const es = {
     feature2Body: 'Cuando alguien acierta, todos los que siguen jugando pierden 5 s.',
     feature3Title: 'El reloj puntúa',
     feature3Body: 'Un punto por cada 1 % de tiempo que te sobre. Cada intento de más resta 4.',
+    phraseHeroWords: ['FRASE', 'DICHO', 'LETRA', 'CINCO', 'LISTO'],
+    phraseHeadline: 'Descubre la frase.\nLetra a letra.',
+    phraseLede:
+      'Una frase oculta para hasta 8 personas, en español o inglés. Nada viene dado: cada letra sale de las palabras que escribes. Seis palabras, cinco envíos y el reloj corriendo.',
+    phraseFeature1Title: 'Verde si está en la frase',
+    phraseFeature1Body:
+      'Cada letra de tu palabra que esté en la frase la destapa entera: +2 s por cada aparición. Gris si no está.',
+    phraseFeature2Title: '−5 s al resto',
+    phraseFeature2Body:
+      'Cuando alguien completa la frase, todos los que siguen jugando pierden 5 s.',
+    phraseFeature3Title: 'La frase vale 80',
+    phraseFeature3Body:
+      'Cinco envíos para completarla, −5 por fallo y −4 por palabra. El reloj que te sobre también puntúa.',
     footer: 'Sin cuenta. Sin descargas. Un enlace y a jugar.',
     createTitle: 'Crear sala',
     createSubtitle: 'Tú fijas las reglas. Los demás entran con el código.',
