@@ -57,7 +57,22 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
       const myId = useSessionStore.getState().session?.playerId;
       if (progress.playerId === myId && progress.finished) void get().refresh();
     });
-    socket.on('team:clocks', () => void get().refresh());
+    // Team mode: "finished" is the team's; refetch only when a team just finished,
+    // not on every clock update (one arrives per word typed).
+    let finishedTeams = new Set<string>();
+    socket.on('team:clocks', (teams) => {
+      const now = new Set(teams.filter((team) => team.finished).map((team) => team.id));
+      const changed = [...now].some((id) => !finishedTeams.has(id));
+      finishedTeams = now;
+      if (changed) void get().refresh();
+    });
+    socket.on('round:start', () => {
+      finishedTeams = new Set();
+    });
+    // "Play again" starts a new chat on the server: drop the old one here too.
+    socket.on('lobby:update', (lobby) => {
+      if (lobby.status === 'lobby') void get().refresh();
+    });
 
     const current = useSessionStore.getState().snapshot;
     if (current) void get().refresh();

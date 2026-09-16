@@ -314,6 +314,8 @@ export interface TeamRoundState {
 export interface TeammateRows {
   playerId: string;
   rows: OwnRow[];
+  /** Phrase game: the team's phrase after this member's move (shared, so safe). */
+  phrase: PhraseSelf | null;
 }
 
 export interface RoundInfo {
@@ -489,6 +491,8 @@ export type ErrorCode =
   | 'not_observer'
   /** Joining under a name the host kicked less than `kickRejoinSeconds` ago. */
   | 'kicked'
+  /** The room was deleted (nobody seated is left). */
+  | 'room_closed'
   /** Phrase game: the text sent does not fit the phrase's words. */
   | 'phrase_shape'
   /** Phrase game: the sends of the round are spent. */
@@ -638,6 +642,8 @@ export interface PhraseAck {
   at: number;
   finished: boolean;
   solvedPosition: number | null;
+  /** The phrase after this send: every letter once it is completed. */
+  phrase: PhraseSelf;
 }
 
 export interface HintAck extends HintReveal {
@@ -743,5 +749,7 @@ export interface ServerToClientEvents {
   'chat:message': (payload: ChatMessage) => void;
   'session:replaced': (payload: SessionReplacedPayload) => void;
   'room:kicked': (payload: KickedPayload) => void;
+  /** The last seated player left: the room is deleted under whoever was still watching. */
+  'room:closed': (payload: { roomCode: string }) => void;
   error: (payload: ErrorPayload) => void;
 }

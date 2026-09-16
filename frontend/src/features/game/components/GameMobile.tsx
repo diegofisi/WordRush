@@ -26,7 +26,9 @@ import { WaitingCard } from './WaitingCard';
 export const GameMobile = (props: GameViewProps) => {
   const { t } = props;
   const phrase = props.phrase;
-  const phraseGame = phrase !== null;
+  const phraseGame = props.round.game === 'phrase';
+  // Phrase game: six words and no more; the FRASE key stays live.
+  const rowsUsed = phraseGame && props.rows.length >= props.round.maxAttempts;
   // Stickers are not a line here: they fly over the keyboard (StickerOverlay).
   const lastEvent = [...props.feed].reverse().find(isTextFeedEvent);
   return (
@@ -149,12 +151,18 @@ export const GameMobile = (props: GameViewProps) => {
             language={props.wordLanguage}
             keyStates={props.keyStates}
             stateLabels={props.tileLabels}
-            disabled={false}
+            disabled={rowsUsed}
             enterLabel={t.game.enter}
             backspaceLabel={t.game.backspace}
             onLetter={props.onLetter}
             onEnter={props.onEnter}
             onBackspace={props.onBackspace}
+            disableGray={phraseGame}
+            phraseKey={
+              phrase
+                ? { label: t.game.phraseKey, disabled: phrase.locked, onClick: phrase.onOpen }
+                : null
+            }
           />
         ) : (
           <>

@@ -23,6 +23,7 @@ export class SettleRoundUseCase {
     const room = this.rooms.findByCode(roomCode);
     if (!room || room.status !== 'playing') return;
     const now = this.clock.now();
+    this.lifecycle.closeSpentTeams(room, now);
     this.lifecycle.finishTimedOut(room, now);
     this.lifecycle.endRoundIfOver(room, now);
   }

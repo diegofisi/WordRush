@@ -28,9 +28,8 @@ export class RoundLifecycleService {
    */
   finishTimedOut(room: Room, now: number): Player[] {
     const timedOut: Player[] = [];
-    for (const team of room.teams) {
-      if (team.round?.isOutOfTime(now)) team.round.finish('timeout', now);
-    }
+    // Members first: a member's deadline is the team's, and once the team round
+    // is closed it no longer reads as "out of time", so the order matters.
     for (const player of room.players) {
       const round = player.round;
       if (round && round.isOutOfTime(now)) {
@@ -38,9 +37,30 @@ export class RoundLifecycleService {
         timedOut.push(player);
       }
     }
+    for (const team of room.teams) {
+      if (team.round?.isOutOfTime(now)) team.round.finish('timeout', now);
+    }
     for (const player of timedOut) this.publishProgress(room, player, now);
     if (timedOut.length > 0) this.publishTeamClocks(room, now);
     return timedOut;
+  }
+
+  /**
+   * Team mode: a team whose remaining members are all done (out of attempts,
+   * or gone) is closed, so the round does not wait for its clock. Used after
+   * somebody leaves or is kicked mid-round.
+   */
+  closeSpentTeams(room: Room, now: number): boolean {
+    let closed = false;
+    for (const team of room.teams) {
+      if (!team.round || team.round.finished) continue;
+      const members = room.members(team.id);
+      if (members.length === 0 || !members.every((m) => m.round?.finished)) continue;
+      team.round.finish('attempts', now);
+      closed = true;
+    }
+    if (closed) this.publishTeamClocks(room, now);
+    return closed;
   }
 
   /** Team mode: the shared clocks, to the whole room. */
@@ -56,7 +76,7 @@ export class RoundLifecycleService {
   /** Team mode: a member's board with letters, to their teammates only. */
   publishTeammateRows(room: Room, player: Player): void {
     if (player.team === null) return;
-    const payload = toTeammateRows(player);
+    const payload = toTeammateRows(player, room.phrase);
     for (const mate of room.members(player.team)) {
       if (mate.id === player.id || !mate.connected) continue;
       this.bus.publish({

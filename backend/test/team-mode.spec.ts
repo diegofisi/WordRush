@@ -132,7 +132,7 @@ describe('Team mode (socket.io integration)', () => {
     expect(round.mode).toBe('teams');
     expect(round.myTeam).toBe('a');
     expect(round.teams.map((t) => t.id)).toEqual(['a', 'b']);
-    expect(round.teammates).toEqual([{ playerId: joinedB.playerId, rows: [] }]);
+    expect(round.teammates).toEqual([{ playerId: joinedB.playerId, rows: [], phrase: null }]);
 
     // Ana's word reaches Bruno with its letters: teammates see each other live.
     const mateRows = waitFor(bruno, 'teammate:progress');
@@ -141,6 +141,7 @@ describe('Team mode (socket.io integration)', () => {
     expect(await mateRows).toEqual({
       playerId: created.playerId,
       rows: [{ word: WRONG, colors: miss.colors }],
+      phrase: null,
     });
 
     // One hint per team: Ana spends it, Bruno sees it, Bruno cannot spend another.

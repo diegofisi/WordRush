@@ -142,6 +142,8 @@ export class Room {
   }
 
   addPlayer(player: Player): void {
+    // Whoever takes the first seat of a host-less room hosts it.
+    if (!this.host) player.isHost = true;
     this.players.push(player);
     if (this.settings.mode === 'teams') this.autoAssign(player);
   }
@@ -173,7 +175,7 @@ export class Room {
   seatWaitingObservers(): Player[] {
     const seated: Player[] = [];
     const waiting = this.observers
-      .filter((p) => p.wantsSeat)
+      .filter((p) => p.wantsSeat && p.connected)
       .sort((a, b) => a.joinedAt - b.joinedAt);
     for (const observer of waiting) {
       if (!this.seat(observer)) break;

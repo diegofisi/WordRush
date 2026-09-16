@@ -1,4 +1,5 @@
-export type AvatarTone = 'accent' | 'green' | 'neutral' | 'yellow' | 'ink' | 'red' | 'blue' | 'pink';
+export type AvatarTone =
+  'accent' | 'green' | 'neutral' | 'yellow' | 'ink' | 'red' | 'blue' | 'pink';
 
 /** Stable per-name tone so the same rival keeps the same colour across screens. */
 export const toneForName = (name: string, index: number): AvatarTone => {

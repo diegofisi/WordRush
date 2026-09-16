@@ -22,7 +22,9 @@ import { WaitingCard } from './WaitingCard';
 export const GameDesktop = (props: GameViewProps) => {
   const { t } = props;
   const phrase = props.phrase;
-  const phraseGame = phrase !== null;
+  const phraseGame = props.round.game === 'phrase';
+  // Phrase game: six words and no more; the FRASE key stays live.
+  const rowsUsed = phraseGame && props.rows.length >= props.round.maxAttempts;
   // `grid-rows-[minmax(0,1fr)]`: an auto row would grow past the grid's own
   // height (tall sticker messages in the feed) and push the whole page down;
   // pinning the row to the viewport keeps every column scrolling inside itself.
@@ -110,12 +112,13 @@ export const GameDesktop = (props: GameViewProps) => {
               language={props.wordLanguage}
               keyStates={props.keyStates}
               stateLabels={props.tileLabels}
-              disabled={false}
+              disabled={rowsUsed}
               enterLabel={t.game.enter}
               backspaceLabel={t.game.backspace}
               onLetter={props.onLetter}
               onEnter={props.onEnter}
               onBackspace={props.onBackspace}
+              disableGray={phraseGame}
               phraseKey={
                 phrase
                   ? { label: t.game.phraseKey, disabled: phrase.locked, onClick: phrase.onOpen }

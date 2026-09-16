@@ -23,7 +23,7 @@ interface PhraseModalProps {
 /** Cursor over the unknown slots: [word, letter]. */
 type Slot = [number, number];
 
-/** Enter sends, Escape closes; nothing here reaches the board's window listener. */
+/** Nothing typed here reaches the board's window listener. */
 const keep = (event: KeyboardEvent<HTMLElement>) => event.stopPropagation();
 
 /**
@@ -45,6 +45,7 @@ export const PhraseModal = ({
   useFocusTrap(card, open);
   const [typed, setTyped] = useState<Record<string, string>>({});
   const [cursor, setCursor] = useState(0);
+  const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
   const slots = useMemo<Slot[]>(() => {
     const list: Slot[] = [];
@@ -76,6 +77,13 @@ export const PhraseModal = ({
     if (!complete || pending) return;
     onSend(text());
   };
+
+  // Focus follows the cursor, and only when it moves: the container re-renders
+  // every tick of the clock, and focusing on every render would steal the
+  // focus back from the Close and Send buttons.
+  useEffect(() => {
+    if (open) inputs.current[cursor]?.focus();
+  }, [open, cursor]);
 
   useEffect(() => {
     if (!open) return;
@@ -131,7 +139,11 @@ export const PhraseModal = ({
         role="dialog"
         aria-modal="true"
         aria-label={t.game.phraseModalTitle}
-        onKeyDown={keep}
+        onKeyDown={(event) => {
+          // Escape is handled here: the card stops every key before `window`.
+          if (event.key === 'Escape') onClose();
+          keep(event);
+        }}
         onKeyUp={keep}
         className="flex w-full max-w-160 flex-col gap-4 rounded-2xl border border-line bg-surface p-5 shadow-xl animate-fade-in"
         onClick={(event) => event.stopPropagation()}
@@ -167,13 +179,16 @@ export const PhraseModal = ({
                     key={li}
                     value={value.toUpperCase()}
                     ref={(node) => {
-                      if (node && index === cursor) node.focus();
+                      inputs.current[index] = node;
                     }}
                     maxLength={1}
                     inputMode="text"
                     autoCapitalize="characters"
                     aria-label={t.game.phraseSlot(wi + 1, li + 1)}
-                    onFocus={() => setCursor(index)}
+                    onFocus={(event) => {
+                      setCursor(index);
+                      event.target.select();
+                    }}
                     onChange={(event) => onChange(index)(event.target.value)}
                     onKeyDown={onKeyDown(index)}
                     className={cn(
@@ -191,6 +206,12 @@ export const PhraseModal = ({
             </span>
           ))}
         </div>
+
+        {wrong ? (
+          <p className="m-0 text-sm font-semibold text-red" role="alert">
+            {t.game.phraseMissed}
+          </p>
+        ) : null}
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
           <span className="text-[13px] text-ink-2">

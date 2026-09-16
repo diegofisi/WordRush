@@ -19,6 +19,8 @@ interface KeyboardProps {
   onBackspace: () => void;
   /** Phrase game: the purple FRASE key at the end of the last row. */
   phraseKey?: { label: string; disabled: boolean; onClick: () => void } | null;
+  /** Phrase game: a grey letter is out of the phrase, its key is disabled. */
+  disableGray?: boolean;
 }
 
 const stateClass: Record<KeyState, string> = {
@@ -39,6 +41,7 @@ export const Keyboard = ({
   onEnter,
   onBackspace,
   phraseKey = null,
+  disableGray = false,
 }: KeyboardProps) => {
   const rows = keyboardRows(language);
   const letterKey = (letter: string) => {
@@ -47,7 +50,7 @@ export const Keyboard = ({
       <button
         key={letter}
         type="button"
-        disabled={disabled}
+        disabled={disabled || (disableGray && state === 'gray')}
         // Only once the key carries a state: an untried key reads fine from its
         // own text, and an aria-label would replace that text for no gain.
         aria-label={state ? `${letter}, ${stateLabels[state]}` : undefined}

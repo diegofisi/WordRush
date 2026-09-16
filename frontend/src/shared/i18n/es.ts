@@ -295,6 +295,8 @@ export const es = {
     teamSolvedBy: (name: string) => `${name} la resolvió`,
     feedTeamOutOfTime: 'se quedó sin tiempo',
     feedTeamOutOfAttempts: 'agotó sus intentos',
+    feedTeamOutOfSends: 'agotó sus envíos de la frase',
+    feedOutOfSends: 'agotó sus envíos de la frase',
     waitingTeamSolved: (name: string, pct: number) =>
       `${name} la resolvió para tu equipo con el ${pct} % del tiempo.`,
     ifTeamSolvesNow: 'Si tu equipo resuelve ahora',
@@ -429,6 +431,7 @@ export const es = {
     kicked: 'El anfitrión te expulsó de la sala. Podrás volver en 30 segundos.',
     phrase_shape: 'El texto no encaja con las palabras de la frase.',
     no_sends_left: 'Ya no te quedan envíos en esta ronda.',
+    room_closed: 'La sala se cerró: no quedó nadie jugando.',
     already_finished: 'Ya terminaste esta ronda.',
     word_length: 'La palabra no tiene la longitud de la ronda.',
     word_not_in_list: 'Esa palabra no está en la lista.',

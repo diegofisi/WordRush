@@ -114,6 +114,11 @@ export const useSessionStore = create<SessionState & SessionActions>((set, get) 
       get().clearSession();
       toast.error('kicked');
     });
+    // Nobody seated is left: the room is gone, and so is my place in it.
+    socket.on('room:closed', () => {
+      get().clearSession();
+      toast.error('room_closed');
+    });
     socket.on('connect_error', () => set({ connection: 'disconnected' }));
     socket.on('error', (payload) => {
       toast.error(payload.code);

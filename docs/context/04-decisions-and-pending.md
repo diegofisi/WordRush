@@ -70,6 +70,7 @@
 | Team mode of the phrase game shares the phrase, the clock and the five sends | One team, one unit, as in Wordle's team mode. |
 | A room with only observers left is deleted; observers alone cannot keep it alive | Nothing can happen in it, and the seats would never free up. |
 | v1.1 built locally on 2026-09-15 (phases 0–8 of `06-v1.1.md`), tagged `v1.1`, **not deployed** | The user asked for a local build only. |
+| Review of 2026-09-15: a team game needs a connected member in both teams to start; a room whose last seated player leaves is deleted and the observers are told (`room:closed`); only connected observers are seated; a kicked socket is detached before the room hears they left | Found reviewing v1.1 before merging: empty teams and host-less rooms had nobody to play or start. |
 
 ## Pending decisions
 - **Games surviving a deploy.** Rooms are in memory; every deploy ends every game. Deferred on 2026-09-15 (`06-v1.1.md`).

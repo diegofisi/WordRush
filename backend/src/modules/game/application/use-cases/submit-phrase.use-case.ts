@@ -7,6 +7,7 @@ import {
   IRoomRepository,
   ROOM_REPOSITORY,
 } from '@modules/rooms/domain/interfaces/room-repository.interface';
+import { toSelfState } from '@modules/rooms/domain/services/state-presenter';
 import { checkPhrase } from '../../domain/services/phrase';
 import { RoundLifecycleService } from '../services/round-lifecycle.service';
 
@@ -83,6 +84,13 @@ export class SubmitPhraseUseCase {
       at: now,
       finished: round.finished,
       solvedPosition: round.solvedPosition,
+      phrase: toSelfState(player, now, phrase).phrase ?? {
+        letters: [],
+        found: 0,
+        total: phrase.total,
+        sendsUsed: progress.sendsUsed,
+        completed: progress.completed,
+      },
     };
 
     this.bus.publish({
@@ -92,6 +100,8 @@ export class SubmitPhraseUseCase {
     });
     this.lifecycle.publishProgress(room, player, now);
     if (team) {
+      // The shared phrase moved (a hit reveals it all): teammates get the letters.
+      this.lifecycle.publishTeammateRows(room, player);
       for (const mate of room.players) {
         if (mate.team === player.team && mate.id !== player.id) {
           this.lifecycle.publishProgress(room, mate, now);

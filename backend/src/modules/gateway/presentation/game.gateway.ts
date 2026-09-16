@@ -188,9 +188,11 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('room:kick')
   onKick(@ConnectedSocket() client: GameSocket, @MessageBody() dto: KickDto): EmptyAck {
     const { roomCode, playerId } = this.requireSession(client);
-    this.kickPlayer.execute(roomCode, playerId, dto.playerId);
-    const victim = this.sessions.socketOf(dto.playerId);
+    const targetId = this.kickPlayer.execute(roomCode, playerId, dto.playerId);
+    // Told already; from here on the victim hears nothing more from this room.
+    const victim = this.sessions.socketOf(targetId);
     if (victim) this.sessions.detach(victim);
+    this.leaveRoom.execute(roomCode, targetId);
     // Nobody may be left to play the round for: close it now.
     this.settleRound.execute(roomCode);
     return OK_EMPTY;

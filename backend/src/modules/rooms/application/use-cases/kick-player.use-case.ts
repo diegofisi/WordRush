@@ -7,12 +7,13 @@ import {
   IRoomRepository,
   ROOM_REPOSITORY,
 } from '../../domain/interfaces/room-repository.interface';
-import { LeaveRoomUseCase } from './leave-room.use-case';
 
 /**
  * The host throws a player or observer out (docs/context/06-v1.1.md -> Room
- * management). The victim is told first, then removed exactly as if they had
- * left, and their name may not join this room again for 30 s.
+ * management). The victim is told and their name may not join this room again
+ * for 30 s; the caller then detaches their socket and removes them exactly as
+ * if they had left (`LeaveRoomUseCase`), so the victim never hears the room
+ * talk about their own removal.
  */
 @Injectable()
 export class KickPlayerUseCase {
@@ -22,10 +23,10 @@ export class KickPlayerUseCase {
     @Inject(ROOM_REPOSITORY) private readonly rooms: IRoomRepository,
     @Inject(CLOCK) private readonly clock: Clock,
     private readonly bus: RoomEventsBus,
-    private readonly leaveRoom: LeaveRoomUseCase,
   ) {}
 
-  execute(roomCode: string, hostId: string, targetId: string): void {
+  /** Returns the id of the player to remove. */
+  execute(roomCode: string, hostId: string, targetId: string): string {
     const room = this.rooms.findByCode(roomCode);
     const host = room?.findPlayer(hostId);
     if (!room || !host) throw new DomainException('not_in_room');
@@ -43,7 +44,7 @@ export class KickPlayerUseCase {
       event: 'room:kicked',
       payload: { roomCode: room.code, rejoinAfterSeconds: ROOM_LIMITS.kickRejoinSeconds },
     });
-    this.leaveRoom.execute(room.code, target.id);
     this.logger.log(`Room ${room.code}: ${host.name} kicked ${target.name}`);
+    return target.id;
   }
 }

@@ -66,7 +66,7 @@ export const ObserverArea = ({
                 size="sm"
                 variant={observer.wantsSeat ? 'outline' : 'primary'}
                 disabled={pending}
-                onClick={() => onSit(!observer.wantsSeat)}
+                onClick={() => onSit(freeSeats > 0 ? true : !observer.wantsSeat)}
                 className="ml-2"
               >
                 {freeSeats > 0

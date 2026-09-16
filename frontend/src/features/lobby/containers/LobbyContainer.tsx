@@ -91,13 +91,9 @@ export const LobbyContainer = () => {
 
   const kickPlayer = lobby.isHost
     ? (playerId: string) => {
-        const name =
-          lobby.players.find((player) => player.id === playerId)?.name ??
-          lobby.observers.find((observer) => observer.id === playerId)?.name ??
-          '';
+        // The room's own `player:left` line already says who is gone.
         void kick(playerId).then((result) => {
-          if (result.ok) toast.info(t.lobby.kicked(name));
-          else report(result);
+          if (!result.ok) report(result);
         });
       }
     : undefined;

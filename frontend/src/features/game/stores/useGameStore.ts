@@ -5,6 +5,7 @@ import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { getT } from '@/shared/i18n';
 import { playSound } from '@/shared/lib/sound';
 import {
+  PHRASE_RULES,
   ROOM_LIMITS,
   type FullState,
   type GuessAck,
@@ -90,6 +91,8 @@ interface GameState {
   /** Phrase game: the modal is open; the last miss's wrong letters. */
   phraseOpen: boolean;
   phraseWrong: boolean[][] | null;
+  /** My own solve order, from my ack: `players` may lag behind by an event. */
+  mySolvedPosition: number | null;
 }
 
 interface GameActions {
@@ -119,6 +122,14 @@ type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K>
 type FeedInput = DistributiveOmit<FeedEvent, 'id' | 'atSeconds' | 'name' | 'isMe'>;
 
 const emptyAnnounced = (): Announced => ({ greens: [], lowTime: [], finished: [] });
+
+/** Phrase game: a letter that came back grey is not in the phrase. */
+const isRuledOut = (rows: OwnRow[], letter: string): boolean => {
+  const wanted = letter.toLowerCase();
+  return rows.some((row) =>
+    [...row.word].some((ch, index) => ch === wanted && row.colors[index] === 'gray'),
+  );
+};
 
 const roundInfoOf = (round: RoundState): RoundInfo => ({
   round: round.round,
@@ -178,6 +189,7 @@ const initialState: GameState = {
   announced: emptyAnnounced(),
   phraseOpen: false,
   phraseWrong: null,
+  mySolvedPosition: null,
 };
 
 export const useGameStore = create<GameState & GameActions>((set, get) => {
@@ -205,6 +217,9 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       round: roundInfoOf(round),
       role: round.role,
       me: round.me,
+      mySolvedPosition:
+        round.players.find((p) => p.playerId === useSessionStore.getState().session?.playerId)
+          ?.solvedPosition ?? null,
       players: Object.fromEntries(round.players.map((player) => [player.playerId, player])),
       left: {},
       teams: teamsOf(round.teams),
@@ -295,8 +310,11 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
         },
       }));
       pushFeed({
-        kind:
-          progress.rows.length >= (get().round?.maxAttempts ?? 8)
+        kind: progress.phrase
+          ? progress.phrase.sendsUsed >= PHRASE_RULES.sends
+            ? 'out-of-sends'
+            : 'out-of-time'
+          : progress.rows.length >= (get().round?.maxAttempts ?? 8)
             ? 'out-of-attempts'
             : 'out-of-time',
         playerId: progress.playerId,
@@ -318,7 +336,11 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       socket.on('player:progress', onProgress);
       // Team mode: a teammate's board, letters included.
       socket.on('teammate:progress', (payload) =>
-        set((state) => ({ teammates: { ...state.teammates, [payload.playerId]: payload.rows } })),
+        set((state) => ({
+          teammates: { ...state.teammates, [payload.playerId]: payload.rows },
+          // Phrase game: the phrase is the team's; a teammate's word moved it for me too.
+          me: state.me && payload.phrase ? { ...state.me, phrase: payload.phrase } : state.me,
+        })),
       );
       // Team mode: the hint is the team's; a teammate spent it, my board shows it.
       socket.on('team:hint', (reveal) =>
@@ -334,7 +356,12 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
               kind: 'team-finished',
               playerId: '',
               teamName: info?.name.trim() || getT().lobby.teamDefault(team.id),
-              reason: team.secondsLeft <= 0 ? 'time' : 'attempts',
+              reason:
+                team.secondsLeft <= 0
+                  ? 'time'
+                  : get().round?.game === 'phrase'
+                    ? 'sends'
+                    : 'attempts',
             });
           }
         }
@@ -350,6 +377,17 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
                   finished: mine.finished,
                   hintUsed: mine.hintUsed,
                   penaltySeconds: mine.penaltySeconds,
+                  // The phrase is the team's: its counters move with any member.
+                  phrase:
+                    state.me.phrase && mine.phrase
+                      ? {
+                          ...state.me.phrase,
+                          found: mine.phrase.found,
+                          total: mine.phrase.total,
+                          sendsUsed: mine.phrase.sendsUsed,
+                          completed: mine.phrase.completed,
+                        }
+                      : state.me.phrase,
                 }
               : state.me,
         }));
@@ -468,7 +506,11 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
     typeLetter: (letter) => {
       const { status, me, draft, round } = get();
       if (status !== 'playing' || !me || me.finished || !round) return;
+      // Every row used: nothing more to type (the phrase game ends by sends or clock).
+      if (me.rows.length >= round.maxAttempts) return;
       if (draft.length >= round.wordLength) return;
+      // Phrase game: a letter already ruled out is refused, its key is disabled.
+      if (round.game === 'phrase' && isRuledOut(me.rows, letter)) return;
       set({ draft: draft + letter.toUpperCase() });
     },
 
@@ -511,6 +553,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
           shakeKey: 0,
           guessNotice: null,
           revealRow: rows.length - 1,
+          mySolvedPosition: ack.solved ? ack.solvedPosition : state.mySolvedPosition,
           solvedCount: ack.solved
             ? Math.max(state.solvedCount, ack.solvedPosition ?? state.solvedCount + 1)
             : state.solvedCount,
@@ -536,22 +579,17 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
     applyPhraseAck: (ack) =>
       set((state) => {
         if (!state.me) return {};
-        const phrase = state.me.phrase
-          ? { ...state.me.phrase, sendsUsed: ack.sendsUsed, completed: ack.correct }
-          : null;
         return {
           me: {
             ...state.me,
-            phrase:
-              phrase && ack.correct
-                ? { ...phrase, letters: phrase.letters, found: phrase.total }
-                : phrase,
+            phrase: ack.phrase,
             secondsLeft: ack.secondsLeft,
             at: ack.at,
             solved: ack.correct,
             finished: ack.finished,
           },
           phraseWrong: ack.wrong,
+          mySolvedPosition: ack.correct ? ack.solvedPosition : state.mySolvedPosition,
           // A hit or the last miss closes the modal; any other miss keeps it open.
           phraseOpen: !ack.correct && !ack.finished,
           solvedCount: ack.correct

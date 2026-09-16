@@ -109,12 +109,13 @@ export function toTeamRoundState(
 }
 
 /** A teammate's board with letters: only teammates ever receive this. */
-export function toTeammateRows(player: Player): TeammateRows {
+export function toTeammateRows(player: Player, phrase: ParsedPhrase | null = null): TeammateRows {
   return {
     playerId: player.id,
     rows: player.round
       ? player.round.rows.map((r) => ({ word: r.word, colors: [...r.colors] }))
       : [],
+    phrase: toPhraseSelf(phrase, player.round?.phrase ?? null),
   };
 }
 
@@ -140,7 +141,7 @@ export function toRoundState(room: Room, player: Player, now: number): RoundStat
       : room
           .members(player.team)
           .filter((p) => p.id !== player.id)
-          .map(toTeammateRows);
+          .map((p) => toTeammateRows(p, room.phrase));
   return {
     round: room.currentRound,
     totalRounds: room.settings.rounds,

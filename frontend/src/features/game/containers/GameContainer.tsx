@@ -78,6 +78,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const emotePausedUntil = useGameStore((state) => state.emotePausedUntil);
   const phraseOpen = useGameStore((state) => state.phraseOpen);
   const phraseWrong = useGameStore((state) => state.phraseWrong);
+  const mySolvedPosition = useGameStore((state) => state.mySolvedPosition);
   const setPhraseOpen = useGameStore((state) => state.setPhraseOpen);
   const typeLetter = useGameStore((state) => state.typeLetter);
   const backspace = useGameStore((state) => state.backspace);
@@ -161,6 +162,8 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const submit = useCallback(async () => {
     const current = useGameStore.getState();
     if (current.status !== 'playing' || !current.me || current.me.finished) return;
+    // Every row used (the phrase game goes on by sends only): nothing to send.
+    if (current.round && current.me.rows.length >= current.round.maxAttempts) return;
     // Guess errors are printed under the row being typed, where the player is
     // looking; a toast there would cover the clock.
     if (current.draft.length < (current.round?.wordLength ?? 5)) {
@@ -242,10 +245,18 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   }
 
   const myTeamState = myTeam ? teams[myTeam] : undefined;
+  // A teammate's solve reaches me as my own `player:progress` first and the
+  // team's clocks a moment later; either source says the team is done.
+  const teamSolved =
+    teamMode &&
+    ((myTeamState?.solved ?? false) ||
+      Object.values(players).some(
+        (p) => p.solved && roster[p.playerId]?.team === myTeam && p.playerId !== myId,
+      ));
   const outcome: MyOutcome = me.solved
     ? 'solved'
     : me.finished
-      ? teamMode && myTeamState?.solved
+      ? teamSolved
         ? 'team-solved'
         : phraseGame
           ? (me.phrase?.sendsUsed ?? 0) >= PHRASE_RULES.sends
@@ -258,7 +269,7 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const secondsLeft = me.finished ? me.secondsLeft : secondsLeftAt(me, now);
   const percent = percentOf(secondsLeft, round.initialSeconds);
   const myProgress = myId ? players[myId] : undefined;
-  const solvedPosition = myProgress?.solvedPosition ?? null;
+  const solvedPosition = myProgress?.solvedPosition ?? mySolvedPosition;
 
   const preview = computeScorePreview({
     secondsLeft,
@@ -362,7 +373,10 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
   const observer = observing
     ? {
         wantsSeat: observers.find((entry) => entry.id === myId)?.wantsSeat ?? false,
-        freeSeats: Math.max(0, settings.capacity - Object.keys(players).length),
+        freeSeats: Math.max(
+          0,
+          settings.capacity - Object.keys(players).filter((id) => !(id in left)).length,
+        ),
         pending: sitting,
         onSit: (wants: boolean) => void handleSit(wants),
       }

@@ -55,6 +55,12 @@ const Body = ({ t, event }: { t: Dictionary; event: TextFeedEvent }) => {
           {name} {t.game.feedOutOfTime}
         </span>
       );
+    case 'out-of-sends':
+      return (
+        <span>
+          {name} {t.game.feedOutOfSends}
+        </span>
+      );
     case 'left':
       return (
         <span>
@@ -84,7 +90,11 @@ const Body = ({ t, event }: { t: Dictionary; event: TextFeedEvent }) => {
       return (
         <span>
           <strong className="text-ink">{event.teamName}</strong>{' '}
-          {event.reason === 'time' ? t.game.feedTeamOutOfTime : t.game.feedTeamOutOfAttempts}
+          {event.reason === 'time'
+            ? t.game.feedTeamOutOfTime
+            : event.reason === 'sends'
+              ? t.game.feedTeamOutOfSends
+              : t.game.feedTeamOutOfAttempts}
         </span>
       );
   }

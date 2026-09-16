@@ -131,10 +131,8 @@ export const TeamPanel = ({
                 labels={{ found: t.game.tileCorrect, unknown: t.game.phraseUnknown }}
               />
               <span className="text-xs text-ink-3">
-                {t.game
-                  .rivalPhraseProgress(rival.phrase.found, rival.phrase.total, 0)
-                  .replace(/ · .*$/, '')}{' '}
-                · {t.game.rivalsPhraseHint}
+                {t.game.phraseLetters(rival.phrase.found, rival.phrase.total)} ·{' '}
+                {t.game.rivalsPhraseHint}
               </span>
             </div>
           ) : null}

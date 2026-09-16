@@ -38,6 +38,9 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
   const initialSeconds = useSessionStore(
     (state) => state.snapshot?.lobby.settings.initialSeconds ?? null,
   );
+  // The typed words' length (the room's), whatever the game: the phrase game
+  // has no answer word to measure.
+  const boardWidth = useSessionStore((state) => state.snapshot?.lobby.settings.wordLength ?? 5);
   const { leaveRoom } = useLeaveRoom();
   const { restartRoom, pending: restarting } = useRestartRoom();
 
@@ -130,11 +133,7 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
         {initialSeconds !== null ? (
           <p className="m-0 text-[13px] text-ink-3">{t.results.timeNote(initialSeconds)}</p>
         ) : null}
-        <RoundBoards
-          t={t}
-          wordLength={results.boards[0]?.rows[0]?.word.length ?? results.wordLength}
-          boards={results.boards}
-        />
+        <RoundBoards t={t} wordLength={boardWidth} boards={results.boards} />
       </div>
       <div className="flex min-w-0 flex-col gap-4">
         {teamMode ? (

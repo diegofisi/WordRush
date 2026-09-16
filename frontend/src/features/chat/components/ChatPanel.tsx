@@ -99,7 +99,9 @@ export const ChatPanel = ({
 
   const body = (
     <>
-      <div className="flex items-center justify-between gap-2 px-4 pt-3.5 pb-2">
+      <div
+        className={cn('flex items-center justify-between gap-2 px-4 pt-3.5 pb-2', bare && 'pr-14')}
+      >
         <span className="label">{t.chat.title}</span>
         {teamMode ? (
           <div role="radiogroup" aria-label={t.chat.channel} className="flex gap-1">

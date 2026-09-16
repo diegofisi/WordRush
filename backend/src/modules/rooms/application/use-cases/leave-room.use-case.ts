@@ -5,6 +5,7 @@ import {
   IRoomRepository,
   ROOM_REPOSITORY,
 } from '../../domain/interfaces/room-repository.interface';
+import type { Room } from '../../domain/entities/room.entity';
 import { toPlayerProgress } from '../../domain/services/state-presenter';
 
 /**
@@ -34,11 +35,7 @@ export class LeaveRoomUseCase {
 
     // An observer holds no seat and no round: they just stop being listed.
     if (room.removeObserver(playerId)) {
-      if (room.isEmpty()) {
-        this.rooms.delete(room.code);
-        this.logger.log(`Room ${room.code} deleted (empty)`);
-        return;
-      }
+      if (this.closeIfEmpty(room)) return;
       room.touch(now);
       this.bus.publish({
         roomCode: room.code,
@@ -54,16 +51,12 @@ export class LeaveRoomUseCase {
     const wasHost = player.isHost;
     // Freeze their clock so `isRoundOver` no longer waits for them.
     player.round?.finish('left', now);
-    const lastProgress = toPlayerProgress(player, now);
+    const lastProgress = toPlayerProgress(player, now, room.phrase);
 
     const removed = room.removePlayer(playerId);
     if (!removed) return;
 
-    if (room.isEmpty()) {
-      this.rooms.delete(room.code);
-      this.logger.log(`Room ${room.code} deleted (empty)`);
-      return;
-    }
+    if (this.closeIfEmpty(room)) return;
 
     room.touch(now);
     // Who is gone first, then their final board: the other way round the
@@ -79,5 +72,23 @@ export class LeaveRoomUseCase {
     });
     this.bus.publish({ roomCode: room.code, event: 'player:progress', payload: lastProgress });
     this.bus.publish({ roomCode: room.code, event: 'lobby:update', payload: room.toLobbyState() });
+  }
+
+  /**
+   * Nobody seated is left: the room goes. Observers alone cannot keep it
+   * alive, so they are told (`room:closed`) before it disappears under them.
+   */
+  private closeIfEmpty(room: Room): boolean {
+    if (!room.isEmpty()) return false;
+    if (room.observers.length > 0) {
+      this.bus.publish({
+        roomCode: room.code,
+        event: 'room:closed',
+        payload: { roomCode: room.code },
+      });
+    }
+    this.rooms.delete(room.code);
+    this.logger.log(`Room ${room.code} deleted (empty)`);
+    return true;
   }
 }

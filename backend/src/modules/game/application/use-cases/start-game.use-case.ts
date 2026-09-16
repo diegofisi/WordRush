@@ -29,6 +29,10 @@ export class StartGameUseCase {
     if (room.connectedPlayers().length < ROOM_LIMITS.minPlayers) {
       throw new DomainException('not_enough_players');
     }
+    // Team mode: an empty team has nobody to play for, so both need somebody.
+    if (room.teams.some((team) => !room.members(team.id).some((p) => p.connected))) {
+      throw new DomainException('not_enough_players', 'Both teams need a connected player');
+    }
     this.startRound.execute(room, this.clock.now());
   }
 }

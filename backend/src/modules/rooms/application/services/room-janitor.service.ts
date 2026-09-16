@@ -82,6 +82,17 @@ export class RoomJanitorService implements OnModuleInit, OnModuleDestroy {
       else room.removePlayer(p.id);
     }
     if (room.isEmpty()) {
+      // Observers alone cannot keep a room alive: it goes, and they are told.
+      if (room.observers.length > 0) {
+        this.bus.publish({
+          roomCode: room.code,
+          event: 'room:closed',
+          payload: { roomCode: room.code },
+        });
+        this.rooms.delete(room.code);
+        this.logger.log(`Room ${room.code} deleted by janitor (no players left)`);
+        return;
+      }
       room.emptiedAt = lastDropAt;
       return;
     }

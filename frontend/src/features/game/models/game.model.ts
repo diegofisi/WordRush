@@ -1,4 +1,5 @@
 import {
+  PHRASE_RULES,
   type Emote,
   type GainKind,
   type OwnRow,
@@ -88,7 +89,9 @@ export type FeedEvent = {
   | { kind: 'left' }
   | { kind: 'new-host' }
   /** Team mode: a whole team ran out of time or attempts. */
-  | { kind: 'team-finished'; teamName: string; reason: 'attempts' | 'time' }
+  | { kind: 'team-finished'; teamName: string; reason: 'attempts' | 'time' | 'sends' }
+  /** Phrase game: somebody spent their five sends. */
+  | { kind: 'out-of-sends' }
   /** Phrase game: a send at the whole phrase. */
   | { kind: 'phrase-completed'; position: number }
   | { kind: 'phrase-missed' }
@@ -129,12 +132,16 @@ export const toRivalViewModel = (
   hasLeft = false,
   maxAttempts = 8,
 ): RivalViewModel => {
+  // Phrase game: the round ends by sends, whatever the number of words typed.
+  const outOfAttempts = progress.phrase
+    ? progress.phrase.sendsUsed >= PHRASE_RULES.sends
+    : progress.rows.length >= maxAttempts;
   const status: RivalStatus = hasLeft
     ? 'left'
     : progress.solved
       ? 'solved'
       : progress.finished
-        ? progress.rows.length >= maxAttempts
+        ? outOfAttempts
           ? 'out-of-attempts'
           : 'out-of-time'
         : 'playing';
