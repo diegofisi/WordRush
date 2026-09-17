@@ -15,6 +15,8 @@ touching anything in the game or the design:
 - `docs/context/03-scoring-system.md` — the final formula with a step-by-step simulation.
 - `docs/context/04-decisions-and-pending.md` — what was decided, what was discarded, what is missing.
 - `docs/context/05-design.md` — visual direction, screens and the link to the Claude Design canvas.
+- `docs/context/07-boss-removal.md` — boss mode is temporary: what it is and how to delete it.
+- `docs/context/08-boss-mode.md` — the fly as a boss, and `09-what-the-fly-can-do.md`, what she can measurably do.
 - `docs/context/06-v1.1.md` — v1.1: word length, the new hint, teams, chat, observers, kick, the phrase game.
 
 ## Repository structure

@@ -1,4 +1,28 @@
-# 06 · Boss mode — the fly
+# 08 · Boss mode — the fly
+
+> **Read `07-boss-removal.md` first.** Boss mode is a temporary option carried over from
+> the old `master` line on **2026-09-17** and is expected to be deleted. This file is the
+> design record as it was written on the branch it came from; what follows is the list of
+> everything v1.1 changed about it, and where the two disagree, **this list wins**.
+>
+> - **Only the five-letter word race, no teams.** Her input channels and her trained
+>   readout are wired for a five-slot board. The lobby forces `wordLength: 5`,
+>   `game: 'wordle'`, `mode: 'normal'`; asking for boss mode in any other shape gets a
+>   room without her and `bossMode` is cleared.
+> - **Attempts.** Humans get v1.1's 8 / 9 / 10 by word length (8 at five letters); she
+>   still gets `BOSS.maxAttempts` (10), uncharged.
+> - **The attempt penalty is v1.1's −4**, not the −2 this document was written against.
+>   The solve floor of 40 is unchanged and she is still not charged per attempt.
+> - **The hint is v1.1's hint** (`06-v1.1.md`): it names a new letter, or places a letter
+>   already known. It no longer carries an occurrence count, so what it narrows for her is
+>   "this letter is in the word" and, when it placed one, "in this slot".
+> - **She is behind a flag.** `BOSS_MODE_ENABLED` (server) and `VITE_BOSS_ENABLED`
+>   (client), both on by default. Off means no threads, no seat and no option.
+> - **Her brain boots lazily**, the first time a boss room is actually playing, so a
+>   server nobody challenges her on holds no connectome at all.
+> - The two docs this one points at were renumbered: `06-boss-mode.md` is this file,
+>   and `07-what-the-fly-can-do.md` is now `09-what-the-fly-can-do.md`.
+
 
 Status: **implemented on 2026-09-13** (backend module `boss`, frontend boss panel). Everything here is a design
 The plain multiplayer game (`02-game-rules.md`) is unaffected and stays the default

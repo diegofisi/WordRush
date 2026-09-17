@@ -1,4 +1,4 @@
-# 07 · What the fly can and cannot do
+# 09 · What the fly can and cannot do
 
 A record of the investigation of 2026-09-13/14 into whether a real *Drosophila*
 connectome can play this game. Written so nobody — including us in six months —
