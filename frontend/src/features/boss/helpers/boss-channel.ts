@@ -1,4 +1,4 @@
-import type { BossViewModel } from '../models/game-view.model';
+import type { BossViewModel } from '../models/boss-view.model';
 
 /**
  * The link between the game tab and the brain tab.

@@ -24,15 +24,20 @@ const defaultValues = (name: string, uiLang: 'es' | 'en'): CreateRoomFormValues 
   rounds: 3,
   capacity: ROOM_LIMITS.maxPlayers,
   hintEnabled: true,
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  bossMode: false,
 });
 
 interface HomeContainerProps {
   /** Chosen on the hero, above the forms. */
   game: GameKind;
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  /** The third home option: the room plays against the fly. */
+  bossMode: boolean;
 }
 
 /** Owns the create/join forms; the name is shared by both actions. */
-export const HomeContainer = ({ game }: HomeContainerProps) => {
+export const HomeContainer = ({ game, bossMode }: HomeContainerProps) => {
   const t = useT();
   const navigate = useNavigate();
   const rememberedName = useUiStore((state) => state.rememberedName);
@@ -52,6 +57,20 @@ export const HomeContainer = ({ game }: HomeContainerProps) => {
   useEffect(() => {
     setValues((current) => (current.game === game ? current : { ...current, game }));
   }, [game]);
+
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
+  // Choosing the fly forces the only shape she can play: five letters, no
+  // teams (docs/context/08-boss-mode.md). Unchoosing it leaves the rest alone.
+  useEffect(() => {
+    setValues((current) =>
+      current.bossMode === bossMode
+        ? current
+        : bossMode
+          ? { ...current, bossMode, wordLength: DEFAULT_WORD_LENGTH, mode: 'normal' }
+          : { ...current, bossMode },
+    );
+  }, [bossMode]);
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
 
   const validName = () => {
     const name = values.name.trim();

@@ -15,6 +15,8 @@ import { PhraseCard } from './PhraseCard';
 import { PhraseModal } from './PhraseModal';
 import { PhraseScoreCard } from './PhraseScoreCard';
 import { RivalCarousel } from './RivalCarousel';
+// BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+import { BossPanel } from '@/features/boss/components/BossPanel';
 import { RivalStrip } from './RivalStrip';
 import { ScorePreviewCard } from './ScorePreviewCard';
 import { StickerOverlay } from './StickerOverlay';
@@ -95,6 +97,11 @@ export const GameMobile = (props: GameViewProps) => {
           onOpen={phrase.onOpen}
           openDisabled={phrase.locked || props.outcome !== 'playing'}
         />
+      ) : null}
+
+      {/* BOSS-MODE (temporary; see docs/context/07-boss-removal.md) */}
+      {props.boss ? (
+        <BossPanel t={t} boss={props.boss} roomCode={props.roomCode} compact />
       ) : null}
 
       {props.team ? (

@@ -15,10 +15,13 @@ export const useWatchBoss = (watching: boolean): void => {
     };
     send(watching);
     if (!watching) return;
-    // A reconnect loses the subscription; ask again on the way back.
-    socket.on('connect', () => send(true));
+    // A reconnect loses the subscription; ask again on the way back. The
+    // listener is removed by reference: `socket.off('connect')` with no handler
+    // would take the session layer's own reconnect listeners with it.
+    const again = () => send(true);
+    socket.on('connect', again);
     return () => {
-      socket.off('connect');
+      socket.off('connect', again);
       send(false);
     };
   }, [watching]);

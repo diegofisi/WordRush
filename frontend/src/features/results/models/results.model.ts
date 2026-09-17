@@ -1,4 +1,6 @@
 import type {
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  BossSummary,
   GameEndPayload,
   GameKind,
   GameMode,
@@ -71,6 +73,14 @@ export interface RoundResultsViewModel {
   myRoundPoints: number;
   myTotal: number;
   isFinal: boolean;
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
+  /** True when the team beat the fly, false when she solved; null otherwise. */
+  bossDefeated: boolean | null;
+  /** The flat bonus every surviving human took; 0 when she was not beaten. */
+  bossBonus: number;
+  /** How the fly finished. Null outside boss mode. */
+  boss: BossSummary | null;
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
 }
 
 const byRoundResult = (first: RoundBreakdown, second: RoundBreakdown) => {
@@ -164,5 +174,10 @@ export const toRoundResultsViewModel = (
     myRoundPoints: teamMode ? (myTeamRow?.roundPoints ?? 0) : (myRow?.roundPoints ?? 0),
     myTotal: teamMode ? (myTeamStanding?.total ?? 0) : (myStanding?.total ?? 0),
     isFinal: gameEnd !== null || payload.nextRoundIn === 0 || payload.round >= payload.totalRounds,
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
+    bossDefeated: payload.bossDefeated ?? null,
+    boss: payload.boss ?? null,
+    bossBonus: Math.max(0, ...rows.map((row) => row.bossBonus ?? 0)),
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
   };
 };

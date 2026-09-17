@@ -50,6 +50,18 @@ export const RoundHeader = ({ t, results }: RoundHeaderProps) => {
           </div>
         )}
         <div className="flex flex-col gap-0.5">
+          {/* BOSS-MODE (temporary; see docs/context/07-boss-removal.md) */}
+          {results.bossDefeated !== null ? (
+            <span
+              className={
+                results.bossDefeated
+                  ? 'w-fit rounded-full bg-green-soft px-3 py-1 text-xs font-bold text-green-ink'
+                  : 'w-fit rounded-full bg-red-soft px-3 py-1 text-xs font-bold text-red'
+              }
+            >
+              {results.bossDefeated ? t.boss.beaten : t.boss.won}
+            </span>
+          ) : null}
           <h2 className="m-0 font-display text-[26px] font-bold tracking-[-0.02em]">
             {teamMode
               ? results.solvedCount > 0
@@ -77,6 +89,18 @@ export const RoundHeader = ({ t, results }: RoundHeaderProps) => {
                     : ''
                 }${t.results.missedCount(missed)}`}
           </p>
+          {/* BOSS-MODE (temporary; see docs/context/07-boss-removal.md) */}
+          {results.boss ? (
+            <p className="m-0 text-sm text-ink-2">
+              {results.boss.solved
+                ? t.boss.solvedIn(results.boss.attempts)
+                : t.boss.fellAfter(results.boss.attempts)}{' '}
+              <span className="text-ink-3">{t.boss.noScoreNote}</span>
+            </p>
+          ) : null}
+          {results.bossDefeated && results.bossBonus > 0 ? (
+            <p className="m-0 text-sm text-green-ink">{t.boss.bonusNote(results.bossBonus)}</p>
+          ) : null}
         </div>
       </div>
       <div className="flex gap-2.5">

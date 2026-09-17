@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { openBossChannel, type BossChannelMessage } from '../helpers/boss-channel';
-import type { BossViewModel } from '../models/game-view.model';
+import type { BossViewModel } from '../models/boss-view.model';
 
 /** The game tab drops a viewer that goes quiet, so say so well inside that. */
 const RENEW_EVERY_MS = 1500;

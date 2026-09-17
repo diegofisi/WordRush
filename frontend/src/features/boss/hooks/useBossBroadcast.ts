@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useWatchBoss } from '../api/watch-boss/useWatchBoss';
 import { openBossChannel, type BossChannelMessage } from '../helpers/boss-channel';
-import type { BossViewModel } from '../models/game-view.model';
+import type { BossViewModel } from '../models/boss-view.model';
 
 /** At most this often, so a ticking clock does not flood the channel. */
 const PUBLISH_EVERY_MS = 120;

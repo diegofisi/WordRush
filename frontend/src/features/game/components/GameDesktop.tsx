@@ -2,6 +2,8 @@ import { PHRASE_RULES } from '@/shared/contract';
 
 import { LOW_TIME_THRESHOLD } from '../stores/useGameStore';
 import type { GameViewProps } from '../models/game-view.model';
+// BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+import { BossPanel } from '@/features/boss/components/BossPanel';
 import { Board } from './Board';
 import { Clock } from './Clock';
 import { ClockCard } from './ClockCard';
@@ -34,6 +36,8 @@ export const GameDesktop = (props: GameViewProps) => {
   return (
     <div className="grid min-h-0 flex-1 grid-cols-[300px_minmax(0,1fr)_320px] grid-rows-[minmax(0,1fr)] gap-6 px-7 py-5">
       <div className="flex min-h-0 flex-col gap-4">
+        {/* BOSS-MODE (temporary; see docs/context/07-boss-removal.md) */}
+        {props.boss ? <BossPanel t={t} boss={props.boss} roomCode={props.roomCode} /> : null}
         {phrase && !props.observer ? (
           // Phrase game: the clock lives in a side card, so the centre column
           // holds only the phrase, the board and the keyboard (they never scroll).

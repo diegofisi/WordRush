@@ -17,9 +17,9 @@ export const BossRows = ({ t, boss }: BossRowsProps) => {
   return (
     <section className="flex flex-col gap-2.5">
       <div className="flex items-baseline gap-3">
-        <span className="label">{t.results.bossWords}</span>
+        <span className="label">{t.boss.words}</span>
         <span className="text-xs text-ink-3">
-          {boss.solved ? t.results.bossSolvedIn(boss.attempts) : t.results.bossFellAfter(boss.attempts)}
+          {boss.solved ? t.boss.solvedIn(boss.attempts) : t.boss.fellAfter(boss.attempts)}
         </span>
       </div>
       <ol className="m-0 flex list-none flex-col gap-1.5 p-0">

@@ -4,8 +4,8 @@ import { cn } from '@/shared/lib/cn';
 import { formatClock } from '@/shared/lib/format';
 import { brainPath } from '@/shared/routes/paths';
 
-import type { BossViewModel } from '../models/game-view.model';
-import { MiniBoard } from './MiniBoard';
+import type { BossViewModel } from '../models/boss-view.model';
+import { MiniBoard } from '@/features/game/components/MiniBoard';
 
 interface BossPanelProps {
   t: Dictionary;
@@ -25,10 +25,10 @@ const barTone = (percent: number, down: boolean) => {
 };
 
 const statusOf = (t: Dictionary, boss: BossViewModel) => {
-  if (boss.solved) return t.game.bossSolvedIt;
-  if (boss.defeated) return t.game.bossDown;
-  if (boss.decision) return t.game.bossAction[boss.decision.action];
-  return t.game.bossAttempt(boss.attempt + 1, BOSS.maxAttempts);
+  if (boss.solved) return t.boss.solvedIt;
+  if (boss.defeated) return t.boss.down;
+  if (boss.decision) return t.boss.action[boss.decision.action];
+  return t.boss.attempt(boss.attempt + 1, BOSS.maxAttempts);
 };
 
 /**
@@ -49,13 +49,13 @@ export const BossPanel = ({ t, boss, roomCode, compact = false }: BossPanelProps
       >
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex items-baseline gap-2">
-            <span className="truncate font-display text-sm font-bold text-ink">{t.game.boss}</span>
+            <span className="truncate font-display text-sm font-bold text-ink">{t.boss.name}</span>
             <span className="truncate font-mono text-[10px] text-ink-3">{statusOf(t, boss)}</span>
           </div>
           <div
             className="h-1.5 w-full overflow-hidden rounded-full bg-track"
             role="progressbar"
-            aria-label={t.game.bossHealth}
+            aria-label={t.boss.health}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={boss.percent}
@@ -79,13 +79,13 @@ export const BossPanel = ({ t, boss, roomCode, compact = false }: BossPanelProps
       )}
     >
       <div className="flex items-baseline justify-between gap-2">
-        <span className="label text-accent">{t.game.bossHealth}</span>
+        <span className="label text-accent">{t.boss.health}</span>
         <span className="font-mono text-[10px] text-ink-3">{statusOf(t, boss)}</span>
       </div>
 
       <div className="flex items-center gap-3">
         <span className="font-display text-lg font-extrabold leading-none text-ink">
-          {t.game.boss}
+          {t.boss.name}
         </span>
         <span className="ml-auto font-mono text-2xl font-bold tabular-nums leading-none text-ink">
           {clock}
@@ -95,7 +95,7 @@ export const BossPanel = ({ t, boss, roomCode, compact = false }: BossPanelProps
       <div
         className="h-2.5 w-full overflow-hidden rounded-full bg-track"
         role="progressbar"
-        aria-label={t.game.bossHealth}
+        aria-label={t.boss.health}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={boss.percent}
@@ -107,16 +107,16 @@ export const BossPanel = ({ t, boss, roomCode, compact = false }: BossPanelProps
       </div>
 
       <div className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] text-ink-3">
-        <span>{t.game.bossStart(boss.startSeconds)}</span>
+        <span>{t.boss.start(boss.startSeconds)}</span>
         {boss.damageSeconds > 0 ? (
-          <span className="text-green-ink">{t.game.bossDamage(boss.damageSeconds)}</span>
+          <span className="text-green-ink">{t.boss.damage(boss.damageSeconds)}</span>
         ) : null}
         {boss.forfeitedSeconds > 0 ? (
-          <span className="text-faint">{t.game.bossForfeited(boss.forfeitedSeconds)}</span>
+          <span className="text-faint">{t.boss.forfeited(boss.forfeitedSeconds)}</span>
         ) : null}
       </div>
 
-      {boss.rows.length > 0 ? <MiniBoard rows={boss.rows} /> : null}
+      {boss.rows.length > 0 ? <MiniBoard rows={boss.rows} wordLength={boss.wordLength} /> : null}
 
       {/* Its own tab: the instrument is a second screen, not a lid over the
           board. The game tab keeps feeding it while it is open. */}
@@ -124,26 +124,26 @@ export const BossPanel = ({ t, boss, roomCode, compact = false }: BossPanelProps
         href={brainPath(roomCode)}
         target="_blank"
         rel="noreferrer"
-        title={t.game.bossOpenHint}
+        title={t.boss.openHint}
         className="rounded-lg border border-accent/40 px-2 py-1.5 text-center font-mono text-[10px] tracking-wider text-accent uppercase transition-colors hover:bg-accent/10"
       >
-        {t.game.bossOpen} ↗
+        {t.boss.open} ↗
       </a>
 
       {boss.decision && !boss.solved && !boss.defeated ? (
         <div className="flex flex-col gap-1 border-t border-line pt-2">
-          <span className="label text-ink-3">{t.game.bossThinking}</span>
+          <span className="label text-ink-3">{t.boss.thinking}</span>
           <span className="text-[13px] font-semibold text-ink">
-            {t.game.bossAttempt(boss.attempt + 1, BOSS.maxAttempts)} ·{' '}
-            {t.game.bossAction[boss.decision.action]}
+            {t.boss.attempt(boss.attempt + 1, BOSS.maxAttempts)} ·{' '}
+            {t.boss.action[boss.decision.action]}
           </span>
           <div className="flex flex-wrap gap-x-3 font-mono text-[10px] text-ink-3">
-            <span>{t.game.bossConfidence(boss.decision.confidence)}</span>
+            <span>{t.boss.confidence(boss.decision.confidence)}</span>
           </div>
 
           {boss.decision.brain && boss.decision.letters.length > 0 ? (
             <div className="mt-1 flex flex-col gap-1">
-              <span className="label text-ink-3">{t.game.bossWants}</span>
+              <span className="label text-ink-3">{t.boss.wants}</span>
               <div className="flex gap-1">
                 {boss.decision.letters.map((letter, index) => (
                   <span
@@ -158,7 +158,7 @@ export const BossPanel = ({ t, boss, roomCode, compact = false }: BossPanelProps
                 ))}
               </div>
               <span className="font-mono text-[10px] text-ink-3">
-                {t.game.bossSimulated(boss.decision.biologicalMs, boss.decision.wallMs)}
+                {t.boss.simulated(boss.decision.biologicalMs, boss.decision.wallMs)}
               </span>
             </div>
           ) : null}

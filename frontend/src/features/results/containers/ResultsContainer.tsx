@@ -14,6 +14,8 @@ import { useRestartRoom } from '../api/restart-room/useRestartRoom';
 import { BreakdownTable } from '../components/BreakdownTable';
 import { FinalBanner } from '../components/FinalBanner';
 import { RoundBoards } from '../components/RoundBoards';
+// BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+import { BossRows } from '@/features/boss/components/BossRows';
 import { RoundHeader } from '../components/RoundHeader';
 import { StandingsList } from '../components/StandingsList';
 import { TeamBreakdownCards } from '../components/TeamBreakdownCards';
@@ -121,6 +123,8 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
           />
         ) : null}
         <RoundHeader t={t} results={results} />
+        {/* BOSS-MODE (temporary; see docs/context/07-boss-removal.md) */}
+        {results.boss ? <BossRows t={t} boss={results.boss} /> : null}
         {teamMode ? (
           <TeamBreakdownCards
             t={t}

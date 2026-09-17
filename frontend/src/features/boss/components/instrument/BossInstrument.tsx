@@ -6,7 +6,7 @@ import { cn } from '@/shared/lib/cn';
 import cloud from '../../data/cloud.json';
 import circuit from '../../data/readout-circuit.json';
 import edges from '../../data/readout-edges.json';
-import type { BossViewModel } from '../../models/game-view.model';
+import type { BossViewModel } from '../../models/boss-view.model';
 import { FlyScene } from './FlyScene';
 import { CLOUD_MODES, type CloudMode } from './cloud-modes';
 import { NeuronCloud3D, type CloudState } from './NeuronCloud3D';
@@ -139,29 +139,29 @@ export const BossInstrument = ({ t, boss }: BossInstrumentProps) => {
     <section
       className="flex w-full max-w-[1400px] flex-col gap-4 rounded-2xl border px-4 py-4 sm:px-6"
       style={{ background: SCOPE.bg, color: SCOPE.ink, borderColor: SCOPE.line }}
-      aria-label={t.game.bossBrainTitle}
+      aria-label={t.boss.brainTitle}
     >
       <header className="flex flex-wrap items-center gap-3">
-        <span className="font-display text-lg font-extrabold">{t.game.boss}</span>
+        <span className="font-display text-lg font-extrabold">{t.boss.name}</span>
         <span
           className="rounded border px-2 py-1 font-mono text-[9.5px] tracking-[0.1em] uppercase"
           style={{ borderColor: SCOPE.line, color: SCOPE.ink2 }}
         >
           {telemetry
             ? `${telemetry.neurons.toLocaleString()} · ${telemetry.synapses.toLocaleString()} · flywire 783`
-            : t.game.bossNoBrain}
+            : t.boss.noBrain}
         </span>
         <span
           className="rounded border px-2 py-1 font-mono text-[9.5px] tracking-[0.1em] uppercase"
           style={{ borderColor: SCOPE.line, color: SCOPE.ink2 }}
         >
-          {decision ? t.game.bossAction[decision.action] : '—'}
+          {decision ? t.boss.action[decision.action] : '—'}
         </span>
       </header>
 
       {!telemetry ? (
         <p className="m-0 text-sm" style={{ color: SCOPE.ink2 }}>
-          {t.game.bossNoBrain}
+          {t.boss.noBrain}
         </p>
       ) : (
         <>
@@ -170,14 +170,14 @@ export const BossInstrument = ({ t, boss }: BossInstrumentProps) => {
               <Box className="h-[320px]">
                 <FlyScene motorHz={motorHz} typing={decision?.typing ?? ''} />
               </Box>
-              <Note>{t.game.bossFlyNote(Math.round(motorHz))}</Note>
+              <Note>{t.boss.flyNote(Math.round(motorHz))}</Note>
             </div>
             <div className="flex flex-col gap-1.5">
               <div className="flex flex-wrap items-center gap-2">
-                <Label>{t.game.bossCloud}</Label>
+                <Label>{t.boss.cloud}</Label>
                 <div className="ml-auto flex gap-1.5">
                   <Toggle
-                    label={t.game.bossMode[mode]}
+                    label={t.boss.mode[mode]}
                     active
                     onClick={() =>
                       setMode(
@@ -187,7 +187,7 @@ export const BossInstrument = ({ t, boss }: BossInstrumentProps) => {
                     }
                   />
                   <Toggle
-                    label={orbit ? t.game.bossOrbitOn : t.game.bossOrbitOff}
+                    label={orbit ? t.boss.orbitOn : t.boss.orbitOff}
                     active={orbit}
                     onClick={() => setOrbit(!orbit)}
                   />
@@ -200,10 +200,10 @@ export const BossInstrument = ({ t, boss }: BossInstrumentProps) => {
                   aria-hidden="true"
                 />
                 <span style={{ color: frame ? SCOPE.neural : SCOPE.ink3 }}>
-                  {frame ? t.game.bossStateLive : t.game.bossStateHeld}
+                  {frame ? t.boss.stateLive : t.boss.stateHeld}
                 </span>
                 <span style={{ color: SCOPE.ink2 }}>
-                  {t.game.bossStateMean(live.mean.toFixed(3), live.firing)}
+                  {t.boss.stateMean(live.mean.toFixed(3), live.firing)}
                 </span>
               </div>
               <Box className="h-[360px]">
@@ -216,77 +216,77 @@ export const BossInstrument = ({ t, boss }: BossInstrumentProps) => {
                 />
               </Box>
               <Note>
-                {t.game.bossCloudNote(
+                {t.boss.cloudNote(
                   cloud.count,
                   frame ? live.firing : telemetry.cloud.length,
                   windowMs,
                 )}
               </Note>
-              <Note>{t.game.bossModeNote[mode](circuit.edges.from.length)}</Note>
+              <Note>{t.boss.modeNote[mode](circuit.edges.from.length)}</Note>
             </div>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-[1fr_1.15fr_0.9fr]">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label>{t.game.bossRaster}</Label>
+                <Label>{t.boss.raster}</Label>
                 <Box className="h-[150px]">
                   <SpikeRaster telemetry={telemetry} windowMs={windowMs} />
                 </Box>
-                <Note>{t.game.bossRasterNote(telemetry.raster.length, windowMs)}</Note>
+                <Note>{t.boss.rasterNote(telemetry.raster.length, windowMs)}</Note>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label>{t.game.bossVoltage}</Label>
+                <Label>{t.boss.voltage}</Label>
                 <Box className="h-[96px]">
                   <VoltageHistogram telemetry={telemetry} />
                 </Box>
-                <Note>{t.game.bossVoltageNote}</Note>
+                <Note>{t.boss.voltageNote}</Note>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Stat
-                  label={t.game.bossBalance}
+                  label={t.boss.balance}
                   value={`${excitatory} / ${100 - excitatory}`}
-                  unit={t.game.bossBalanceUnit}
+                  unit={t.boss.balanceUnit}
                 />
                 <Stat
-                  label={t.game.bossBio}
+                  label={t.boss.bio}
                   value={liveMs ?? String(decision?.biologicalMs ?? 0)}
-                  unit={liveMs ? t.game.bossLive : t.game.bossBioUnit(decision?.wallMs ?? 0)}
+                  unit={liveMs ? t.boss.live : t.boss.bioUnit(decision?.wallMs ?? 0)}
                 />
                 <Stat
-                  label={t.game.bossConfidenceLabel}
+                  label={t.boss.confidenceLabel}
                   value={(decision?.confidence ?? 0).toFixed(2)}
-                  unit={t.game.bossConfidenceUnit}
+                  unit={t.boss.confidenceUnit}
                 />
                 <Stat
-                  label={t.game.bossLetters}
+                  label={t.boss.letters}
                   value={(decision?.letters ?? [])[0] ?? '—'}
-                  unit={t.game.bossLettersUnit}
+                  unit={t.boss.lettersUnit}
                 />
               </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label>{t.game.bossNetwork}</Label>
+              <Label>{t.boss.network}</Label>
               <Box className="h-[430px]">
                 <DecisionNetwork telemetry={telemetry} />
               </Box>
               <div className="flex flex-wrap justify-between gap-2">
                 <Note>
                   {edges.inputs} → {edges.outputs} ·{' '}
-                  {t.game.bossParams(edges.inputs * edges.outputs + edges.outputs, edges.samples)}
+                  {t.boss.params(edges.inputs * edges.outputs + edges.outputs, edges.samples)}
                 </Note>
                 <Note>
-                  <span style={{ color: SCOPE.neural }}>●</span> {t.game.bossExcites}{' '}
-                  <span style={{ color: SCOPE.inhib }}>●</span> {t.game.bossInhibits}
+                  <span style={{ color: SCOPE.neural }}>●</span> {t.boss.excites}{' '}
+                  <span style={{ color: SCOPE.inhib }}>●</span> {t.boss.inhibits}
                 </Note>
               </div>
-              <Note>{t.game.bossNetworkNote}</Note>
+              <Note>{t.boss.networkNote}</Note>
             </div>
 
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label>{t.game.bossPopulations}</Label>
+                <Label>{t.boss.populations}</Label>
                 {telemetry.populations.map((population) => (
                   <div key={population.name} className="flex items-center gap-2">
                     <span className="w-24 font-mono text-[10px]" style={{ color: SCOPE.ink2 }}>
@@ -312,11 +312,11 @@ export const BossInstrument = ({ t, boss }: BossInstrumentProps) => {
                     </span>
                   </div>
                 ))}
-                <Note>{t.game.bossPopulationsNote}</Note>
+                <Note>{t.boss.populationsNote}</Note>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label>{t.game.bossStimulus}</Label>
+                <Label>{t.boss.stimulus}</Label>
                 <div className="grid grid-cols-5 gap-1.5">
                   {[0, 1, 2, 3, 4].map((slot) => {
                     const rates = telemetry.stimulus.slice(slot * 4, slot * 4 + 4);
@@ -350,11 +350,11 @@ export const BossInstrument = ({ t, boss }: BossInstrumentProps) => {
                     );
                   })}
                 </div>
-                <Note>{t.game.bossStimulusNote}</Note>
+                <Note>{t.boss.stimulusNote}</Note>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label>{t.game.bossWants}</Label>
+                <Label>{t.boss.wants}</Label>
                 <div className="flex flex-wrap gap-1">
                   {(decision?.letters ?? []).map((letter, index) => (
                     <span
@@ -370,47 +370,47 @@ export const BossInstrument = ({ t, boss }: BossInstrumentProps) => {
                     </span>
                   ))}
                 </div>
-                <Note>{t.game.bossWantsNote}</Note>
+                <Note>{t.boss.wantsNote}</Note>
               </div>
             </div>
           </div>
 
           {/* How she was trained, on the same page as what she does with it. */}
           <div className="flex flex-col gap-2 border-t pt-3" style={{ borderColor: SCOPE.line }}>
-            <Label>{t.game.bossTraining}</Label>
+            <Label>{t.boss.training}</Label>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <Stat
-                label={t.game.bossTrainShape}
+                label={t.boss.trainShape}
                 value={`${edges.inputs}·${edges.outputs}`}
-                unit={t.game.bossTrainShapeUnit}
+                unit={t.boss.trainShapeUnit}
               />
               <Stat
-                label={t.game.bossTrainSamples}
+                label={t.boss.trainSamples}
                 value={String(edges.samples)}
-                unit={t.game.bossTrainSamplesUnit}
+                unit={t.boss.trainSamplesUnit}
               />
               <Stat
-                label={t.game.bossTrainError}
+                label={t.boss.trainError}
                 value={edges.heldOutError.toFixed(3)}
-                unit={t.game.bossTrainErrorUnit(edges.flatError.toFixed(3))}
+                unit={t.boss.trainErrorUnit(edges.flatError.toFixed(3))}
               />
               <Stat
-                label={t.game.bossTrainGain}
+                label={t.boss.trainGain}
                 value={`${(((edges.flatError - edges.heldOutError) / edges.flatError) * 100).toFixed(1)}%`}
-                unit={t.game.bossTrainGainUnit}
+                unit={t.boss.trainGainUnit}
               />
             </div>
-            <Note>{t.game.bossTrainTeacher}</Note>
-            <Note>{t.game.bossTrainHint}</Note>
-            <Note>{t.game.bossTrainFixed}</Note>
-            <Note>{t.game.bossTrainWhen(edges.trainedAt, edges.lambda)}</Note>
+            <Note>{t.boss.trainTeacher}</Note>
+            <Note>{t.boss.trainHint}</Note>
+            <Note>{t.boss.trainFixed}</Note>
+            <Note>{t.boss.trainWhen(edges.trainedAt, edges.lambda)}</Note>
           </div>
 
           <p
             className="m-0 border-t pt-3 font-mono text-[9px] leading-relaxed"
             style={{ borderColor: SCOPE.line, color: SCOPE.ink3 }}
           >
-            {t.game.bossProvenance}
+            {t.boss.provenance}
           </p>
         </>
       )}

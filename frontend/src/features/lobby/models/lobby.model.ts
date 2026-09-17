@@ -17,6 +17,9 @@ export interface LobbyPlayerViewModel {
   isMe: boolean;
   /** Team mode only. */
   team: TeamId | null;
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  /** The fly's seat: shown apart and never counted as a human. */
+  isBot: boolean;
 }
 
 export interface LobbyTeamViewModel {
@@ -70,8 +73,13 @@ export const toLobbyViewModel = (dto: LobbyState, myId: string | null): LobbyVie
     connected: player.connected,
     isMe: player.id === myId,
     team: player.team,
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+    isBot: player.isBot === true,
   }));
   const me = players.find((player) => player.isMe) ?? null;
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  // Every count below means humans: the fly occupies no seat and is never ready.
+  const humans = players.filter((player) => !player.isBot);
   const teams = (dto.teams ?? []).map((team) => ({
     id: team.id,
     name: team.name,
@@ -100,9 +108,10 @@ export const toLobbyViewModel = (dto: LobbyState, myId: string | null): LobbyVie
     hostName: players.find((player) => player.isHost)?.name ?? '',
     isHost: me?.isHost ?? false,
     me,
-    readyCount: players.filter((player) => player.ready).length,
-    playerCount: players.length,
-    connectedCount: players.filter((player) => player.connected).length,
-    freeSeats: Math.max(0, dto.settings.capacity - players.length),
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `humans` was `players` in the four counts below.
+    readyCount: humans.filter((player) => player.ready).length,
+    playerCount: humans.length,
+    connectedCount: humans.filter((player) => player.connected).length,
+    freeSeats: Math.max(0, dto.settings.capacity - humans.length),
   };
 };

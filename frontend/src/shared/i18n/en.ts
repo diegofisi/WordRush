@@ -480,4 +480,125 @@ export const en: Dictionary = {
     ok: 'OK',
     shh: 'Shh',
   },
+
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
+  // The whole optional "challenge the fly" mode lives in this one group, so
+  // removing it is deleting from this banner to the matching one below.
+  boss: {
+    homeOption: 'Challenge the fly (legacy mode)',
+    homeOptionHint: 'Legacy mode: 5 letters, no teams. 1 to 8 humans against one fly.',
+    homeOptionOn: 'You are playing against the fly.',
+    toggle: 'Take on the fly',
+    toggleHint: '1 to 8 humans, one target',
+    on: 'vs the fly',
+    name: 'The fly',
+    health: "The fly's clock",
+    start: (n) => `start ${n} s`,
+    damage: (n) => `team −${n} s`,
+    forfeited: (n) => `letters +${n} s`,
+    attempt: (n, of) => `attempt ${n} of ${of}`,
+    solvedIt: 'solved it',
+    down: 'beaten',
+    hit: (n) => `−${n} s off the fly`,
+    thinking: 'What she is doing',
+    action: {
+      guess: 'plays what her brain asked for',
+    },
+    confidence: (n) => `confidence ${n.toFixed(2)}`,
+    wants: 'Letters her brain asked for',
+    open: 'See her brain',
+    openHint: 'Opens in another tab',
+    close: 'Hide her brain',
+    linkLive: 'Linked to the game',
+    linkWaiting: 'Waiting for the game',
+    linkHelp:
+      "This tab measures the fly's brain while she plays. Keep the game tab open and the data shows up here.",
+    noBrain:
+      'She has not thought with the connectome yet this round. It appears on her first turn.',
+    brainTitle: 'Her brain while she decided',
+    network: 'Decision network',
+    networkNote:
+      'The trained readout, drawn with its own weights. The real descending rates go in, 27 letters come out. The brightest is the one she wants most.',
+    params: (params, samples) =>
+      `${params} parameters, fitted on ${samples} connectome samples`,
+    excites: 'excites',
+    inhibits: 'inhibits',
+    flyNote: (hz) =>
+      `The real "Shy fly" mesh (Maf'j Alvarez, CC-BY 3.0), recoloured as Drosophila. She types the word she is actually sending, at the pace of her motor population: ${hz} Hz.`,
+    stimulus: 'Stimulus · previous row',
+    stimulusNote: 'Poisson injected into each channel, in Hz. It is all the input she gets.',
+    wantsNote:
+      "The game strikes out the words that contradict her colours and shows her 8 at random. She chooses among those 8 with these letters. The deduction is the game's; the choice is hers. Measured over 120 rounds at 4 attempts on the same 8: brain intact solved 43, every synapse cut 41, a coin 49. Her choice is real (she played differently from a dead brain in 119 rounds) and it is no better than chance.",
+    cloud: 'Neuron cloud',
+    mode: {
+      transmitter: 'Mode · transmitter',
+      atlas: 'Mode · atlas',
+      circuit: 'Mode · circuit',
+    },
+    modeNote: {
+      transmitter: () =>
+        'Coloured by real neurotransmitter. Additive blending: denser regions burn brighter, which is what makes the anatomy read.',
+      atlas: () =>
+        'Grey: the unsimulated atlas. Green: excitatory (acetylcholine and friends). Orange: inhibitory (GABA and glutamate). Only what fires is coloured.',
+      circuit: (synapses: number) =>
+        `64 of the 1,299 descending cells the readout reads, in their real places in the brain, and the ${synapses} synapses between them in the connectome. Each node's brightness is its measured rate; a line lights when its source cell fires.`,
+    },
+    orbitOn: 'Orbit on',
+    orbitOff: 'Orbit off',
+    stateLive: 'Live model state',
+    stateHeld: 'Last decision',
+    stateMean: (mean: string, firing: number) => `mean activity ${mean} · ${firing} cells lit`,
+    cloudColour:
+      'Coloured by real neurotransmitter. Additive blending: denser regions burn brighter, which is what makes the anatomy read.',
+    cloudNote: (total, fired, ms) =>
+      `A sample of ${total} real neurons. ${fired} fired in the last ${ms} ms of biological time.`,
+    raster: 'Spike raster',
+    rasterNote: (rows, ms) =>
+      `One row per descending cell (${rows}). One tick per spike, ${ms} ms of biological time.`,
+    voltage: 'Membrane voltage',
+    voltageNote: 'Histogram across the whole brain. Rest −52 mV, threshold −45 mV.',
+    populations: 'Rate by population',
+    populationsNote: 'Spikes per neuron per second, by FlyWire anatomical class.',
+    balance: 'Excit. / inhib.',
+    balanceUnit: 'incoming current, mV',
+    bio: 'Biological time',
+    live: 'bio ms / wall ms, live',
+    bioUnit: (wall) => `ms simulated in ${wall} ms of wall time`,
+    letters: 'Top letter',
+    lettersUnit: 'what her readout wants most',
+    confidenceLabel: 'Confidence',
+    confidenceUnit: 'margin of the decision',
+    training: 'How she was trained',
+    trainShape: 'Readout',
+    trainShapeUnit: 'inputs · outputs, one matrix',
+    trainSamples: 'Samples',
+    trainSamplesUnit: 'boards simulated on the connectome',
+    trainError: 'Held-out error',
+    trainErrorUnit: (flat: string) => `against ${flat} ignoring the brain`,
+    trainGain: 'What the brain adds',
+    trainGainUnit: 'better than a constant output',
+    trainTeacher:
+      'Target: the letters that were really in the word. The teacher is the answer, not a solver — nobody taught her to imitate an algorithm.',
+    trainHint:
+      'Output 28 is her hint: she learnt which boards are worth spending it on. No hand-written threshold decides that. If the room has hints off she asks and the rules say no, exactly as for a human.',
+    trainFixed:
+      'The readout is the only thing ever fitted. The 138,639 neurons and 2,700,513 synapses upstream of it are FlyWire anatomy and were never touched.',
+    trainWhen: (date: string, lambda: number) =>
+      `Trained ${date} by ridge regression, penalty ${lambda} (the best held-out).`,
+    provenance:
+      "Everything above is measured on the running model: the raster is her spike times, the histogram is every neuron's membrane voltage, the rates are counted spikes. None of it is generated for the picture.",
+    simulated: (bio, wall) => `${bio} ms of brain simulated in ${wall} ms`,
+    noScore: 'The boss does not score: her clock is health, not spare time.',
+    colBoss: 'Boss',
+    won: 'The fly solved it and takes the round',
+    beaten: 'The fly went down: the team wins',
+    words: 'What the fly played',
+    solvedIn: (n) =>
+      n === 1 ? 'The fly got it on her first try.' : `The fly got it in ${n} attempts.`,
+    fellAfter: (n) =>
+      n === 1 ? 'The fly went down after 1 attempt.' : `The fly went down after ${n} attempts.`,
+    noScoreNote: 'She plays on your clock and scores by the same formula.',
+    bonusNote: (n) => `+${n} bonus for every human still in the round.`,
+  },
+  // BOSS-MODE — end.
 };

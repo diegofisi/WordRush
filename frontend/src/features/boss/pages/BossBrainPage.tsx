@@ -33,7 +33,7 @@ export const BossBrainPage = () => {
       style={{ background: SCOPE.bg, color: SCOPE.ink }}
     >
       <header className="flex w-full max-w-[1400px] flex-wrap items-baseline gap-3">
-        <h1 className="m-0 font-display text-base font-extrabold">{t.game.bossBrainTitle}</h1>
+        <h1 className="m-0 font-display text-base font-extrabold">{t.boss.brainTitle}</h1>
         <span
           className="font-mono text-[10px] tracking-[0.1em] uppercase"
           style={{ color: SCOPE.ink3 }}
@@ -44,14 +44,14 @@ export const BossBrainPage = () => {
           className="ml-auto font-mono text-[10px] tracking-[0.1em] uppercase"
           style={{ color: connected ? SCOPE.neural : SCOPE.ink3 }}
         >
-          {connected ? t.game.bossLinkLive : t.game.bossLinkWaiting}
+          {connected ? t.boss.linkLive : t.boss.linkWaiting}
         </span>
       </header>
 
       {!connected ? (
-        <PageEmpty title={t.game.bossBrainTitle} body={t.game.bossLinkHelp} />
+        <PageEmpty title={t.boss.brainTitle} body={t.boss.linkHelp} />
       ) : !boss ? (
-        <PageEmpty title={t.game.bossBrainTitle} body={t.game.bossNoBrain} />
+        <PageEmpty title={t.boss.brainTitle} body={t.boss.noBrain} />
       ) : (
         <Suspense fallback={<PageLoading title={t.common.connecting} />}>
           <BossInstrument t={t} boss={boss} />

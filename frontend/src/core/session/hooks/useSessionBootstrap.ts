@@ -14,13 +14,19 @@ import { pathForStatus, PATHS } from '@/shared/routes/paths';
  * A dead session is dropped quietly there too; the expiry notice is for
  * somebody who was thrown out of a room, not for a plain visit.
  */
-export const useSessionBootstrap = () => {
+// BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+/**
+ * `skip` is the fly's brain tab: it must neither rejoin nor be navigated
+ * anywhere, since rejoining would take the seat of the tab that is playing.
+ */
+export const useSessionBootstrap = (skip = false) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const started = useRef(false);
 
   useEffect(() => {
-    if (started.current) return;
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `skip ||`.
+    if (skip || started.current) return;
     started.current = true;
     const atHome = pathname === PATHS.home;
     // Every room route carries the code, so a session that cannot be restored
@@ -47,5 +53,6 @@ export const useSessionBootstrap = () => {
       }
       useSessionStore.getState().markBootstrapped();
     });
-  }, [navigate, pathname]);
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `skip` in the deps.
+  }, [navigate, pathname, skip]);
 };
