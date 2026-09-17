@@ -117,13 +117,11 @@ describe('RestartRoomUseCase', () => {
   it('clears the fields the janitor reads, so the room is a lobby again', () => {
     finishGame();
     room.nextRoundAt = T0 + 12_000;
-    room.emptiedAt = T0;
 
     useCase.execute('ABCD', 'host');
 
     expect(room.finishedAt).toBeNull();
     expect(room.nextRoundAt).toBeNull();
-    expect(room.emptiedAt).toBeNull();
     expect(room.lastActivityAt).toBe(LATER);
   });
 

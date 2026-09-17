@@ -8,7 +8,7 @@ import { EmotePicker } from './EmotePicker';
 import { HintButton } from './HintButton';
 import { HintLetterChip } from './HintLetterChip';
 import { Keyboard } from './Keyboard';
-import { FeedRow } from './LiveFeed';
+import { FeedRow } from './RoomStream';
 import { ObserverCard } from './ObserverCard';
 import { PenaltyChip } from './PenaltyChip';
 import { PhraseCard } from './PhraseCard';

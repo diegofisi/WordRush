@@ -11,6 +11,8 @@ export interface ChatMessageViewModel {
   isMe: boolean;
   /** Team mode: the sender sits in my team. */
   isTeammate: boolean;
+  /** Epoch ms, for the merged room stream's ordering. */
+  at: number;
   /** `hh:mm` local time. */
   time: string;
   /** First message of a new round: the list prints a divider before it. */
@@ -36,6 +38,7 @@ export const toChatMessageViewModels = (
     observer: message.observer,
     isMe: message.playerId === myId,
     isTeammate: myTeam !== null && message.team === myTeam,
+    at: message.at,
     time: formatTime(message.at),
     startsRound: index === 0 ? message.round > 0 : messages[index - 1]?.round !== message.round,
   }));

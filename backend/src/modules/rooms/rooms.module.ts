@@ -10,6 +10,7 @@ import { MarkDisconnectedUseCase } from './application/use-cases/mark-disconnect
 import { SitObserverUseCase } from './application/use-cases/observer.use-cases';
 import { RejoinRoomUseCase } from './application/use-cases/rejoin-room.use-case';
 import { RestartRoomUseCase } from './application/use-cases/restart-room.use-case';
+import { ResumeSessionUseCase } from './application/use-cases/resume-session.use-case';
 import { SetReadyUseCase } from './application/use-cases/set-ready.use-case';
 import {
   AssignTeamUseCase,
@@ -29,6 +30,7 @@ import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-
     CreateRoomUseCase,
     JoinRoomUseCase,
     RejoinRoomUseCase,
+    ResumeSessionUseCase,
     SetReadyUseCase,
     JoinTeamUseCase,
     AssignTeamUseCase,
@@ -47,6 +49,7 @@ import { InMemoryRoomRepository } from './infrastructure/repositories/in-memory-
     CreateRoomUseCase,
     JoinRoomUseCase,
     RejoinRoomUseCase,
+    ResumeSessionUseCase,
     SetReadyUseCase,
     UpdateRoomSettingsUseCase,
     RestartRoomUseCase,

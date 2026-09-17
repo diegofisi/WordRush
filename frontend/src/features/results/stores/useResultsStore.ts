@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import { socket } from '@/core/session/lib/socket';
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
+import { playSound } from '@/shared/lib/sound';
 import type {
   FullState,
   GameEndPayload,
@@ -96,9 +97,19 @@ export const useResultsStore = create<ResultsState & ResultsActions>((set) => {
           roomStatus: payload.nextRoundIn > 0 ? 'between-rounds' : 'finished',
         }),
       );
-      socket.on('game:end', (payload) =>
-        set({ gameEnd: payload, nextRoundAt: null, roomStatus: 'finished' }),
-      );
+      socket.on('game:end', (payload) => {
+        set((state) => {
+          const myId = useSessionStore.getState().session?.playerId ?? null;
+          // Won or lost is read from the table that just arrived: my team's
+          // first place in team mode, my own otherwise.
+          const won =
+            payload.teamStandings.length > 0
+              ? payload.teamStandings[0]?.team === state.myTeam
+              : payload.standings[0]?.playerId === myId;
+          playSound(won ? 'gameWon' : 'gameLost');
+          return { gameEnd: payload, nextRoundAt: null, roomStatus: 'finished' };
+        });
+      });
       socket.on('round:start', (round) =>
         set({ latestRoundStarted: round.round, roomStatus: 'playing' }),
       );

@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 
 import { Card } from '@/shared/components/ui/Card';
 import { ROOM_LIMITS, type ChatChannel } from '@/shared/contract';
@@ -6,12 +14,15 @@ import type { Dictionary } from '@/shared/i18n';
 import { cn } from '@/shared/lib/cn';
 
 import type { ChatMessageViewModel } from '../models/chat.model';
+import { toStream, type ChatStreamEvent } from '../models/stream.model';
 
 interface ChatPanelProps {
   t: Dictionary;
   messages: ChatMessageViewModel[];
-  /** Team mode: the "(Equipo)" channel exists next to "(Todos)". */
-  teamMode: boolean;
+  /** The room's own events (solves, penalties, hints, arrivals, stickers). */
+  events: ChatStreamEvent[];
+  /** Team mode during the round: the "(Equipo)" channel exists next to "(Todos)". */
+  channels: boolean;
   channel: ChatChannel;
   onChannel: (channel: ChatChannel) => void;
   /** False while the round keeps me out of "(Todos)"; the composer says why. */
@@ -19,6 +30,8 @@ interface ChatPanelProps {
   lockedReason: string | null;
   pending: boolean;
   onSend: (text: string) => void;
+  /** The sticker picker's trigger, which sits next to the input. */
+  sticker?: ReactNode;
   /** Borderless, for the phone sheet. */
   bare?: boolean;
   className?: string;
@@ -64,20 +77,24 @@ const Row = ({ t, message }: { t: Dictionary; message: ChatMessageViewModel }) =
 );
 
 /**
- * docs/context/06-v1.1.md -> Chat: one list, one composer, the channel
- * switch in team mode. The list is `aria-live` so a screen reader hears new
- * messages; it auto-scrolls to the newest one.
+ * One panel for the whole room (docs/context/06-v1.1.md -> Chat): the round's
+ * events, the stickers and the text messages in a single stream in time order,
+ * the composer at the bottom with the sticker trigger beside it, and the
+ * channel switch only where text has channels. The list is `aria-live` so a
+ * screen reader hears what arrives; it auto-scrolls to the newest item.
  */
 export const ChatPanel = ({
   t,
   messages,
-  teamMode,
+  events,
+  channels,
   channel,
   onChannel,
   canWrite,
   lockedReason,
   pending,
   onSend,
+  sticker,
   bare = false,
   className,
 }: ChatPanelProps) => {
@@ -87,7 +104,9 @@ export const ChatPanel = ({
     const list = listRef.current;
     if (list) list.scrollTop = list.scrollHeight;
   }, []);
-  useEffect(toEnd, [messages.length, toEnd]);
+  // One stream: the room's events, its stickers and the text messages.
+  const items = toStream(messages, events);
+  useEffect(toEnd, [items.length, toEnd]);
 
   const disabled = !canWrite || pending;
   const submit = () => {
@@ -103,7 +122,7 @@ export const ChatPanel = ({
         className={cn('flex items-center justify-between gap-2 px-4 pt-3.5 pb-2', bare && 'pr-14')}
       >
         <span className="label">{t.chat.title}</span>
-        {teamMode ? (
+        {channels ? (
           <div role="radiogroup" aria-label={t.chat.channel} className="flex gap-1">
             {(['team', 'all'] as const).map((option) => (
               <button
@@ -123,7 +142,7 @@ export const ChatPanel = ({
           </div>
         ) : null}
       </div>
-      {messages.length === 0 ? (
+      {items.length === 0 ? (
         <p className="m-0 flex-1 px-4 pb-3 text-[13px] text-ink-3">{t.chat.empty}</p>
       ) : (
         <ul
@@ -132,9 +151,13 @@ export const ChatPanel = ({
           aria-relevant="additions"
           className="m-0 flex min-h-0 flex-1 list-none flex-col gap-0.5 overflow-y-auto p-0 px-2 pb-2"
         >
-          {messages.map((message) => (
-            <Row key={message.id} t={t} message={message} />
-          ))}
+          {items.map((item) =>
+            item.kind === 'message' ? (
+              <Row key={`m${item.message.id}`} t={t} message={item.message} />
+            ) : (
+              <Fragment key={`e${item.event.id}`}>{item.event.node}</Fragment>
+            ),
+          )}
         </ul>
       )}
       <form
@@ -145,6 +168,7 @@ export const ChatPanel = ({
         }}
       >
         <div className="flex items-center gap-2">
+          {sticker}
           <input
             value={draft}
             maxLength={ROOM_LIMITS.chatMaxLength}
@@ -180,6 +204,8 @@ export const ChatPanel = ({
   return bare ? (
     <div className={cn('flex min-h-0 flex-col', className)}>{body}</div>
   ) : (
-    <Card className={cn('flex min-h-0 flex-col overflow-hidden', className)}>{body}</Card>
+    // No `overflow-hidden`: the sticker picker in the composer opens above it
+    // and must not be clipped by the card.
+    <Card className={cn('flex min-h-0 flex-col', className)}>{body}</Card>
   );
 };

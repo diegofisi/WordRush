@@ -1,0 +1,159 @@
+# This project: {app name} — {one line: what the client is}
+
+> This file is the **project binding** for the portable doctrine in this skill.
+> It is read **first** and it **wins** wherever it disagrees with a doctrine
+> file. Where it disagrees with the code, the code wins — and fixing this file is
+> part of the change.
+>
+> Copy this template to `references/project.md` and fill every section. Delete
+> nothing: a section that does not apply says "does not apply" so the next reader
+> knows it was considered.
+
+**Status ({YYYY-MM-DD}):** {what exists today, and where the binding is known to
+lag the code.}
+
+## What it is
+
+{Two or three sentences: who uses it, on what devices, what it does. Not the
+rules of the domain — link those.}
+
+Sources of truth that this file does **not** restate:
+
+- `{path}` — {domain rules / scoring / decisions}
+- `{path}` — {design source: artboards, tokens, screens}
+
+## Stack (confirmed {YYYY-MM-DD})
+
+| Layer | Choice | Notes |
+|---|---|---|
+| Framework | React {version} | {compiler on/off, StrictMode on/off} |
+| Build | {Vite / Next / …} | |
+| Language | TypeScript {version} | {strictness} |
+| Styling | {Tailwind vX / MUI / CSS modules} | {where the tokens live} |
+| UI kit | {MUI / shadcn / house primitives / none} | {path to the primitives} |
+| Data fetching | {React Query / SWR / none — transport-driven} | |
+| State | {Zustand / Redux / none} | |
+| Transport | {axios / fetch / socket.io / tRPC} | {the exact module path} |
+| Router | {react-router vX / none} | {history or hash} |
+| Forms | {react-hook-form + zod / plain useState} | |
+| i18n | {library / house dictionary / none} | {source language} |
+| Tests | {Vitest / Jest / RTL / none} | |
+| Lint | {plugins that actually run} | {boundaries enforced or convention only} |
+
+Fonts, colour tokens and spacing scale: {where they are defined, and the rule —
+e.g. "CSS variables in `src/index.css`, taken from the design file; never a hex in
+a component"}.
+
+## Applies / does not apply
+
+The doctrine covers more ground than any one repo uses. This table is the
+authority on which chapters are live here.
+
+| Doctrine topic | Reference file | Applies here? | What replaces it |
+|---|---|---|---|
+| Vertical slices, folder layout | `architecture.md` | yes / no | |
+| Container / Presentational | `containers-pages.md` | yes / no | |
+| Adapter Pattern (DTO → Model) | `data-flow.md` | yes / no | |
+| **Data-fetching library** (query/mutation hooks) | `data-flow.md` | {React Query / **no** — everything is {transport}-driven} | {hooks return `Result<T>`; pushed events are store-driven} |
+| **UI kit** (typography, layout primitives, `sx`) | `components.md` | {MUI / **no kit**} | {mapping table below} |
+| **Forms library** (react-hook-form + zod) | `forms.md` | {yes / **no**} | {plain `useState` + helper in `helpers/`} |
+| **Auth / roles / guards** | `web-app-patterns.md` | {yes / **no login at all**} | {session by room code / nothing} |
+| **i18n** | `conventions.md` → Copy | {yes / no} | {dictionary path, source language} |
+| **Router** | `routing-shell.md` | {yes / no} | |
+| External store | `state.md` | {yes / no} | |
+| Live-process stores | `state.md` | {yes / no} | |
+
+## Doctrine → this repo (primitive mapping)
+
+Only needed when the repo's UI kit differs from the doctrine's examples.
+
+| Doctrine (kit dialect) | Here |
+|---|---|
+| `<Typography variant>` | {plain semantic tags + type classes; the three fonts are …} |
+| `<Stack>` / `<Grid>` / `<Box>` | {plain `div` + flex/grid utilities; there are no layout primitives} |
+| `sx` + theme palette | {utility classes + `cn()`; colours are CSS variables in …} |
+| `CircularProgress` / `Alert` | {`PageLoading`, `PageEmpty` from …; there is no `PageError`} |
+| Kit controls | {the hand-made `Button`, `Input`, … in …} |
+| Snackbar | {`useToastStore` + `<Toaster>`, called from containers only} |
+| Icons | {library for chrome; custom set for …} |
+| Error fallback | {`ErrorBoundary` + `CrashScreen`, wrapped around `<App/>` in `main.tsx`} |
+
+## Feature map
+
+| Kind | Path | Slices |
+|---|---|---|
+| core | `src/core/` | {concern — what it owns} |
+| features | `src/features/` | {slice — what it owns}, … |
+
+Shared layer:
+
+| Folder | Contents |
+|---|---|
+| `components/ui` | {list} |
+| `components/layout` | {list} |
+| `lib` / `hooks` / `stores` | {list} |
+| `i18n` / `routes` / `contract` | {list} |
+
+## Sanctioned facades (the only cross-slice imports)
+
+- `{@/core/...}` — {what it exposes and why every slice may use it}
+- `{@/features/x}` — {the facade's exported surface}
+- `{@/shared/**}` — always
+
+Anything else from another slice: duplicate a minimal local hook or model.
+Deep paths into a facade feature are still forbidden.
+
+## Transport
+
+{Which transport, which module, and the rule.} Name:
+
+- the exact module every `api/` folder and store imports;
+- which interactions are request/response (they get an `api/` folder) and which
+  are pushed (they are store-driven and never get a hook);
+- where the event/endpoint table lives — **link it, do not copy it**; a prose
+  copy of a typed source of truth drifts the day someone changes the type;
+- who owns the contract and what must change in the same commit when it changes.
+
+{If a clock, a queue or any long-running process is server-owned, state the rule
+here: what the store keeps, what the client is allowed to derive, and what it must
+wait for.}
+
+## Routing shape
+
+{Route list, path-constant module, builders, which routes are protected and what
+a reload on each one does.}
+
+## House conventions
+
+Decisions where the doctrine allows more than one form — pick one and record it:
+
+| Question | This repo |
+|---|---|
+| `api/` folder casing | {`kebab-case` / `PascalCase {Domain}/{Endpoint}`} |
+| DTO file name | {`{event}.dto.ts` / `{Name}DTO.ts`} |
+| Model folder | {`models/` / `interfaces/`} |
+| Model name | {`{Name}` / `{Name}ViewModel`} |
+| Mapper name and location | {`toModel`, in the dto file / `transform…ToViewModel`, in the model file} |
+| Shared layer name | {`shared/` / `common/`} |
+| `localStorage` prefix | {`{app}.`} |
+| Documentation / comment language | {} |
+| Commit message style | {} |
+
+## Verification commands
+
+```bash
+{pnpm verify}        # what it wraps: typecheck, lint, test, build
+```
+
+Individually: `{pnpm typecheck}`, `{pnpm lint}`, `{pnpm test}`, `{pnpm build}`,
+plus `{any repo-root check, e.g. contract sync}`.
+
+{Note anything non-obvious: "lint must be 0 warnings, not just 0 errors";
+"`build` is what CI/the host runs".}
+
+## Known traps
+
+Short pointers only. The dated ledger is `project-pitfalls.md`.
+
+- {trap}
+- {trap}

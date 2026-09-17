@@ -56,14 +56,14 @@ without its two labels does not compile.
 
 ## Where they appear
 
-- The **picker** (`src/features/game/components/EmotePicker.tsx`): a round trigger under
-  the score card on desktop and under the keyboard on phones, opening a popover with a
+- The **picker** (`src/features/game/components/EmotePicker.tsx`): a round trigger next to
+  the chat composer on desktop and under the keyboard on phones, opening a popover with a
   5 × 4 grid plus the player's five most recent emotes.
-- The **live feed** (`LiveFeed.tsx`): a reaction is its own message — a "time + name"
-  header with the sticker at 112 px under it, consecutive ones from the same player
-  stacked under a single header.
-- The **phone overlay** (`StickerOverlay.tsx`): phones have no feed, so the newest
-  sticker floats over the keyboard at 96 px for 2.5 s with the sender's name.
+- The **room stream** (`RoomStream.tsx`, rendered inside the merged chat panel): a
+  reaction is its own message — a "time + name" header with the sticker at 112 px under
+  it, consecutive ones from the same player stacked under a single header.
+- The **phone overlay** (`StickerOverlay.tsx`): the phone's chat lives in a sheet, so the
+  newest sticker also floats over the keyboard at 96 px for 2.5 s with the sender's name.
 
 All of them go through `EmoteIcon` in `src/shared/components/icons/EmoteIcon.tsx`, which
 reads this folder through `src/shared/components/icons/customEmotes.ts`.

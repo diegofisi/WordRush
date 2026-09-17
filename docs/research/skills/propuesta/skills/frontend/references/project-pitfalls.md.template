@@ -1,0 +1,40 @@
+# {app name} — frontend pitfalls ledger
+
+> **This file grows.** Every time a correction has to be made twice — by the
+> user to the agent, or in review to the same kind of code — it becomes one
+> dated line here. That is the whole mechanism: the agent fails, someone catches
+> it, a rule is added, and every later task starts from the improved process.
+>
+> **Rules for writing an entry.** One line, dated `YYYY-MM-DD`, phrased as the
+> rule and not as the story. Say what to do, and (only when it is not obvious)
+> what the symptom was, so the next reader can recognise the bug. Delete an entry
+> when the code makes it impossible — a lint rule, a type, a deleted feature —
+> and say in the commit why.
+>
+> **What does not belong here:** universal React traps (they live in
+> `pitfalls.md`), domain rules (they live in the project's docs), and anything
+> nobody has actually got wrong yet. This is a record of bugs paid for, not a
+> wish list.
+>
+> Read it before finishing any frontend change, together with `pitfalls.md`.
+
+## {Area — e.g. Transport and stores}
+
+- **{YYYY-MM-DD}** — {rule}. {Symptom, if not obvious.}
+- **{YYYY-MM-DD}** — {rule}.
+
+## {Area — e.g. Rendering and state}
+
+- **{YYYY-MM-DD}** — {rule}.
+
+## {Area — e.g. Styling and tokens}
+
+- **{YYYY-MM-DD}** — {rule}.
+
+## {Area — e.g. Copy and accessibility}
+
+- **{YYYY-MM-DD}** — {rule}.
+
+## {Area — e.g. Tooling and workflow}
+
+- **{YYYY-MM-DD}** — {rule}.

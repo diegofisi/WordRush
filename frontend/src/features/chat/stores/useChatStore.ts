@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { request, socket } from '@/core/session/lib/socket';
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import type { ChatHistoryAck, ChatMessage } from '@/shared/contract';
+import { playSound } from '@/shared/lib/sound';
 
 interface ChatState {
   /** The current game's messages I may read, oldest first. */
@@ -43,12 +44,16 @@ export const useChatStore = create<ChatState & ChatActions>((set, get) => ({
     if (bound) return;
     bound = true;
 
-    socket.on('chat:message', (message) =>
+    socket.on('chat:message', (message) => {
+      // Only somebody else's message pings; my own is not news to me.
+      if (message.playerId !== useSessionStore.getState().session?.playerId) {
+        playSound('chatMessage');
+      }
       set((state) => ({
         messages: byId([...state.messages, message]),
         unread: state.open ? 0 : state.unread + 1,
-      })),
-    );
+      }));
+    });
     // The round's hidden talk becomes history for everybody: fetch it.
     socket.on('round:end', () => void get().refresh());
     // A player who finished the round may now read what was hidden from them;

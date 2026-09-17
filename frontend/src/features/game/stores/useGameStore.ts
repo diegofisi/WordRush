@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { socket } from '@/core/session/lib/socket';
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { getT } from '@/shared/i18n';
-import { playSound } from '@/shared/lib/sound';
+import { playSound, playTileReveal } from '@/shared/lib/sound';
 import {
   PHRASE_RULES,
   ROOM_LIMITS,
@@ -37,8 +37,10 @@ const EMOTE_PAUSE_MS = ROOM_LIMITS.emotePauseSeconds * 1000;
 const GREENS_ANNOUNCE_AT = 4;
 /** How long the phone overlay keeps the newest sticker on screen. */
 const STICKER_MS = 2_500;
+/** The board's own flip stagger (`Board.tsx`), which the reveal tick follows. */
+const FLIP_STAGGER_MS = 110;
 /** Flip (560 ms) + stagger of the last tile; after this the reveal is static. */
-const REVEAL_MS = 560 + 4 * 110 + 100;
+const REVEAL_MS = 560 + 4 * FLIP_STAGGER_MS + 100;
 const MAX_FEED = 40;
 /** How long the inline guess-error caption stays under the current row. */
 const NOTICE_MS = 1_600;
@@ -119,7 +121,7 @@ let nextId = 1;
 
 /** `Omit` that distributes over the FeedEvent union instead of collapsing it. */
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
-type FeedInput = DistributiveOmit<FeedEvent, 'id' | 'atSeconds' | 'name' | 'isMe'>;
+type FeedInput = DistributiveOmit<FeedEvent, 'id' | 'atSeconds' | 'at' | 'name' | 'isMe'>;
 
 const emptyAnnounced = (): Announced => ({ greens: [], lowTime: [], finished: [] });
 
@@ -150,13 +152,20 @@ const leftRoster = (left: Record<string, string>): Record<string, RosterEntry> =
     Object.entries(left).map(([id, name]) => [id, { name, connected: false, team: null }]),
   );
 
-const rosterOf = (lobby: LobbyState): Record<string, RosterEntry> =>
-  Object.fromEntries(
-    lobby.players.map((player) => [
+/** Players and observers alike: the stream names whoever arrives or speaks. */
+const rosterOf = (lobby: LobbyState): Record<string, RosterEntry> => {
+  const entries: [string, RosterEntry][] = [
+    ...lobby.observers.map((observer): [string, RosterEntry] => [
+      observer.id,
+      { name: observer.name, connected: observer.connected, team: null },
+    ]),
+    ...lobby.players.map((player): [string, RosterEntry] => [
       player.id,
       { name: player.name, connected: player.connected, team: player.team },
     ]),
-  );
+  ];
+  return Object.fromEntries(entries);
+};
 
 const teamsOf = (teams: TeamRoundState[]): Partial<Record<TeamId, TeamRoundState>> =>
   Object.fromEntries(teams.map((team) => [team.id, team]));
@@ -203,6 +212,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
     const base = {
       id: nextId++,
       atSeconds: secondsSinceStart(),
+      at: Date.now(),
       name: roster[event.playerId]?.name ?? '?',
       isMe: event.playerId === myId,
     };
@@ -331,7 +341,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
 
       socket.on('round:start', (round) => {
         applyRound(round, 'playing');
-        if (round.round === 1) playSound('gameStarted');
+        playSound('gameStarted');
       });
       socket.on('player:progress', onProgress);
       // Team mode: a teammate's board, letters included.
@@ -343,9 +353,10 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
         })),
       );
       // Team mode: the hint is the team's; a teammate spent it, my board shows it.
-      socket.on('team:hint', (reveal) =>
-        set((state) => (state.me ? { me: { ...state.me, hintUsed: true, hint: reveal } } : {})),
-      );
+      socket.on('team:hint', (reveal) => {
+        playSound('hintUsed');
+        set((state) => (state.me ? { me: { ...state.me, hintUsed: true, hint: reveal } } : {}));
+      });
       socket.on('team:clocks', (teams) => {
         const { myTeam, teams: before } = get();
         for (const team of teams) {
@@ -393,6 +404,9 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
         }));
       });
       socket.on('player:solved', (payload) => {
+        // My own solve rings with the reveal (`applyGuessAck`); a rival's costs
+        // me 5 s, and that is what this two-note says.
+        if (payload.playerId !== get().myId) playSound('rivalSolved');
         set((state) => ({ solvedCount: Math.max(state.solvedCount, payload.position) }));
         pushFeed({
           kind: get().round?.game === 'phrase' ? 'phrase-completed' : 'solved',
@@ -408,6 +422,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       socket.on('player:hint', () => pushFeed({ kind: 'hint', playerId: '' }));
       socket.on('time:penalty', (payload) => {
         const { myId } = get();
+        if (payload.clocks.some((clock) => clock.playerId === myId)) playSound('penalty');
         set((state) => {
           const players = { ...state.players };
           let me = state.me;
@@ -435,6 +450,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       // Every sticker, mine included, is a message in the feed. The phone has no
       // feed panel, so the newest one also feeds the 2.5 s overlay there.
       socket.on('reaction:show', (payload) => {
+        playSound('sticker');
         pushFeed({ kind: 'reaction', playerId: payload.playerId, emote: payload.emote });
         const id = nextId++;
         set((state) => ({
@@ -461,7 +477,13 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
         playSound('roundEnded');
       });
       socket.on('game:end', () => set({ status: 'ended', draft: '' }));
-      socket.on('lobby:update', (lobby) =>
+      socket.on('lobby:update', (lobby) => {
+        // Somebody new in the room while the round runs (an observer, or a
+        // player back for the next one) is a line in the room's stream.
+        const known = get().roster;
+        const arrivals = [...lobby.players, ...lobby.observers].filter(
+          (person) => !(person.id in known) && person.id !== get().myId,
+        );
         set((state) => ({
           // Whoever left is no longer in the room; keep their name so the panel
           // and the feed can still show who they were.
@@ -469,8 +491,12 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
           settings: lobby.settings,
           teamInfo: lobby.teams,
           observers: lobby.observers,
-        })),
-      );
+        }));
+        for (const person of arrivals) {
+          playSound('playerJoined');
+          pushFeed({ kind: 'joined', playerId: person.id });
+        }
+      });
       socket.on('player:left', (payload) => {
         const t = getT();
         set((state) => ({
@@ -485,7 +511,10 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
           },
         }));
         pushFeed({ kind: 'left', playerId: payload.playerId });
-        if (payload.playerId !== get().myId) toast.info(t.game.leftToast(payload.name));
+        if (payload.playerId !== get().myId) {
+          playSound('playerLeft');
+          toast.info(t.game.leftToast(payload.name));
+        }
         if (payload.newHostId) {
           const hostName = get().roster[payload.newHostId]?.name;
           pushFeed({ kind: 'new-host', playerId: payload.newHostId });
@@ -511,12 +540,14 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       if (draft.length >= round.wordLength) return;
       // Phrase game: a letter already ruled out is refused, its key is disabled.
       if (round.game === 'phrase' && isRuledOut(me.rows, letter)) return;
+      playSound('keyTap');
       set({ draft: draft + letter.toUpperCase() });
     },
 
     backspace: () => set((state) => ({ draft: state.draft.slice(0, -1) })),
 
     noticeGuess: (text) => {
+      playSound('invalidWord');
       const id = nextId++;
       set((state) => ({ shakeKey: state.shakeKey + 1, guessNotice: { id, text } }));
       window.setTimeout(() => {
@@ -526,6 +557,17 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
 
     applyGuessAck: (ack, word) => {
       const revealRow = get().me?.rows.length ?? 0;
+      // The reveal is heard as it is seen: one tick per tile of the flip
+      // stagger, then what the row was worth.
+      playTileReveal(word.length, FLIP_STAGGER_MS);
+      const greens = ack.gains.some((gain) => gain.kind === 'green');
+      const yellows = ack.gains.some((gain) => gain.kind === 'yellow');
+      if (ack.solved) {
+        window.setTimeout(() => playSound('solved'), REVEAL_MS);
+      } else {
+        if (greens) window.setTimeout(() => playSound('letterPlaced'), REVEAL_MS);
+        if (yellows) window.setTimeout(() => playSound('letterFound'), REVEAL_MS + 400);
+      }
       // Clear the reveal marker so a remounted board (layout switch, back navigation) stays static.
       window.setTimeout(() => {
         set((state) => (state.revealRow === revealRow ? { revealRow: null } : {}));
@@ -561,8 +603,9 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       });
     },
 
-    applyHintAck: (ack) =>
-      set((state) =>
+    applyHintAck: (ack) => {
+      playSound('hintUsed');
+      return set((state) =>
         state.me
           ? {
               me: {
@@ -574,10 +617,12 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
               },
             }
           : {},
-      ),
+      );
+    },
 
-    applyPhraseAck: (ack) =>
-      set((state) => {
+    applyPhraseAck: (ack) => {
+      playSound(ack.correct ? 'solved' : 'invalidWord');
+      return set((state) => {
         if (!state.me) return {};
         return {
           me: {
@@ -596,7 +641,8 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
             ? Math.max(state.solvedCount, ack.solvedPosition ?? state.solvedCount + 1)
             : state.solvedCount,
         };
-      }),
+      });
+    },
 
     setPhraseOpen: (open) => set({ phraseOpen: open, ...(open ? {} : { phraseWrong: null }) }),
 

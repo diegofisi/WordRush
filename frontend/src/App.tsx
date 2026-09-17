@@ -10,6 +10,7 @@ import { GamePage } from '@/features/game/pages/GamePage';
 import { useLobbyStore } from '@/features/lobby/stores/useLobbyStore';
 import { HomePage } from '@/features/lobby/pages/HomePage';
 import { LobbyPage } from '@/features/lobby/pages/LobbyPage';
+import { RoomEntryPage } from '@/features/lobby/pages/RoomEntryPage';
 import { useResultsStore } from '@/features/results/stores/useResultsStore';
 import { ResultsPage } from '@/features/results/pages/ResultsPage';
 import { AppLayout } from '@/shared/components/layout/AppLayout';
@@ -59,7 +60,9 @@ export const App = () => (
     <Routes>
       <Route element={<AppLayout />}>
         <Route path={PATHS.home} element={<HomePage />} />
-        <Route element={<RequireSession />}>
+        {/* Every room URL is an entry point: without a session for that room
+            the guard renders the join view for the code in the address bar. */}
+        <Route element={<RequireSession fallback={<RoomEntryPage />} />}>
           <Route path={PATHS.lobby} element={<LobbyPage />} />
           <Route path={PATHS.game} element={<GamePage />} />
           <Route path={PATHS.results} element={<ResultsPage />} />

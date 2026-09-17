@@ -19,6 +19,15 @@ import {
 import { RoundSchedulerService } from '../services/round-scheduler.service';
 import { StartRoundUseCase } from './start-round.use-case';
 
+/** Why a round is the last one, beyond having played them all. */
+export interface EndRoundOptions {
+  /**
+   * End the game on this round whatever the counter says. Team mode uses it
+   * when a whole team has walked out (docs/context/06-v1.1.md -> Teams).
+   */
+  final?: boolean;
+}
+
 /**
  * Scores the round, updates the accumulated table, reveals the word and either
  * schedules the next round or ends the game. A round that ends with nobody
@@ -36,7 +45,7 @@ export class EndRoundUseCase {
     private readonly startRound: StartRoundUseCase,
   ) {}
 
-  execute(room: Room, now: number): RoundEndPayload {
+  execute(room: Room, now: number, options: EndRoundOptions = {}): RoundEndPayload {
     const { initialSeconds, hintEnabled, rounds, mode, game } = room.settings;
     const teamMode = mode === 'teams';
     const phrase = room.phrase;
@@ -162,16 +171,8 @@ export class EndRoundUseCase {
     // Nobody left to play for: the game ends here instead of starting a round
     // into an empty room (docs/context/02-game-rules.md).
     const abandoned = room.connectedPlayers().length === 0;
-    const isLast = room.currentRound >= rounds || abandoned;
-    // The game goes to the team with the most points; the counter outlives the
-    // game, and it must be right on this very payload.
-    if (isLast && teamStandings.length > 0) {
-      const [first, second] = teamStandings;
-      if (first && (!second || second.total < first.total)) {
-        room.team(first.team).gamesWon += 1;
-        first.gamesWon += 1;
-      }
-    }
+    const isLast = room.currentRound >= rounds || abandoned || options.final === true;
+    if (isLast) this.awardGame(room, teamStandings);
     const payload: RoundEndPayload = {
       round: room.currentRound,
       totalRounds: rounds,
@@ -208,10 +209,16 @@ export class EndRoundUseCase {
         event: 'game:end',
         payload: { standings, teamStandings, rounds },
       });
+      const early =
+        room.currentRound < rounds
+          ? abandoned
+            ? ', nobody connected'
+            : ', a whole team left'
+          : null;
       this.logger.log(
-        abandoned && room.currentRound < rounds
-          ? `Room ${room.code}: game finished early, nobody connected`
-          : `Room ${room.code}: game finished after ${rounds} round(s)`,
+        early === null
+          ? `Room ${room.code}: game finished after ${rounds} round(s)`
+          : `Room ${room.code}: game finished early${early}`,
       );
     } else {
       room.status = 'between-rounds';
@@ -220,6 +227,64 @@ export class EndRoundUseCase {
       this.scheduler.schedule(room.code, delayMs, () => this.startNextRound(room.code));
     }
     return payload;
+  }
+
+  /**
+   * Ends the game with no round to score: the standings as they stand, the
+   * game counter and `game:end`. Used when the room stops being playable
+   * between rounds — in team mode, when the last member of a team leaves
+   * (docs/context/06-v1.1.md -> Teams).
+   */
+  endGameNow(room: Room, now: number): void {
+    const { rounds, mode } = room.settings;
+    const teamMode = mode === 'teams';
+    const standings = teamMode
+      ? []
+      : computeStandings(
+          room.players.map((p) => ({
+            playerId: p.id,
+            name: p.name,
+            total: p.totalPoints,
+            attempts: p.totalAttempts,
+            hintsUsed: p.hintsUsed,
+          })),
+        );
+    const teamStandings = computeTeamStandings(
+      room.teams.map((team) => ({
+        team: team.id,
+        name: team.name,
+        color: team.color,
+        total: team.totalPoints,
+        roundsWon: team.roundsWon,
+        gamesWon: team.gamesWon,
+      })),
+    );
+    this.awardGame(room, teamStandings);
+    // Whatever was about to start does not: the room is finished from here.
+    this.scheduler.cancel(room.code);
+    room.status = 'finished';
+    room.finishedAt = now;
+    room.nextRoundAt = null;
+    room.touch(now);
+    this.bus.publish({
+      roomCode: room.code,
+      event: 'game:end',
+      payload: { standings, teamStandings, rounds },
+    });
+    this.logger.log(`Room ${room.code}: game finished early after round ${room.currentRound}`);
+  }
+
+  /**
+   * The game goes to the team with the most points; the counter outlives the
+   * game, so it is bumped on the very payload that announces the result.
+   */
+  private awardGame(room: Room, teamStandings: TeamStanding[]): void {
+    if (teamStandings.length === 0) return;
+    const [first, second] = teamStandings;
+    if (first && (!second || second.total < first.total)) {
+      room.team(first.team).gamesWon += 1;
+      first.gamesWon += 1;
+    }
   }
 
   private startNextRound(roomCode: string): void {

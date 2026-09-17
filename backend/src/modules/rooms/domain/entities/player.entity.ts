@@ -69,9 +69,9 @@ export class Player {
 
   /**
    * Back to how the player entered the lobby the first time: no ready flag,
-   * no totals, no round. Somebody who is away keeps their seat but their
-   * lobby grace period starts again with the new lobby, so a restart does not
-   * hand the janitor a stale `disconnectedAt` to prune them with.
+   * no totals, no round. Somebody who is away keeps their seat, and their
+   * absence is counted from the new lobby, so a restart does not hand the
+   * janitor a stale `disconnectedAt` to delete the room with.
    */
   resetForNewGame(now: number): void {
     this.ready = false;

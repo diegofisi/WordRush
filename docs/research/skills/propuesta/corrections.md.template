@@ -1,0 +1,56 @@
+# Corrections
+
+Cross-session memory. A conversation ends and takes its lessons with it; this file
+does not.
+
+**The rule:** every time the user has to correct the same thing twice, it gets one
+dated line here. Not a paragraph, not a document — one line, in this shape:
+
+```
+- YYYY-MM-DD — <what went wrong> · <why it matters> · <what to do instead>
+```
+
+Load-bearing details:
+
+- `CLAUDE.md` points at this file, so it is read at the start of every session. Keep
+  it short enough that this is cheap: when it passes ~40 lines, promote the stable
+  entries into the matching `.claude/rules/*.md` or into
+  `.claude/skills/*/references/project-pitfalls.md` and delete them here.
+- A line stays until it is wrong. Do not "clean up" old entries because they look
+  obvious; they look obvious because they are written down.
+- Entries about *how this project works* belong in `project.md`. Entries about *a
+  mistake already paid for* belong here or in `project-pitfalls.md`. The difference:
+  a correction has a date and a victim.
+- Anything a script can enforce should become a hook or a `verify` step instead of a
+  line here. A line here is the fallback for what only judgement catches.
+
+## Entries
+
+Seeded with the generic ones. Delete any that does not apply here, and add this
+project's own below.
+
+- 2026-09-16 — Commits carried `Co-Authored-By: Claude` / "Generated with Claude"
+  trailers · the user does not want AI attribution in the public history, and prose
+  asking for it is forgotten every session · it is enforced in
+  `.claude/settings.json` (`includeCoAuthoredBy: false`, empty `attribution`); never
+  write an attribution trailer by hand, and after committing check
+  `git log -1 --format=%B` and amend if one slipped in.
+- 2026-09-16 — Verification commands chained with `;` instead of `&&` · with `;` a
+  failing typecheck is followed by a passing build and the run reads green, so broken
+  code gets reported as done · chain every verification command with `&&`, and put
+  the whole chain in the root `verify` script so it cannot be retyped wrong.
+- 2026-09-16 — Edits failing with "string not found" right after a successful write ·
+  the PostToolUse formatter rewrites the file (quotes, line breaks, trailing commas)
+  so the anchor text no longer matches what was written · re-read the file before the
+  next edit to it, and anchor edits on code that the formatter does not move
+  (identifiers, not whitespace or punctuation).
+- 2026-09-16 — Scripts written through shell heredocs arrived corrupted · backslashes
+  and `$` are mangled by the shell layer before the file is written, and on Windows
+  paths this silently breaks regexes and escapes · write files with the Write tool,
+  never with `cat <<EOF`; use the shell for running things, not for authoring them.
+- 2026-09-16 — A task was reported done after a refactor that was never asked for ·
+  unrequested changes widen the diff, hide the real fix and make review expensive ·
+  one fix per task, no drive-by refactors; after two failed attempts stop and ask
+  instead of trying a third approach.
+
+<!-- Project-specific entries below this line. -->

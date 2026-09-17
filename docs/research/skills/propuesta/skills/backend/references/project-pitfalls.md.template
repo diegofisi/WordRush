@@ -1,0 +1,51 @@
+# Project pitfalls — {{PROJECT_NAME}}
+
+<!--
+  TEMPLATE. The bind-project skill copies this to references/project-pitfalls.md.
+  It starts almost empty on purpose: it is not written in one sitting, it grows.
+-->
+
+This is **this repository's** bug ledger: one dated line per mistake already paid for
+here. `pitfalls.md` next to it holds the rules that are true of any NestJS Clean
+Architecture service; this file holds the ones that are only true here.
+
+The skill reads both before finishing any change. A change that reintroduces a line from
+this file is not done.
+
+## How it grows
+
+Add a line when:
+
+- a bug reached the branch and had to be fixed — the line is the rule that would have
+  prevented it;
+- the user corrected the same thing twice — the second time it becomes a line here
+  instead of a third correction;
+- a decision was taken because of something that went wrong (not a design preference —
+  those belong in the project's decision log).
+
+Do **not** add: style opinions, restatements of the universal `pitfalls.md`, or anything
+that is already enforced by a type, a lint rule or a test. If a rule can be made
+executable, make it executable and do not write it here.
+
+Keep the file as a flat, dated list. It is read top to bottom, so when it passes roughly
+forty lines, delete what a type or a test now enforces rather than adding sections.
+
+## Format
+
+One line per entry:
+
+```
+YYYY-MM-DD — <the rule, in the imperative> — <why: what broke> — <where: file or module>
+```
+
+Example:
+
+```
+2026-09-15 — The round word never appears in a payload before `round:end` — a debug
+field on the guess ack shipped the answer to every client — `gateway/presentation/`,
+`rooms/domain/services/state-presenter.ts`
+```
+
+## Ledger
+
+<!-- Newest last. Nothing here yet: add the first line the first time something breaks. -->

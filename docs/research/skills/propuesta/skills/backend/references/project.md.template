@@ -1,0 +1,135 @@
+# Project binding — {{PROJECT_NAME}} backend
+
+<!--
+  TEMPLATE. The bind-project skill fills this in and writes it as references/project.md.
+  Rules for filling it:
+  - Every statement is checked against the code, not against what the README wishes.
+  - Nothing is copied here that already exists as a typed source of truth (contracts,
+    schemas, enums). Point at the file instead; a prose copy drifts on the first change.
+  - "Does not apply" is a real answer and the most valuable column in this file.
+  - Delete every section that is empty. An empty heading reads as "unknown".
+-->
+
+**Status ({{DATE}}):** {{one line: what exists today, and the precedence rule —
+where this file and the code disagree, the code wins; fix this file in the same change}}.
+
+## What it is
+
+{{Two or three sentences: what the service does and who talks to it.}}
+
+Rules, decisions and formulas are **not** restated here. They live in {{path}} and that
+is the source of truth for them.
+
+## Stack
+
+- Runtime: {{Node version, package manager}}
+- Framework: {{NestJS version}}, TypeScript {{version}} ({{strict?}})
+- Transport: {{HTTP / WebSockets / both, and the library}}
+- Persistence: {{database + ORM + version, or "in memory, single process", or "external API"}}
+- Other infrastructure: {{cache, queue, object store, scheduler — or "none"}}
+- Path aliases: {{@shared/*, @modules/*, ...}}
+
+## Applies / does not apply
+
+The doctrine is written for a service that has everything. This table says which parts
+this repository actually has. A row marked *No* is skipped, not adapted.
+
+| Doctrine topic | Applies? | Where / why |
+|---|---|---|
+| 4-layer modules, dependency rule (`architecture.md`) | Yes | {{always}} |
+| Layer-boundary lint enforcement | {{Yes/No}} | {{config file, or "reviewed by hand"}} |
+| Domain entities, value objects, domain services (`domain.md`) | Yes | {{}} |
+| Injected clock / id generator / randomness | {{Yes/No}} | {{token and file}} |
+| Use cases and DTO validation (`application.md`) | Yes | {{global pipe settings}} |
+| Authentication and authorization | {{Yes/No}} | {{guard, or "no accounts: identity is X"}} |
+| Response envelope (`BaseResponse`) | {{Yes/No}} | {{}} |
+| Pagination | {{Yes/No}} | {{shape}} |
+| Relational database and ORM | {{Yes/No}} | {{}} |
+| Migrations (`migrations.md`) | {{Yes/No}} | {{if No: the whole file is skipped}} |
+| Transactions / UnitOfWork | {{Yes/No}} | {{}} |
+| In-memory stores | {{Yes/No}} | {{which module owns them, and the eviction path}} |
+| Object storage | {{Yes/No}} | {{buckets and tokens}} |
+| Queues and background jobs | {{Yes/No}} | {{}} |
+| Scheduled tasks / crons | {{Yes/No}} | {{}} |
+| In-process timers (tickers, schedulers) | {{Yes/No}} | {{which module owns them}} |
+| HTTP controllers (`presentation.md` → HTTP) | {{Yes/No}} | {{which routes exist}} |
+| WebSocket gateways (`presentation.md` → sockets) | {{Yes/No}} | {{}} |
+| Typed transport contract | {{Yes/No}} | {{file + sync/check command}} |
+| Rate limiting | {{Yes/No}} | {{where, and what it is keyed on}} |
+| Streaming / file downloads | {{Yes/No}} | {{}} |
+| Unit tests (`testing.md`) | Yes | {{runner, location}} |
+| Integration / e2e suite | {{Yes/No}} | {{command and what it needs running}} |
+
+## Module map (`src/modules/`)
+
+| Module | Owns | Layers present |
+|---|---|---|
+| {{name}} | {{one line: the concepts and decisions it owns}} | {{domain / application / infrastructure / presentation}} |
+
+Shared kernel (`src/shared/`): {{what lives there, which parts are `@Global()`, which
+tokens it publishes}}.
+
+Doctrine pieces that were **not** brought over: {{e.g. BaseEntity, BaseResponse, storage
+utilities — and why}}.
+
+## Sanctioned cross-module seams
+
+Everything else is a boundary violation.
+
+| From → To | Through | Why it exists |
+|---|---|---|
+| {{module}} → {{module}} | {{exported Symbol / service / event bus}} | {{the decision}} |
+
+## Contract / source of truth
+
+{{The typed file that owns request and event shapes, how it is versioned, the command
+that fails when the copies diverge. What the contract file *cannot* express, and so is
+written here as a short list of invariants with the file that enforces each one.}}
+
+| Invariant | Enforced in |
+|---|---|
+| {{}} | {{}} |
+
+## Environment variables
+
+{{Point at the one table that is kept current (README or `.env.example`) rather than
+copying it. Say where the parsers live and what adding a variable requires.}}
+
+## Commands
+
+```bash
+{{install}}
+{{dev}}
+{{build}}
+```
+
+## Verification
+
+Single command if the repo has one: `{{pnpm verify}}`.
+Otherwise, in this order, **one command per invocation** (chaining with `;` reports
+success when an earlier one failed):
+
+```bash
+{{typecheck}}
+{{lint (the no-fix variant)}}
+{{tests}}
+{{build}}
+{{project-specific, e.g. contract check}}
+```
+
+{{Anything the tooling does by itself — a formatting hook, a pre-commit — so it is not
+run twice by hand.}}
+
+## Known traps
+
+The dated ledger is `project-pitfalls.md`; this section holds only the standing,
+structural traps a newcomer must know before the first change.
+
+- {{trap}}
+- {{trap}}
+
+## Maintenance
+
+This file is updated in the same change as the code it describes. When it disagrees with
+the code, the code wins. Re-run the `bind-project` skill after any change to the stack,
+the module map or the verification commands.

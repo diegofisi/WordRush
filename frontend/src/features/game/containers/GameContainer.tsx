@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { ChatContainer, useChatStore } from '@/features/chat';
@@ -10,6 +10,7 @@ import { useNow } from '@/shared/hooks/useNow';
 import { useToastSafeBottom } from '@/shared/hooks/useToastSafeBottom';
 import { useT } from '@/shared/i18n';
 import { percentOf, secondsLeftAt } from '@/shared/lib/format';
+import { playSound } from '@/shared/lib/sound';
 import { otherTeam } from '@/shared/lib/teamColor';
 import { resultsPath } from '@/shared/routes/paths';
 import { toast } from '@/shared/stores/useToastStore';
@@ -19,9 +20,12 @@ import { useSendGuess } from '../api/send-guess/useSendGuess';
 import { useSendPhrase } from '../api/send-phrase/useSendPhrase';
 import { useSendReaction } from '../api/send-reaction/useSendReaction';
 import { useUseHint } from '../api/use-hint/useUseHint';
+import { EmotePicker } from '../components/EmotePicker';
 import { GameDesktop } from '../components/GameDesktop';
 import { GameMobile } from '../components/GameMobile';
+import { FeedRow, StickerMessage } from '../components/RoomStream';
 import { countGreenPositions, deriveKeyStates } from '../helpers/keyboard';
+import { groupRoomStream } from '../helpers/roomStream';
 import { computePhraseScorePreview } from '../helpers/phraseScorePreview';
 import { computeScorePreview } from '../helpers/scorePreview';
 import { computeTeamScorePreview } from '../helpers/teamScorePreview';
@@ -153,6 +157,21 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
       }
     }
   }, [rivals, rivalClocks, announceLowTime, teamMode]);
+
+  // The clock speaks up at 10 s and on each of the last five seconds; every
+  // mark rings once per round (docs/context/06-v1.1.md -> Sound).
+  const warned = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    warned.current = new Set();
+  }, [round?.round]);
+  useEffect(() => {
+    if (status !== 'playing' || !me || me.finished) return;
+    const left = Math.ceil(secondsLeftAt(me, now));
+    if (left !== 10 && (left < 1 || left > 5)) return;
+    if (warned.current.has(left)) return;
+    warned.current.add(left);
+    playSound('timeWarning');
+  }, [me, now, status]);
 
   const keyStates = useMemo(
     () => deriveKeyStates(me?.rows ?? [], me?.hint ?? null),
@@ -355,6 +374,18 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
 
   // Team mode: "finished" is the team's; the team channel is always open.
   const doneWithRound = observing || (teamMode ? (myTeamState?.finished ?? false) : me.finished);
+  // The room's events go into the chat panel: one stream, in time order
+  // (docs/context/06-v1.1.md -> Chat).
+  const streamEvents = groupRoomStream(feed).map((item) => ({
+    id: item.id,
+    at: item.at,
+    node:
+      item.kind === 'text' ? (
+        <FeedRow t={t} event={item.event} />
+      ) : (
+        <StickerMessage t={t} group={item.group} />
+      ),
+  }));
   const chat = {
     panel: (
       <ChatContainer
@@ -362,6 +393,22 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
         myTeam={observing ? null : myTeam}
         canWriteAll={doneWithRound || status !== 'playing'}
         lockedReason={teamMode ? t.chat.lockedTeam : t.chat.locked}
+        events={streamEvents}
+        // Two channels only while the round runs; between rounds everybody
+        // talks in "(Todos)".
+        channels={teamMode && status === 'playing'}
+        // The phone keeps the picker in the row under the keyboard, where it is
+        // reachable without opening the chat sheet.
+        sticker={
+          isDesktop ? (
+            <EmotePicker
+              t={t}
+              variant="row"
+              cooldownSeconds={Math.max(0, Math.ceil((emotePausedUntil - now) / 1000))}
+              onEmote={(emote) => void handleEmote(emote)}
+            />
+          ) : undefined
+        }
         bare={!isDesktop}
         className="min-h-0 flex-1"
       />

@@ -74,7 +74,10 @@ export interface RivalTeamViewModel extends TeamHeaderViewModel {
 
 export type FeedEvent = {
   id: number;
+  /** Seconds since the round started; the stream prints it as the line's time. */
   atSeconds: number;
+  /** Epoch ms, so the merged room stream can order events against messages. */
+  at: number;
   playerId: string;
   name: string;
   isMe: boolean;
@@ -87,6 +90,7 @@ export type FeedEvent = {
   | { kind: 'out-of-attempts' }
   | { kind: 'out-of-time' }
   | { kind: 'left' }
+  | { kind: 'joined' }
   | { kind: 'new-host' }
   /** Team mode: a whole team ran out of time or attempts. */
   | { kind: 'team-finished'; teamName: string; reason: 'attempts' | 'time' | 'sends' }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { DEFAULT_WORD_LENGTH, ROOM_LIMITS, type GameKind } from '@/shared/contract';
 import { useT } from '@/shared/i18n';
@@ -35,7 +35,6 @@ interface HomeContainerProps {
 export const HomeContainer = ({ game }: HomeContainerProps) => {
   const t = useT();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const rememberedName = useUiStore((state) => state.rememberedName);
   const rememberName = useUiStore((state) => state.rememberName);
   const uiLang = useUiStore((state) => state.lang);
@@ -43,7 +42,7 @@ export const HomeContainer = ({ game }: HomeContainerProps) => {
   const [values, setValues] = useState<CreateRoomFormValues>(() =>
     defaultValues(rememberedName, uiLang),
   );
-  const [code, setCode] = useState(() => (searchParams.get('code') ?? '').toUpperCase());
+  const [code, setCode] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
   const [codeError, setCodeError] = useState<string | null>(null);
 
@@ -53,11 +52,6 @@ export const HomeContainer = ({ game }: HomeContainerProps) => {
   useEffect(() => {
     setValues((current) => (current.game === game ? current : { ...current, game }));
   }, [game]);
-
-  useEffect(() => {
-    const fromUrl = searchParams.get('code');
-    if (fromUrl) setCode(fromUrl.toUpperCase());
-  }, [searchParams]);
 
   const validName = () => {
     const name = values.name.trim();

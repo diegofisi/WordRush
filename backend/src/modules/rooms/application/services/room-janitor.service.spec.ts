@@ -1,5 +1,4 @@
 import { type Clock } from '@shared/domain/clock';
-import { type OutboundEvent, RoomEventsBus } from '@shared/events/room-events.bus';
 import { Player } from '../../domain/entities/player.entity';
 import { Room } from '../../domain/entities/room.entity';
 import { ROOM_LIFECYCLE } from '../../domain/room-lifecycle';
@@ -40,64 +39,38 @@ function makeRoom(code: string, ids: string[], now: number): Room {
 describe('RoomJanitorService', () => {
   let rooms: InMemoryRoomRepository;
   let clock: FakeClock;
-  let bus: RoomEventsBus;
-  let events: OutboundEvent[];
   let janitor: RoomJanitorService;
 
   beforeEach(() => {
     rooms = new InMemoryRoomRepository();
     clock = new FakeClock();
-    bus = new RoomEventsBus();
-    events = [];
-    bus.subscribe((e) => events.push(e));
-    janitor = new RoomJanitorService(rooms, clock, bus);
+    janitor = new RoomJanitorService(rooms, clock);
   });
 
-  it('removes a lobby player that stayed disconnected past the grace period', () => {
+  it('never removes a player from a lobby, however long they stay away', () => {
     const room = makeRoom('ABCD', ['a', 'b'], T0);
     room.findPlayer('b')!.markDisconnected(T0);
     rooms.save(room);
 
-    janitor.sweep(T0 + ROOM_LIFECYCLE.lobbyDisconnectGraceMs - 1);
+    // Somebody who switched apps keeps their seat for as long as the room lives.
+    janitor.sweep(T0 + 30 * MINUTE);
+
     expect(room.players.map((p) => p.id)).toEqual(['a', 'b']);
-
-    janitor.sweep(T0 + ROOM_LIFECYCLE.lobbyDisconnectGraceMs + 1);
-    expect(room.players.map((p) => p.id)).toEqual(['a']);
-    expect(events.filter((e) => e.event === 'lobby:update')).toHaveLength(1);
+    expect(room.findPlayer('b')!.connected).toBe(false);
     expect(rooms.findByCode('ABCD')).toBe(room);
   });
 
-  it('keeps an emptied lobby for 10 minutes counted from the last disconnection', () => {
-    const room = makeRoom('ABCD', ['a'], T0);
-    room.findPlayer('a')!.markDisconnected(T0);
-    rooms.save(room);
-
-    // The lone player loses their slot at 60 s; the empty room survives.
-    janitor.sweep(T0 + ROOM_LIFECYCLE.lobbyDisconnectGraceMs + 1);
-    expect(room.isEmpty()).toBe(true);
-    expect(rooms.findByCode('ABCD')).toBe(room);
-    // No lobby:update for a room with nobody left to hear it.
-    expect(events).toHaveLength(0);
-
-    janitor.sweep(T0 + ROOM_LIFECYCLE.abandonedTtlMs - 1);
-    expect(rooms.findByCode('ABCD')).toBe(room);
-
-    janitor.sweep(T0 + ROOM_LIFECYCLE.abandonedTtlMs + 1);
-    expect(rooms.findByCode('ABCD')).toBeUndefined();
-  });
-
-  it('deletes a lobby nobody is connected to after 10 minutes', () => {
+  it('deletes a lobby nobody is connected to after an hour', () => {
     const room = makeRoom('WXYZ', ['a', 'b'], T0);
-    // Both disconnect but the room is not swept until after the TTL.
     room.findPlayer('a')!.markDisconnected(T0);
     room.findPlayer('b')!.markDisconnected(T0 + 5 * MINUTE);
     rooms.save(room);
 
-    janitor.sweep(T0 + 9 * MINUTE);
+    // The clock runs from the *last* disconnection (T0 + 5 min).
+    janitor.sweep(T0 + ROOM_LIFECYCLE.abandonedTtlMs);
     expect(rooms.findByCode('WXYZ')).toBe(room);
 
-    // The clock runs from the *last* disconnection (T0 + 5 min).
-    janitor.sweep(T0 + 15 * MINUTE + 1);
+    janitor.sweep(T0 + 5 * MINUTE + ROOM_LIFECYCLE.abandonedTtlMs + 1);
     expect(rooms.findByCode('WXYZ')).toBeUndefined();
   });
 
@@ -107,9 +80,8 @@ describe('RoomJanitorService', () => {
     room.findPlayer('b')!.markDisconnected(T0);
     rooms.save(room);
 
-    janitor.sweep(T0 + 60 * MINUTE);
+    janitor.sweep(T0 + 10 * 60 * MINUTE);
     expect(rooms.findByCode('LIVE')).toBe(room);
-    // Players are only pruned in the lobby: 'b' keeps their board mid-round.
     expect(room.players).toHaveLength(2);
   });
 

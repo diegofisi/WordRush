@@ -34,8 +34,6 @@ export class Room {
   lastRoundEnd: RoundEndPayload | null = null;
   finishedAt: number | null = null;
   nextRoundAt: number | null = null;
-  /** Epoch ms at which the last player was removed; only set on an empty room. */
-  emptiedAt: number | null = null;
   /** Both teams in team mode; empty in the normal mode. */
   readonly teams: Team[] = [];
   /** Joined a running game; they watch and talk (docs/context/06-v1.1.md -> Observers). */
@@ -261,7 +259,6 @@ export class Room {
     this.lastRoundEnd = null;
     this.finishedAt = null;
     this.nextRoundAt = null;
-    this.emptiedAt = null;
     for (const player of this.players) player.resetForNewGame(now);
     for (const team of this.teams) team.resetForNewGame();
     // A new game starts a new chat; observers who asked for a seat take one now.
@@ -283,13 +280,13 @@ export class Room {
 
   /**
    * Epoch ms since which nobody has been connected; null while someone is.
-   * An empty room keeps the moment it was emptied, so the abandonment clock
-   * does not restart when its last player is removed.
+   * A room with nobody in it at all is deleted on the spot by the use case
+   * that emptied it, so the last-activity fallback is only a safety net.
    */
   lastDisconnectionAt(): number | null {
     const everyone = this.everyone;
     if (everyone.some((p) => p.connected)) return null;
-    if (everyone.length === 0) return this.emptiedAt ?? this.lastActivityAt;
+    if (everyone.length === 0) return this.lastActivityAt;
     return Math.max(...everyone.map((p) => p.disconnectedAt ?? this.createdAt));
   }
 

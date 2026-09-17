@@ -13,6 +13,9 @@ export const socket: AppSocket = io(SOCKET_URL, {
   autoConnect: false,
   transports: ['websocket', 'polling'],
   reconnection: true,
+  // A room outlives any outage: keep trying for as long as the tab is open
+  // (docs/context/02-game-rules.md -> "Disconnections and room lifetime").
+  reconnectionAttempts: Infinity,
   reconnectionDelay: 500,
   reconnectionDelayMax: 4_000,
 });
@@ -20,6 +23,30 @@ export const socket: AppSocket = io(SOCKET_URL, {
 export const ensureConnected = () => {
   if (!socket.connected) socket.connect();
 };
+
+/**
+ * A phone that was locked, a laptop that slept or a network that came back:
+ * socket.io's own backoff may still be waiting, so coming into view or back
+ * online reconnects at once. `rejoin()` runs on `connect` as always, so this
+ * adds no logic of its own.
+ */
+declare global {
+  interface Window {
+    /** Dev only: the socket itself, so a verification run can drop the line. */
+    __wordrushSocket?: AppSocket;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  if (import.meta.env.DEV) window.__wordrushSocket = socket;
+  const wakeUp = () => {
+    if (!socket.connected) socket.connect();
+  };
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') wakeUp();
+  });
+  window.addEventListener('online', wakeUp);
+}
 
 /**
  * Wraps an emit-with-ack into a promise of `Result`. Resolves with an

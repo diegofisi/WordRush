@@ -5,7 +5,7 @@ import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { PageLoading } from '@/shared/components/ui/PageState';
 import { ROOM_LIMITS, type RoomSettings } from '@/shared/contract';
 import { useT } from '@/shared/i18n';
-import { homeWithCode, PATHS, pathForStatus } from '@/shared/routes/paths';
+import { inviteLinkFor, PATHS, pathForStatus } from '@/shared/routes/paths';
 import { toast } from '@/shared/stores/useToastStore';
 
 import { useKickPlayer } from '../api/kick-player/useKickPlayer';
@@ -47,9 +47,10 @@ export const LobbyContainer = () => {
 
   if (!lobby || !session) return <PageLoading title={t.common.loading} />;
 
-  const inviteLink = `${window.location.origin}${homeWithCode(lobby.code)}`;
+  // The canonical invitation is the room URL itself, so the link somebody
+  // copies from the address bar and the one this button writes are the same.
   const copyLink = async () => {
-    const link = inviteLink;
+    const link = inviteLinkFor(lobby.code);
     try {
       await navigator.clipboard.writeText(link);
       toast.success(t.common.copied);
@@ -107,7 +108,6 @@ export const LobbyContainer = () => {
           settings={lobby.settings}
           playerCount={lobby.playerCount}
           connectedCount={lobby.connectedCount}
-          inviteLink={inviteLink}
           isHost={lobby.isHost}
           onCopyLink={() => void copyLink()}
           onChangeRules={() => setRulesOpen(true)}

@@ -7,11 +7,15 @@
   admits up to 2 **observers** on top (`06-v1.1.md` -> Observers).
 - Recommended minimum initial time: 60 seconds. Below that, with 8 players, the last one
   is almost always knocked out by the −5 s penalties. See `03-scoring-system.md`.
-- You get in with a room code, or by scanning the QR of the invite link. There is a
+- You get in with a room code, or by opening the room's URL (`/room/CODE`), which is the
+  invitation since 2026-09-17 — the QR is gone, see `06-v1.1.md`. There is a
   waiting room with the player list, how many are connected, and a "Listo" ("Ready")
   button that is only informational. The host can **kick** somebody; that name may not
   come back for 30 s.
-- The invite link (`/?code=XXXX`) opens a reduced view that only asks for the name; it does not show the create-room form.
+- The invite link is the room URL `/room/CODE`: it opens a reduced view that only asks for
+  the name and never the create-room form. `/game/CODE` and `/results/CODE` do the same for
+  somebody arriving from outside, and the old `/?code=XXXX` redirects there
+  (2026-09-17, `06-v1.1.md` -> Room management).
 - The host can start with fewer players than the capacity, as long as at least 2 are connected. Not everybody has to be "ready".
 - The host can change the settings while in the lobby ("Cambiar reglas" / "Change rules"):
   language, initial time, rounds, capacity and hint on/off. Only the host, only before the
@@ -112,8 +116,22 @@ room at a time. There is never a doubt about "which game do I go back to".
 ## Disconnections and room lifetime
 - Mid-round, decided 2026-09-15: the clock keeps running, the player may come back while the round lasts, an absent player counts as not solved. Teams: `06-v1.1.md`.
 - The player's session is stored in the browser (`localStorage`). If they close the tab or lose internet and come back while the game is still running, they re-enter in their place with their board and their clock exactly as they were (the clock does not stop for a disconnection).
+- **Being away is never leaving (decided 2026-09-17).** A disconnected player is
+  **not** removed from the room, in the lobby or in a game: they stay on the list,
+  marked as disconnected, and come back to the same seat with the same session for
+  as long as the room lives. Only "Salir de la sala", a kick, or the room itself
+  going away frees a seat. Until that date the waiting room dropped anybody who had
+  been gone for 60 seconds, so switching apps for a minute made the player vanish
+  from it.
+- **The server is patient with the heartbeat (2026-09-17).** It pings every 20 s
+  and waits up to 120 s for the answer, instead of Socket.IO's 25 s / 20 s: a
+  background tab or a phone with the screen off throttles its timers and cannot
+  answer in twenty seconds. On top of that, a drop of up to **2 minutes** is
+  repaired silently — the same socket comes back with its channels and the events
+  it missed, and nobody else in the room notices anything.
 - If they come back when the game has already finished or the room no longer exists, they see a "sesión expirada" ("session expired") message and go back to the start.
-- A waiting room with nobody connected: deleted after 10 minutes.
+- A room nobody is connected to, waiting or playing: deleted **60 minutes** after
+  the last person dropped (10 minutes until 2026-09-17).
 - A game in progress with everybody disconnected: the current round ends on the clock; if nobody is connected when it ends, no other round is started, the game is marked finished and the room is deleted after 5 minutes.
 - Finished game: the room is deleted after 5 minutes. Rooms live in memory and take up a few KB; these delays are hygiene, not cost.
 
@@ -157,7 +175,7 @@ room at a time. There is never a doubt about "which game do I go back to".
 - Everything the finished game produced is wiped: ready flags, the accumulated table, totals,
   attempts, hints and the list of words already played (a word may come up again). The
   "deleted 5 minutes after finishing" clock is cancelled; from then on the lobby rules apply
-  (deleted after 10 minutes with nobody connected).
+  (deleted after 60 minutes with nobody connected).
 - Players who are disconnected keep their seat and rejoin the new lobby with their stored
   session, exactly as they would have rejoined the game.
 - Guests read "Esperando a que el anfitrión inicie otra partida…" ("Waiting for the host to

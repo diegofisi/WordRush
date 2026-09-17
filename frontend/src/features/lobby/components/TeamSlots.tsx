@@ -67,7 +67,11 @@ const MemberRow = ({
   team,
   isHost,
   pending,
-  onAssign,
+  draggable,
+  dragging,
+  onDragStart,
+  onDragEnd,
+  onMove,
   onKick,
 }: {
   t: Dictionary;
@@ -75,7 +79,14 @@ const MemberRow = ({
   team: LobbyTeamViewModel;
   isHost: boolean;
   pending: boolean;
-  onAssign: TeamSlotsProps['onAssign'];
+  /** The host may drag anybody; everybody else only their own card. */
+  draggable: boolean;
+  /** This very card is the one being dragged. */
+  dragging: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+  /** The arrow button and the drop share this one move. */
+  onMove: () => void;
   onKick?: TeamSlotsProps['onKick'];
 }) => {
   const subtitle = [member.isHost ? t.common.host : null, member.isMe ? t.common.you : null]
@@ -83,10 +94,21 @@ const MemberRow = ({
     .join(' · ');
   return (
     <li
+      draggable={draggable && !pending}
+      data-player={member.id}
+      title={draggable ? t.lobby.dragHint : undefined}
+      onDragStart={(event) => {
+        event.dataTransfer.setData('text/plain', member.id);
+        event.dataTransfer.effectAllowed = 'move';
+        onDragStart();
+      }}
+      onDragEnd={onDragEnd}
       className={cn(
         'flex items-center gap-3 rounded-xl border bg-surface px-3 py-2.5',
         member.isMe ? 'border-accent/60' : 'border-line',
         !member.connected && 'opacity-60',
+        draggable && !pending && 'cursor-grab active:cursor-grabbing',
+        dragging && 'opacity-40',
       )}
     >
       <Avatar name={member.name} size={36} tone={paintFor(team.color).avatar} />
@@ -102,11 +124,11 @@ const MemberRow = ({
           {t.lobby.ready}
         </span>
       ) : null}
-      {isHost ? (
+      {draggable ? (
         <button
           type="button"
           disabled={pending}
-          onClick={() => onAssign(member.id, otherTeam(team.id))}
+          onClick={onMove}
           title={t.lobby.moveToOther}
           aria-label={`${member.name}: ${t.lobby.moveToOther}`}
           className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink-2 transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
@@ -128,9 +150,10 @@ const MemberRow = ({
 
 /**
  * Team mode lobby (docs/context/06-v1.1.md -> Teams): two columns, any split.
- * Click "join" on the other team to move; the host moves anybody with the
- * arrow; a team's members name and colour it. The win counters live here
- * because the room outlives a game.
+ * A card is **dragged** from one team to the other — the host drags anybody,
+ * everybody else only their own card — and the arrow button does the same move
+ * for touch and for the keyboard. A team's members name and colour it. The win
+ * counters live here because the room outlives a game.
  */
 export const TeamSlots = ({
   t,
@@ -146,19 +169,63 @@ export const TeamSlots = ({
   onKick,
 }: TeamSlotsProps) => {
   const freeSeats = Math.max(0, capacity - playerCount);
+  // The card being dragged right now; both panels read it to light the target.
+  const [dragging, setDragging] = useState<{ id: string; from: TeamId; isMe: boolean } | null>(
+    null,
+  );
+  const [over, setOver] = useState<TeamId | null>(null);
+
+  /**
+   * One move, whatever started it: the host assigns (`team:assign`), anybody
+   * else moves themselves (`team:join`). No new server event.
+   */
+  const move = (player: { id: string; isMe: boolean }, to: TeamId) => {
+    if (isHost && !player.isMe) onAssign(player.id, to);
+    else if (player.isMe) onJoin(to);
+    else onAssign(player.id, to);
+  };
+
+  const dropOn = (to: TeamId) => {
+    const card = dragging;
+    setDragging(null);
+    setOver(null);
+    if (!card || card.from === to || pending) return;
+    move(card, to);
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {teams.map((team) => {
           const paint = paintFor(team.color);
+          const isTarget = dragging !== null && dragging.from !== team.id;
           return (
             <section
               key={team.id}
               aria-label={teamLabel(t, team)}
+              data-team={team.id}
+              data-drop-target={isTarget ? 'true' : undefined}
+              onDragOver={(event) => {
+                if (!isTarget) return;
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'move';
+                if (over !== team.id) setOver(team.id);
+              }}
+              onDragLeave={(event) => {
+                if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+                setOver((current) => (current === team.id ? null : current));
+              }}
+              onDrop={(event) => {
+                if (!isTarget) return;
+                event.preventDefault();
+                dropOn(team.id);
+              }}
               className={cn(
-                'flex flex-col gap-3 rounded-2xl border-2 p-4',
+                'flex flex-col gap-3 rounded-2xl border-2 p-4 transition-colors',
                 paint.border,
                 paint.soft,
+                isTarget && 'border-dashed',
+                over === team.id && 'border-accent bg-accent-soft',
               )}
             >
               <div className="flex items-center justify-between gap-2">
@@ -214,13 +281,22 @@ export const TeamSlots = ({
                     team={team}
                     isHost={isHost}
                     pending={pending}
-                    onAssign={onAssign}
+                    draggable={isHost || member.isMe}
+                    dragging={dragging?.id === member.id}
+                    onDragStart={() =>
+                      setDragging({ id: member.id, from: team.id, isMe: member.isMe })
+                    }
+                    onDragEnd={() => {
+                      setDragging(null);
+                      setOver(null);
+                    }}
+                    onMove={() => move(member, otherTeam(team.id))}
                     onKick={onKick}
                   />
                 ))}
                 {team.members.length === 0 ? (
                   <li className="rounded-xl border-[1.5px] border-dashed border-line-dashed px-3 py-3 text-center text-[13px] text-ink-3">
-                    {t.lobby.noMembers}
+                    {isTarget ? t.lobby.dropHere : t.lobby.noMembers}
                   </li>
                 ) : null}
               </ul>
@@ -251,7 +327,9 @@ export const TeamSlots = ({
         })}
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 text-[13px] text-ink-3">
-        <span>{t.lobby.freeSeats(freeSeats)}</span>
+        <span>
+          {t.lobby.freeSeats(freeSeats)} · {t.lobby.dragHint}
+        </span>
         {isHost ? (
           <button
             type="button"

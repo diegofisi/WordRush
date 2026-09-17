@@ -5,7 +5,7 @@
 > replace them here, what the feature map is, and where the design comes from.
 > Read it first, then the workflow's doctrine files.
 
-**Status (2026-09-14):** `frontend/` exists and follows this binding (core `session`; features `lobby`, `game`, `results`; `shared/` with tokens, i18n, primitives, icons). Where this file and the code disagree, the code wins; fix the file.
+**Status (2026-09-17):** `frontend/` exists and follows this binding (core `session`; features `lobby`, `game`, `results`, `chat`; `shared/` with tokens, i18n, primitives, icons). Where this file and the code disagree, the code wins; fix the file.
 
 ## What it is
 
@@ -70,7 +70,7 @@ chapter for its principles, not for its API.
 | Kind | Path | Slices |
 |---|---|---|
 | **core** | `src/core/` | `session` — player identity (name, playerId, roomCode, token in `localStorage` under `wordrush.session`), the socket connection and its lifecycle |
-| **features** | `src/features/` | `lobby` (create room form, join by code, waiting room, team slots in team mode), `game` (clock, board, keyboard with Ñ and the FRASE key, rivals panel or team panel, live feed, hint, emotes, score preview; the phrase game's card, modal and slots), `results` (round breakdown or team cards, accumulated table, final table), `chat` (messages, channel switch, phone sheet; embedded by game and results) |
+| **features** | `src/features/` | `lobby` (create room form, join by code, the room-URL entry view, waiting room, team slots with drag and drop in team mode), `game` (clock, board, keyboard with Ñ and the FRASE key, rivals panel or team panel, hint, emotes, score preview, the room stream it hands to the chat; the phrase game's card, modal and slots), `results` (round breakdown or team cards, accumulated table, final table), `chat` (the one room panel: system events, stickers and messages in a single stream, channel switch, composer with the sticker trigger, phone sheet; embedded by game and results) |
 
 `src/shared/`:
 
@@ -81,7 +81,7 @@ chapter for its principles, not for its API.
 | `components/icons` | `GameIcons` `EmoteIcon` `customEmotes` |
 | `lib` | `cn` `format` `result` `avatarTone` |
 | `hooks` | `useNow` `useMediaQuery` `useToastSafeBottom` |
-| `stores` | `useUiStore` (theme + interface language + remembered name), `useToastStore` |
+| `stores` | `useUiStore` (theme + interface language + remembered name + sound: muted, volume, keyboard tick), `useToastStore` |
 | `i18n`, `routes`, `contract` | dictionaries, `paths.ts`, the synced copy of the socket contract |
 
 ## Sanctioned facades (the only cross-slice imports)
@@ -92,8 +92,9 @@ chapter for its principles, not for its API.
 - `@/shared/i18n` (`useT`), `@/shared/stores/useUiStore` (theme + UI language),
   `@/shared/stores/useToastStore`.
 - `@/shared/**` — always.
-- `@/features/chat` — `ChatContainer` and `useChatStore`: the chat is one slice that the
-  game and results screens embed (docs/context/06-v1.1.md -> Chat).
+- `@/features/chat` — `ChatContainer`, `useChatStore` and the `ChatStreamEvent` type: the
+  chat is one slice that the game and results screens embed, and the game hands it the
+  round's events already rendered (docs/context/06-v1.1.md -> Chat).
 
 Anything else from another slice: duplicate a minimal local hook/model.
 
@@ -140,13 +141,23 @@ client never declares a timeout; it waits for the server.
 Flat router under `AppLayout`: `/` (create / join), `/room/:code` (lobby),
 `/game/:code` (game), `/results/:code` (results), plus a `*` 404. Path
 constants and builders in `shared/routes/paths.ts`, including `pathForStatus()`,
-which maps a room status to its screen. The three room routes sit behind
-`RequireSession`.
+which maps a room status to its screen, and `inviteLinkFor()`, the canonical
+invitation (`${origin}/room/CODE`, what "copy link" writes). The three room
+routes sit behind `RequireSession`.
 
-A reload on `/game/:code` re-joins with the stored session; if the server
-rejects it, go to `/`. Note the `:code` segment is **not** authoritative: where
-a session exists it wins (`session?.roomCode ?? code`), so the segment is only
-there to be shareable.
+**Every room URL is an entry point** (2026-09-17). `RequireSession` takes a
+`fallback` — `RoomEntryPage` in the lobby slice — and renders it whenever the
+stored session does not open the room in the URL: no session shows the join view
+for that code, a session in *another* room shows the "one game at a time" card
+with "leave it to join CODE". A session for that room walks through and
+`useSessionBootstrap` lands it on the screen its status asks for; a dead session
+on a room URL is dropped silently (no expiry notice, no toast) because the code
+in the URL is somewhere to go. `/?code=XXXX` is kept for old links and redirects
+to `/room/XXXX`.
+
+A reload on `/game/:code` re-joins with the stored session. Note the `:code`
+segment is **not** authoritative *inside* the room: where a session exists it
+wins (`session?.roomCode ?? code`).
 
 ## Verification commands
 
@@ -178,3 +189,11 @@ From the repo root, `pnpm check-contract` must also pass: it fails when
 - The emote burst rule (more than 8 in 3 s pauses the player for 5 s) is
   enforced server-side; run the same rule in the store before sending and show
   the countdown on the picker trigger, so the UI never looks broken.
+- Sound is one module, `shared/lib/sound.ts`: every cue is synthesised (sine and
+  triangle voices through one low-pass filter and a master gain, peak ~−14 dBFS)
+  and asked for by name from the store that owns the event, never from a
+  component's render. `useUiStore` holds `muted`, `volume` and `keyboardSounds`
+  (the typing tick, off by default); the top bar's `SoundToggle` is their one
+  place. In `dev`, `window.__wordrushSound` records every cue asked for and
+  `window.__wordrushSocket` is the socket, both only so a verification run can
+  assert on them.

@@ -58,7 +58,8 @@ export const TopBar = ({
         {connectionLabel ? (
           <span
             role="status"
-            className="hidden items-center gap-2 rounded-full bg-red-soft px-3 py-1.5 text-xs font-semibold text-red sm:flex"
+            data-reconnecting="true"
+            className="flex items-center gap-2 rounded-full bg-red-soft px-2.5 py-1.5 text-xs font-semibold text-red sm:px-3"
           >
             <span className="h-2 w-2 animate-pulse rounded-full bg-red" aria-hidden="true" />
             {connectionLabel}

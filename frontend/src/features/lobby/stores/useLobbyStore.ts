@@ -29,9 +29,13 @@ export const useLobbyStore = create<LobbyState & LobbyActions>((set, get) => ({
     socket.on('lobby:update', (dto) => {
       // Somebody new in the waiting room, and it was not me arriving.
       const before = get().lobby;
-      const arrived = before && dto.status === 'lobby' && dto.players.length > before.playerCount;
+      const seats = dto.players.length + dto.observers.length;
+      const seatsBefore = before ? before.playerCount + before.observers.length : seats;
+      const inLobby = before && dto.status === 'lobby';
       set({ lobby: toLobbyViewModel(dto, myId()) });
-      if (arrived) playSound('playerJoined');
+      if (!inLobby) return;
+      if (seats > seatsBefore) playSound('playerJoined');
+      else if (seats < seatsBefore) playSound('playerLeft');
     });
     // The lobby may not receive a lobby:update when the game starts; flip the status locally.
     socket.on('round:start', () =>

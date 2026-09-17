@@ -5,9 +5,7 @@ import type { GameViewProps } from '../models/game-view.model';
 import { Board } from './Board';
 import { Clock } from './Clock';
 import { ClockCard } from './ClockCard';
-import { EmotePicker } from './EmotePicker';
 import { Keyboard } from './Keyboard';
-import { LiveFeed } from './LiveFeed';
 import { ObserverCard } from './ObserverCard';
 import { PhraseCard } from './PhraseCard';
 import { PhraseModal } from './PhraseModal';
@@ -18,7 +16,12 @@ import { TeamPanel } from './TeamPanel';
 import { TeamScoreCard } from './TeamScoreCard';
 import { WaitingCard } from './WaitingCard';
 
-/** Three-column game (Main.dc.html): rivals · clock/board/keyboard · feed/score/emotes. */
+/**
+ * Three-column game (Main.dc.html, and phrase/Equipos.dc.html in team mode):
+ * rivals or teams · clock/board/keyboard · the room's chat and the score. The
+ * chat is one panel: events, stickers and messages in a single stream, with
+ * the sticker picker in its composer (docs/context/06-v1.1.md -> Chat).
+ */
 export const GameDesktop = (props: GameViewProps) => {
   const { t } = props;
   const phrase = props.phrase;
@@ -139,7 +142,6 @@ export const GameDesktop = (props: GameViewProps) => {
       )}
 
       <div className="flex min-h-0 flex-col gap-4">
-        <LiveFeed t={t} feed={props.feed} />
         {props.chat.panel}
         {props.observer ? null : phrase ? (
           <PhraseScoreCard
@@ -153,9 +155,6 @@ export const GameDesktop = (props: GameViewProps) => {
         ) : (
           <ScorePreviewCard t={t} preview={props.preview} outcome={props.outcome} />
         )}
-        <div className="flex justify-center">
-          <EmotePicker t={t} cooldownSeconds={props.emoteCooldownSeconds} onEmote={props.onEmote} />
-        </div>
       </div>
 
       {phrase ? (

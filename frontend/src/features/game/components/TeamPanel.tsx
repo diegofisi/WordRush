@@ -47,20 +47,21 @@ export const TeamPanel = ({
   const rival = team.rival;
   const rivalPaint = rival ? paintFor(rival.color) : null;
   const rivalLow = rival && !rival.finished && team.rivalClock < lowTimeThreshold;
+  // Alone on the team: the panel says nothing instead of a placeholder
+  // sentence — the team's clock and score live in the centre column anyway.
+  const showMine = team.teammates.length > 0;
   return (
     <div className="flex min-h-0 flex-col gap-4">
-      <Card className={cn('flex min-h-0 flex-col overflow-hidden border-2', mine.border)}>
-        <div className="flex items-center justify-between px-4 pt-3.5 pb-2.5">
-          <span className={cn('label', mine.text)}>{teamLabel(t, team.mine)}</span>
-          <span className="text-xs text-ink-3">
-            {team.solverName
-              ? t.game.teamSolvedBy(team.solverName)
-              : t.game.teammatesCount(team.teammates.length)}
-          </span>
-        </div>
-        {team.teammates.length === 0 ? (
-          <p className="m-0 px-4 pb-4 text-[13px] text-ink-3">{t.game.noTeammates}</p>
-        ) : (
+      {showMine ? (
+        <Card className={cn('flex min-h-0 flex-col overflow-hidden border-2', mine.border)}>
+          <div className="flex items-center justify-between px-4 pt-3.5 pb-2.5">
+            <span className={cn('label', mine.text)}>{teamLabel(t, team.mine)}</span>
+            <span className="text-xs text-ink-3">
+              {team.solverName
+                ? t.game.teamSolvedBy(team.solverName)
+                : t.game.teammatesCount(team.teammates.length)}
+            </span>
+          </div>
           <ul className="m-0 flex min-h-0 list-none flex-col gap-1 overflow-y-auto p-0 px-2 pb-2">
             {team.teammates.map((mate) => (
               <li
@@ -94,8 +95,8 @@ export const TeamPanel = ({
               </li>
             ))}
           </ul>
-        )}
-      </Card>
+        </Card>
+      ) : null}
 
       {rival && rivalPaint ? (
         <Card className={cn('flex min-h-0 flex-col overflow-hidden border-2', rivalPaint.border)}>

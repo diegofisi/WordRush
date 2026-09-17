@@ -96,10 +96,17 @@ ticker, between-rounds scheduler) and `rooms` (janitor), never in the gateway.
 ## Room lifecycle
 
 `src/modules/rooms/domain/room-lifecycle.ts` holds every delay of
-`docs/context/02-game-rules.md` -> "Disconnections and room lifetime": a lobby player
-disconnected for 60 s loses their slot, a room nobody is connected to is deleted 10 minutes
-after the last disconnection, and a finished room 5 minutes after its `game:end`. A round that
-ends with nobody connected ends the game as well: no round is ever started into an empty room.
+`docs/context/02-game-rules.md` -> "Disconnections and room lifetime". Since 2026-09-17 a
+disconnected player is **never** removed from a live room: the janitor only deletes rooms, one
+nobody is connected to 60 minutes after the last disconnection and a finished one 5 minutes
+after its `game:end`. A round that ends with nobody connected ends the game as well: no round
+is ever started into an empty room.
+
+The socket heartbeat is deliberately patient (`src/shared/socket/cors-io.adapter.ts`):
+`pingInterval` 20 s, `pingTimeout` 120 s, and Socket.IO's connection state recovery over a
+2-minute window, so a background tab or a locked phone is not mistaken for somebody who left.
+`main.ts` matches it on the HTTP side with `keepAliveTimeout` 65 s and `headersTimeout` 66 s,
+both above the 60 s a Railway proxy holds an idle connection.
 
 ## Contract note
 

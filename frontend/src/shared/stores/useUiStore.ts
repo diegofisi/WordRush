@@ -9,6 +9,9 @@ const LANG_KEY = 'wordrush.lang';
 const THEME_KEY = 'wordrush.theme';
 const NAME_KEY = 'wordrush.name';
 const MUTED_KEY = 'wordrush.muted';
+const VOLUME_KEY = 'wordrush.volume';
+const KEY_SOUNDS_KEY = 'wordrush.keySounds';
+const DEFAULT_VOLUME = 0.7;
 
 const readStorage = (key: string): string | null => {
   try {
@@ -53,6 +56,10 @@ interface UiState {
   rememberedName: string;
   /** The game's sound cues off; persisted like the theme. */
   muted: boolean;
+  /** Master volume for every cue, 0 to 1 (docs/context/06-v1.1.md -> Sound). */
+  volume: number;
+  /** The typing tick: the one cue that is off unless the player asks for it. */
+  keyboardSounds: boolean;
 }
 
 interface UiActions {
@@ -61,13 +68,26 @@ interface UiActions {
   toggleTheme: () => void;
   rememberName: (name: string) => void;
   toggleMuted: () => void;
+  setVolume: (volume: number) => void;
+  setKeyboardSounds: (on: boolean) => void;
 }
+
+/** Nothing stored means the default level, not silence. */
+const readVolume = (): number => {
+  const raw = readStorage(VOLUME_KEY);
+  if (raw === null) return DEFAULT_VOLUME;
+  const stored = Number(raw);
+  if (!Number.isFinite(stored) || stored < 0 || stored > 1) return DEFAULT_VOLUME;
+  return stored;
+};
 
 const initialState: UiState = {
   lang: getInitialLang(),
   theme: getInitialTheme(),
   rememberedName: readStorage(NAME_KEY) ?? '',
   muted: readStorage(MUTED_KEY) === '1',
+  volume: readVolume(),
+  keyboardSounds: readStorage(KEY_SOUNDS_KEY) === '1',
 };
 
 export const useUiStore = create<UiState & UiActions>((set, get) => ({
@@ -91,6 +111,20 @@ export const useUiStore = create<UiState & UiActions>((set, get) => ({
     const muted = !get().muted;
     writeStorage(MUTED_KEY, muted ? '1' : '0');
     set({ muted });
+  },
+  setVolume: (value) => {
+    const volume = Math.min(1, Math.max(0, value));
+    writeStorage(VOLUME_KEY, String(volume));
+    // Dragging the slider up is also how a muted player turns the sound back on.
+    if (volume > 0 && get().muted) {
+      writeStorage(MUTED_KEY, '0');
+      set({ muted: false });
+    }
+    set({ volume });
+  },
+  setKeyboardSounds: (on) => {
+    writeStorage(KEY_SOUNDS_KEY, on ? '1' : '0');
+    set({ keyboardSounds: on });
   },
 }));
 

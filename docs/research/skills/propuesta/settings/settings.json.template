@@ -1,0 +1,82 @@
+{
+  "_notes": [
+    "Template. bind-project copies this to .claude/settings.json and strips every",
+    "key whose name starts with '_' (JSON has no comments). If a settings.json",
+    "already exists, merge instead of overwriting.",
+    "",
+    "includeCoAuthoredBy:false + empty attribution: no Co-Authored-By trailer and no",
+    "'Generated with' line in commits or PR bodies. This is the enforcement; the",
+    "prose in .claude/rules/git.md is only the reminder for hand-typed messages.",
+    "",
+    "PostToolUse hook: formats the single file just edited, per package. Never",
+    "blocks — a formatter problem must not stop work.",
+    "",
+    "Stop hook: one batched `tsc --noEmit` per tsconfig covering the files changed",
+    "in this session, at the end of the response instead of after every edit. It is",
+    "a report, not a gate: it always exits 0 and never blocks. Remove the Stop entry",
+    "on a repo with no TypeScript, or on one where a full typecheck is slow enough",
+    "to be annoying — the root `verify` script is still the real gate.",
+    "",
+    "permissions: keep production-affecting commands OUT of `allow`. Deploys,",
+    "destructive database commands, `git push --force`, secret reads and",
+    "infrastructure CLIs (railway, fly, vercel --prod, kubectl, terraform apply, aws)",
+    "belong in `ask` or `deny`, never in `allow`, and never in settings.local.json",
+    "either — 'it asked me every time' is not a reason to hand over the deploy key.",
+    "Fill `allow` with read-only and cheap local commands only.",
+    "",
+    "Replace <pm> below with the detected package manager (pnpm / npm / yarn / bun)."
+  ],
+
+  "includeCoAuthoredBy": false,
+  "attribution": {},
+
+  "permissions": {
+    "allow": [
+      "Bash(<pm> verify)",
+      "Bash(<pm> typecheck:*)",
+      "Bash(<pm> lint:*)",
+      "Bash(<pm> test:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(<pm> publish:*)",
+      "Bash(docker:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*.pem)",
+      "Bash(git push --force:*)",
+      "Bash(git commit --no-verify:*)"
+    ]
+  },
+
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format.mjs\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-typecheck.mjs\"",
+            "timeout": 180
+          }
+        ]
+      }
+    ]
+  }
+}

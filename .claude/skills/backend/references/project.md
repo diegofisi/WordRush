@@ -41,7 +41,7 @@ Game rules and the scoring formula are **not** restated here. They live in
 
 | Module | Owns |
 |---|---|
-| `rooms` | Create room (settings: language, mode normal/teams, word length, initial time, rounds, capacity, hint on/off), join by code (as an observer once the game runs, two at most), lobby state, ready flags, teams (join, host assigns, name and colour, counters), observers taking a seat, host actions (start, change rules, kick with a 30 s name block, restart into a new lobby). Room + Player + Team aggregates. |
+| `rooms` | Create room (settings: language, mode normal/teams, word length, initial time, rounds, capacity, hint on/off), join by code (as an observer once the game runs, two at most), rejoin and resume after a drop (a disconnected player is never removed from a live room), lobby state, ready flags, teams (join, host assigns, name and colour, counters), observers taking a seat, host actions (start, change rules, kick with a 30 s name block, restart into a new lobby). Room + Player + Team aggregates. |
 | `game` | Round lifecycle: pick word (or phrase), accept guesses, colour feedback, per-letter time bonuses (once per letter position), the −5 s broadcast, hint reveal, end-of-round scoring, accumulated table, tie-breaks; the phrase game (`phrase.ts`, `submit-phrase.use-case.ts`: green anywhere in the phrase, 2 s per occurrence, five sends). This module implements `docs/context/03-*` and `06-*`. |
 | `words` | Word lists ES/EN per length, validation of a guess (must be a real word), normalisation of accents and Ñ, and the phrase banks of "Adivina la frase" (`PHRASE_BANK`, `scripts/build-phrases.mjs`). Pure domain service; no I/O after boot. |
 | `reactions` | Emote broadcast with the per-player burst limit (more than 8 in 3 s pauses the player for 5 s). Its own module. |
@@ -51,7 +51,10 @@ Game rules and the scoring formula are **not** restated here. They live in
 Shared kernel (`backend/src/shared/`): `contract/` (owns the socket contract),
 `domain/` (`Clock` + its `CLOCK` token, `DomainException`, `ERROR_MESSAGES`),
 `events/` (`RoomEventsBus`), `config/` (env parsers), `socket/` (the CORS
-adapter). The doctrine's `BaseEntity` and `BaseResponse` were never brought
+adapter, which also owns the heartbeat — `pingInterval` 20 s / `pingTimeout`
+120 s — and Socket.IO's connection state recovery over 2 minutes; the gateway
+re-seats a `client.recovered` socket through `ResumeSessionUseCase` instead of
+treating it as a new one). The doctrine's `BaseEntity` and `BaseResponse` were never brought
 over — there is no ORM, and the one HTTP route returns a plain object — and its
 storage/crypto/stream utilities do not apply either.
 

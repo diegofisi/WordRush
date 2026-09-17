@@ -4,3 +4,4 @@
  */
 export { ChatContainer } from './containers/ChatContainer';
 export { useChatStore } from './stores/useChatStore';
+export type { ChatStreamEvent } from './models/stream.model';

@@ -1,13 +1,8 @@
-import { QrCode } from 'lucide-react';
-import { useState } from 'react';
-
 import { CopyIcon, SlidersIcon } from '@/shared/components/icons/GameIcons';
 import { Button } from '@/shared/components/ui/Button';
 import type { RoomSettings } from '@/shared/contract';
 import type { Dictionary } from '@/shared/i18n';
 import { cn } from '@/shared/lib/cn';
-
-import { RoomQr } from './RoomQr';
 
 interface RoomCodeHeaderProps {
   t: Dictionary;
@@ -15,8 +10,6 @@ interface RoomCodeHeaderProps {
   settings: RoomSettings;
   playerCount: number;
   connectedCount: number;
-  /** The invitation link, for the QR. */
-  inviteLink: string;
   isHost: boolean;
   onCopyLink: () => void;
   /** Host only: opens the room rules dialog. */
@@ -66,12 +59,10 @@ export const RoomCodeHeader = ({
   settings,
   playerCount,
   connectedCount,
-  inviteLink,
   isHost,
   onCopyLink,
   onChangeRules,
 }: RoomCodeHeaderProps) => {
-  const [qrOpen, setQrOpen] = useState(false);
   // Host only: the chips and the button next to them open the same dialog, so
   // the rules are edited where they are read instead of down in the footer.
   const edit = isHost ? onChangeRules : undefined;
@@ -86,20 +77,10 @@ export const RoomCodeHeader = ({
           <Button variant="outline" size="sm" onClick={onCopyLink} leading={<CopyIcon size={18} />}>
             {t.common.copyLink}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            aria-pressed={qrOpen}
-            onClick={() => setQrOpen((open) => !open)}
-            leading={<QrCode size={18} aria-hidden="true" />}
-          >
-            {qrOpen ? t.lobby.hideQr : t.lobby.showQr}
-          </Button>
         </div>
         <span className="text-sm text-ink-2">
           {t.lobby.shareHint} · {t.lobby.connectedCount(connectedCount)}
         </span>
-        {qrOpen ? <RoomQr link={inviteLink} label={t.lobby.qrAlt} /> : null}
       </div>
       <div className="flex flex-wrap items-center gap-2.5 lg:justify-end">
         <div className="flex flex-wrap gap-2 lg:justify-end">

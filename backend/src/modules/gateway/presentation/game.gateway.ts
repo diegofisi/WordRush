@@ -56,6 +56,7 @@ import { MarkDisconnectedUseCase } from '@modules/rooms/application/use-cases/ma
 import { SitObserverUseCase } from '@modules/rooms/application/use-cases/observer.use-cases';
 import { RejoinRoomUseCase } from '@modules/rooms/application/use-cases/rejoin-room.use-case';
 import { RestartRoomUseCase } from '@modules/rooms/application/use-cases/restart-room.use-case';
+import { ResumeSessionUseCase } from '@modules/rooms/application/use-cases/resume-session.use-case';
 import { SetReadyUseCase } from '@modules/rooms/application/use-cases/set-ready.use-case';
 import {
   AssignTeamUseCase,
@@ -100,6 +101,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     private readonly createRoom: CreateRoomUseCase,
     private readonly joinRoom: JoinRoomUseCase,
     private readonly rejoinRoom: RejoinRoomUseCase,
+    private readonly resumeSession: ResumeSessionUseCase,
     private readonly setReady: SetReadyUseCase,
     private readonly joinTeam: JoinTeamUseCase,
     private readonly assignTeam: AssignTeamUseCase,
@@ -126,17 +128,51 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   handleConnection(client: GameSocket): void {
+    // Socket.IO recovered the connection: this is the same socket, back from a
+    // blink of the network, with its channels and its missed events already
+    // restored. It must never take the "new socket" path, which would count it
+    // as a second person and leave the first one marked away.
+    if (client.recovered) {
+      this.resumeSeat(client);
+      return;
+    }
     this.logger.debug?.(`Socket connected ${client.id}`);
   }
 
   handleDisconnect(client: GameSocket): void {
     this.limiter.forget(client.id);
-    if (!this.sessions.isCurrent(client)) {
-      this.sessions.detach(client);
+    const wasCurrent = this.sessions.isCurrent(client);
+    const session = this.sessions.detach(client);
+    if (!session || !wasCurrent) return;
+    // Socket.IO persisted `client.data` a moment ago — the very object `detach`
+    // just emptied — so the seat has to be written back under its own key for
+    // the recovered socket to find it.
+    client.data.lastSeat = session;
+    this.markDisconnected.execute(session.roomCode, session.playerId);
+  }
+
+  /** Gives a recovered socket its seat back, or strips what recovery restored. */
+  private resumeSeat(client: GameSocket): void {
+    const seat = client.data.lastSeat;
+    client.data.lastSeat = undefined;
+    client.data.roomCode = undefined;
+    client.data.playerId = undefined;
+    if (!seat) return;
+
+    // Another tab took the seat while this socket was away: it keeps it.
+    if (this.sessions.socketOf(seat.playerId)) {
+      void client.leave(roomChannel(seat.roomCode));
+      client.emit('session:replaced', { roomCode: seat.roomCode });
       return;
     }
-    const session = this.sessions.detach(client);
-    if (session) this.markDisconnected.execute(session.roomCode, session.playerId);
+    // The room or the seat is gone (left, kicked, room deleted). Recovery
+    // restored the channel, so it has to be given up by hand.
+    if (!this.resumeSession.execute(seat.roomCode, seat.playerId)) {
+      void client.leave(roomChannel(seat.roomCode));
+      return;
+    }
+    this.sessions.bind(client, seat.roomCode, seat.playerId);
+    this.logger.debug?.(`Socket ${client.id} recovered seat ${seat.playerId} in ${seat.roomCode}`);
   }
 
   // ---------------------------------------------------------------- rooms
