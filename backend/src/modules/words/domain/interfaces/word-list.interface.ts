@@ -8,4 +8,7 @@ export interface IWordList {
   isAllowed(language: Language, word: string): boolean;
   /** Words of `length` the game may pick as the round answer. */
   answers(language: Language, length: WordLength): readonly string[];
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  /** Every word a player may type. A superset of `answers`. Boss mode only. */
+  guessable(language: Language, length: WordLength): readonly string[];
 }

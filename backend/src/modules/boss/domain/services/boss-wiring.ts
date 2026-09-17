@@ -1,7 +1,10 @@
-import { WORD_LENGTH } from '@shared/contract';
+import { BOSS } from '@shared/contract';
 import { ALPHABET, LETTERS } from './letter-readout';
 import { neuronsOfClass, type Connectome } from './connectome';
 import type { StimulusChannel } from './lif-network';
+
+/** Her board is five slots wide; the readout was trained on one. */
+const WORD_LENGTH = BOSS.wordLength;
 
 /**
  * Where the game touches the brain.
@@ -26,7 +29,7 @@ export type SlotState = (typeof SLOT_STATES)[number];
  * threshold that needs ~25 of them at once: the stimulus died at the first
  * synapse. Measured across 400 boards a level, the board's identity in a
  * downstream population went from 5% to 32% once this, the channel width and the
- * integration window were all fixed together (docs/context/06-boss-mode.md).
+ * integration window were all fixed together (docs/context/08-boss-mode.md).
  *
  * 128 Hz is high for a fly neuron but under its own refractory ceiling; the
  * earlier sweep needed 2,400 Hz, which is not a rate any cell can produce, and

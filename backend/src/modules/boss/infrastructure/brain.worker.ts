@@ -91,7 +91,7 @@ const SETTLE_MS = 60;
  * sustains an avalanche, and the detail burns off. Weakening the synapses
  * removes the peak and keeps improving to 32.3%, but that means departing from
  * Shiu et al., and 900 ms at the published strength is enough to play with
- * (docs/context/06-boss-mode.md).
+ * (docs/context/08-boss-mode.md).
  *
  * 675 since 2026-09-15, as a balance decision and not a calibration: the
  * readout was fitted at 900 ms and her choice was measured to be no better

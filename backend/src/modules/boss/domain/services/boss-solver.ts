@@ -1,4 +1,4 @@
-import { WORD_LENGTH, type TileColor } from '@shared/contract';
+import { BOSS, type TileColor } from '@shared/contract';
 import { computeFeedback } from '@modules/game/domain/services/color-feedback';
 
 /**
@@ -10,18 +10,26 @@ import { computeFeedback } from '@modules/game/domain/services/color-feedback';
  * cannot supply and a human player does in their head: striking out every word
  * that contradicts the colours already on the board. She then chooses among
  * what is left, with her own brain, and that choice is the only thing that is
- * hers (docs/context/06-boss-mode.md, docs/context/07-what-the-fly-can-do.md).
+ * hers (docs/context/08-boss-mode.md, docs/context/09-what-the-fly-can-do.md).
  */
+
+/** Her board is five slots wide; the readout was trained on one. */
+const WORD_LENGTH = BOSS.wordLength;
 
 function sameColors(a: readonly TileColor[], b: readonly TileColor[]): boolean {
   for (let i = 0; i < WORD_LENGTH; i += 1) if (a[i] !== b[i]) return false;
   return true;
 }
 
-function occurrences(word: string, letter: string): number {
-  let count = 0;
-  for (const character of word) if (character === letter) count += 1;
-  return count;
+/**
+ * What a spent hint tells her, in v1.1 terms: the hint either names a letter
+ * that is in the answer, or places a letter she already knows
+ * (docs/context/06-v1.1.md -> Hint).
+ */
+export interface BossHint {
+  letter: string;
+  /** 0-based answer position, when the hint placed the letter. */
+  position: number | null;
 }
 
 /**
@@ -33,13 +41,16 @@ function occurrences(word: string, letter: string): number {
 export function candidatesFrom(
   pool: readonly string[],
   rows: readonly { word: string; colors: readonly TileColor[] }[],
-  hint: { letter: string; count: number } | null,
+  hint: BossHint | null,
 ): string[] {
   return pool.filter((candidate) => {
     for (const row of rows) {
       if (!sameColors(computeFeedback(row.word, candidate).colors, row.colors)) return false;
     }
-    if (hint && occurrences(candidate, hint.letter) !== hint.count) return false;
+    if (hint) {
+      if (!candidate.includes(hint.letter)) return false;
+      if (hint.position !== null && candidate[hint.position] !== hint.letter) return false;
+    }
     return true;
   });
 }

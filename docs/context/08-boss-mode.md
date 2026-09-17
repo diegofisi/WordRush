@@ -348,7 +348,7 @@ that cannot win. The regression is covered in `test/boss-mode.spec.ts`.
 
 ## 2026-09-14 — what she is now
 
-The full investigation is in `07-what-the-fly-can-do.md`. The short version: a
+The full investigation is in `09-what-the-fly-can-do.md`. The short version: a
 fly brain cannot deduce, and deduction is the game. So the game does that one
 part for her, says so, and everything else is hers.
 
@@ -431,7 +431,7 @@ eight candidates. Measured on 2026-09-14, 120 rounds:
 Intact and cut played different words in 119 rounds of 120: the choice is hers.
 It is also no better than the coin's. That is the number on her page, and the
 reason this design lives on the `fly-boss` branch and not on `master`
-(`07-what-the-fly-can-do.md`, section 9).
+(`09-what-the-fly-can-do.md`, section 9).
 
 Nothing removed on 2026-09-13 came back: no policy, no cerco channel, no
 discount, no answer-list shortcut. Her hint is still the readout's 28th output.

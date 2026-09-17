@@ -13,6 +13,11 @@ export interface IBossBrainStream {
   /** Every live slice, with the room it was simulated for. */
   subscribe(listener: (roomCode: string, frame: BossFrame) => void): void;
   /**
+   * Wakes the brain if it is asleep. Called once a room is actually playing
+   * against her, so a server with no boss room holds no connectome at all.
+   */
+  ensure(): void;
+  /**
    * Points a stream at a room's board, or stops streaming that room. Off costs
    * nothing; a room past the thread count gets no stream until one frees up.
    */
@@ -35,7 +40,7 @@ export type { BossAction };
  * It used to carry the candidate count, the greens, the yellows, the attempt
  * number, the hint and the clock — everything a hand-written policy needed to
  * choose her move. The policy is gone and so is its input
- * (docs/context/06-boss-mode.md, 2026-09-13).
+ * (docs/context/08-boss-mode.md, 2026-09-13).
  */
 export interface BossSituation {
   /** What she can see on her own board: a colour per slot. */

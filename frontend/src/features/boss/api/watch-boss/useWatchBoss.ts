@@ -6,7 +6,7 @@ import type { EmptyOk } from '@/shared/lib/result';
 /**
  * Tells the server somebody has her brain panel open. Streaming the simulation
  * costs a worker thread real CPU, so it only runs while it is being watched
- * (docs/context/06-boss-mode.md).
+ * (docs/context/08-boss-mode.md).
  */
 export const useWatchBoss = (watching: boolean): void => {
   useEffect(() => {

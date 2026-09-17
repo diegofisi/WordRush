@@ -6,6 +6,8 @@ import {
 } from '@modules/rooms/domain/interfaces/room-repository.interface';
 import { BossPlayTurnUseCase } from '../use-cases/boss-play-turn.use-case';
 import type { Player } from '@modules/rooms/domain/entities/player.entity';
+import { BOSS } from '@shared/contract';
+import { bossPlayable } from '../../domain/services/boss-seat';
 import type { LetterState, SlotState } from '../../domain/services/boss-wiring';
 import { BossMemoryService } from './boss-memory.service';
 import { BossWatchersService } from './boss-watchers.service';
@@ -74,7 +76,7 @@ export class BossTickerService implements OnModuleInit, OnModuleDestroy {
   private pointStream(roomCode: string): void {
     const room = this.rooms.findByCode(roomCode);
     const bot = room?.bot;
-    if (!room || !bot?.round || !room.settings.bossMode) {
+    if (!room || !bot?.round || !bossPlayable(room)) {
       if (this.streamed.delete(roomCode)) this.brain.stream(roomCode, false);
       return;
     }
@@ -98,7 +100,7 @@ export class BossTickerService implements OnModuleInit, OnModuleDestroy {
       const live = new Set<string>();
       for (const room of this.rooms.all()) {
         live.add(room.code);
-        if (!room.settings.bossMode || room.status !== 'playing') continue;
+        if (!bossPlayable(room) || room.status !== 'playing') continue;
         const bot = room.bot;
         if (!bot) continue;
         // Nobody to play against, nobody to play for. A room outlives its last
@@ -106,6 +108,8 @@ export class BossTickerService implements OnModuleInit, OnModuleDestroy {
         // by every room: a fly still thinking in an abandoned room slows the
         // fly in a room with people in it.
         if (room.connectedPlayers().length === 0) continue;
+        // First boss round on this process: wake the brain. Idempotent.
+        this.brain.ensure();
         void this.playTurn.execute(room, bot, now).catch((error: unknown) => {
           this.logger.error(
             `Boss turn failed in room ${room.code}`,
@@ -123,7 +127,7 @@ export class BossTickerService implements OnModuleInit, OnModuleDestroy {
 
 /** Her board as the brain sees it: one colour per slot. */
 function slotsOfRound(round: NonNullable<Player['round']>): SlotState[] {
-  const slots: SlotState[] = ['unknown', 'unknown', 'unknown', 'unknown', 'unknown'];
+  const slots: SlotState[] = Array.from<SlotState>({ length: BOSS.wordLength }).fill('unknown');
   for (const row of round.rows) {
     for (let i = 0; i < row.colors.length; i += 1) {
       const colour = row.colors[i];

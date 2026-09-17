@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { Worker } from 'node:worker_threads';
 import type { BossFrame } from '@shared/contract';
-import { parseThreadCount } from '@shared/config/env';
+import { parseThreadCount } from '../domain/services/boss-env';
 import type { BrainIdle, BrainReady, BrainRequest, BrainResponse } from './brain.worker';
 
 /**
@@ -127,7 +127,13 @@ export class BrainWorkerService implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleInit(): void {
-    // Boot in the background: nothing should wait on a connectome to serve a lobby.
+    // Nothing boots here. A thread holds ~90 MB of connectome, so the brain is
+    // only woken when a room is actually playing against her: the ticker calls
+    // `ensure()` and she stands still (retrying every 1.5 s) until it answers.
+  }
+
+  /** Boots the warm decider if it is not up yet. Idempotent and cheap to call. */
+  ensure(): void {
     void this.start();
   }
 

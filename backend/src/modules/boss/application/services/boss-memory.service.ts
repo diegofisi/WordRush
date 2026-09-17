@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { BossHint } from '../../domain/services/boss-solver';
 
 /**
  * What the fly remembers inside one round, which is now only what she did
@@ -7,16 +8,15 @@ import { Injectable } from '@nestjs/common';
  * It used to hold the answers still compatible with her colours, the letters
  * she had located and the hint she had spent — a deduction about the answer,
  * kept on her behalf. That is the player's job, and hers is a brain
- * (docs/context/06-boss-mode.md, 2026-09-13).
+ * (docs/context/08-boss-mode.md, 2026-09-13).
  */
 export interface BossMemory {
   /** The round this memory belongs to; a new round throws it away. */
   round: number;
   /** Whole words she has already sent. She never sends one twice. */
   played: Set<string>;
-  /** The letter her hint named, and how often it occurs, once she spent it. */
-  hintLetter: string | null;
-  hintCount: number;
+  /** What her hint told her, once she spent it (docs/context/06-v1.1.md -> Hint). */
+  hint: BossHint | null;
   /** Her own draw of candidates each turn. Seeded per round so a replay matches. */
   random: () => number;
   /** Epoch ms before which she is still thinking or typing. */
@@ -37,8 +37,7 @@ export class BossMemoryService {
     const seeded: BossMemory = {
       round,
       played: new Set<string>(),
-      hintLetter: null,
-      hintCount: 0,
+      hint: null,
       random: seededRandom((round * 1_000_003 + hashCode(roomCode)) >>> 0),
       // A beat before her first move, so a round does not open with her already typing.
       nextMoveAt: now + 1200,

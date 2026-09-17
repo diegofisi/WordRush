@@ -7,7 +7,7 @@ import {
   type IHintPort,
   type IRoundBookkeeping,
 } from '@modules/game/domain/interfaces/round-bookkeeping.interface';
-import { applyGuessRow } from '@modules/game/domain/services/apply-guess';
+import { applyBossGuessRow } from '../../domain/services/boss-guess';
 import type { Player } from '@modules/rooms/domain/entities/player.entity';
 import type { Room } from '@modules/rooms/domain/entities/room.entity';
 import { IWordList, WORD_LIST } from '@modules/words/domain/interfaces/word-list.interface';
@@ -31,7 +31,7 @@ import { BossMemoryService, type BossMemory } from '../services/boss-memory.serv
  * overlapped, so the team's damage always landed after she was already done and
  * no clock setting could make the fight real. A turn now costs 12 to 23 s, which
  * puts her finish inside the window where humans actually solve
- * (docs/context/06-boss-mode.md).
+ * (docs/context/08-boss-mode.md).
  */
 export const BOSS_CADENCE = {
   /**
@@ -63,7 +63,7 @@ export const BOSS_CADENCE = {
 /**
  * One turn of the fly. She plays through the same round object, the same time
  * ledger and the same solve announcement as a human; the two differences are
- * the ones the rules call for (docs/context/06-boss-mode.md): she earns no time
+ * the ones the rules call for (docs/context/08-boss-mode.md): she earns no time
  * from letters, and her solve damages humans instead of her teammates.
  */
 @Injectable()
@@ -93,9 +93,9 @@ export class BossPlayTurnUseCase {
      * Choosing from the answer list was a 92% cut of the search space handed to
      * her for nothing: every word she played could be the answer, while a human
      * spends attempts on words that never could be. Same keyboard, same
-     * dictionary, same odds (docs/context/06-boss-mode.md, 2026-09-13).
+     * dictionary, same odds (docs/context/08-boss-mode.md, 2026-09-13).
      */
-    const pool = this.wordList.guessable(room.settings.language);
+    const pool = this.wordList.guessable(room.settings.language, BOSS.wordLength);
     const memory = this.memory.forRound(room.code, room.currentRound, now);
     if (now < memory.nextMoveAt || memory.thinking) return false;
 
@@ -135,8 +135,7 @@ export class BossPlayTurnUseCase {
     if (decision.hintWant > 0.5 && room.settings.hintEnabled && !round.hintUsed) {
       const reveal = this.hints.reveal(room.code, bot.id);
       if (reveal) {
-        memory.hintLetter = reveal.letter;
-        memory.hintCount = reveal.count;
+        memory.hint = { letter: reveal.letter, position: reveal.position };
         hintSpent = true;
       }
     }
@@ -171,18 +170,16 @@ export class BossPlayTurnUseCase {
      * over another — and her readout chooses among those. That choice is hers,
      * and it is the only part of the turn that is.
      *
-     * Measured on 2026-09-14 and recorded in docs/context/07-what-the-fly-can-do.md:
+     * Measured on 2026-09-14 and recorded in docs/context/09-what-the-fly-can-do.md:
      * without the filter she cannot converge at all (0 of 30 rounds), and with
      * it a random choice already wins 98.6% of rounds in 8 attempts. She gets
      * BOSS.maxAttempts, more than a human's 8, uncharged; the round the team
      * plays is against her clock. The filter is declared on her panel in as
      * many words.
      */
-    const compatible = candidatesFrom(
-      pool,
-      round.rows,
-      memory.hintLetter ? { letter: memory.hintLetter, count: memory.hintCount } : null,
-    ).filter((candidate) => !memory.played.has(candidate));
+    const compatible = candidatesFrom(pool, round.rows, memory.hint).filter(
+      (candidate) => !memory.played.has(candidate),
+    );
     const shown =
       compatible.length > 0
         ? drawCandidates(compatible, BOSS.candidates, memory.random)
@@ -221,7 +218,7 @@ export class BossPlayTurnUseCase {
   ): BossSituation {
     return {
       slots: slotsOf(round),
-      letters: lettersOf(round, memory.hintLetter),
+      letters: lettersOf(round, memory.hint?.letter ?? null),
       seed: (room.currentRound * 1_000_003 + round.attempt * 7919 + room.code.charCodeAt(0)) >>> 0,
     };
   }
@@ -237,7 +234,7 @@ export class BossPlayTurnUseCase {
     const round = bot.round;
     if (!round) return;
 
-    applyGuessRow(round, word, answer, BOSS.earnsTimeFromLetters);
+    applyBossGuessRow(round, word, answer, BOSS.earnsTimeFromLetters);
     memory.played.add(word);
     room.touch(now);
 
@@ -259,7 +256,7 @@ export class BossPlayTurnUseCase {
 
 /** What her own board looks like: one colour per slot, as the brain sees it. */
 function slotsOf(round: NonNullable<Player['round']>): SlotState[] {
-  const slots: SlotState[] = ['unknown', 'unknown', 'unknown', 'unknown', 'unknown'];
+  const slots: SlotState[] = Array.from<SlotState>({ length: BOSS.wordLength }).fill('unknown');
   for (const row of round.rows) {
     for (let i = 0; i < row.colors.length; i += 1) {
       const colour = row.colors[i];

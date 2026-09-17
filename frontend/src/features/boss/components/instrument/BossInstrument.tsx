@@ -89,7 +89,7 @@ const Box = ({ children, className }: { children: React.ReactNode; className?: s
 /**
  * The instrument. Same shape as the design canvas, but every number is measured
  * on the brain that is running right now, not generated for the picture
- * (docs/context/06-boss-mode.md).
+ * (docs/context/08-boss-mode.md).
  *
  * It draws what it is given and nothing else: the page around it owns the
  * connection, so the same component serves the brain tab and anything else that

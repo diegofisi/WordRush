@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 15;
+export const CONTRACT_VERSION = 16;
 
 export type Language = 'es' | 'en';
 /** docs/context/06-v1.1.md -> Guess the phrase: the second game on the same rooms. */
@@ -105,6 +105,176 @@ export const ROOM_LIMITS = {
   kickRejoinSeconds: 30,
 } as const;
 
+// ---------------------------------------------------------------------------
+// BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+//
+// Everything between this banner and the closing one belongs to the optional
+// "challenge the fly" mode brought over from the old `master` line. It is
+// additive: every field it adds elsewhere in this file is optional, so a room
+// that never turns it on is byte-for-byte the v1.1 contract.
+// Rules: docs/context/08-boss-mode.md
+// ---------------------------------------------------------------------------
+
+export const BOSS = {
+  /** Display name of the seat. The interface localises it; this is the fallback. */
+  name: 'Mosca',
+  /**
+   * Her brain is wired for a five-letter board and her readout was trained on
+   * one, so boss mode is offered only for the five-letter word race. The lobby
+   * forces this length and the server refuses to seat her otherwise.
+   */
+  wordLength: 5,
+  /**
+   * Seconds a human solve takes off her. Harder than the 5 s of the normal
+   * game on purpose: measured on 2026-09-13, a 5 s hit left her winning every
+   * scenario even with the whole room solving instantly.
+   */
+  damageOnHumanSolve: 8,
+  /** She earns time from letters at the normal rates, like anybody else. */
+  earnsTimeFromLetters: true,
+  /** Flat points for every human still seated when she goes down. */
+  defeatedBonus: 25,
+  /** Boss mode allows a solo run; the normal game needs two humans. */
+  minHumans: 1,
+  /**
+   * Her attempts per round: more than a human's 8, and she is never charged
+   * for them (docs/context/08-boss-mode.md, 2026-09-14).
+   */
+  maxAttempts: 10,
+  /**
+   * How many compatible words she is shown each turn, drawn at random. Her
+   * output pathway carries about two independent quantities on the boards a
+   * game produces; choosing one of eight fits through it.
+   */
+  candidates: 8,
+} as const;
+
+/**
+ * She has exactly one move: play the word her brain asked for. There used to
+ * be four, chosen by hand-written thresholds; that was a policy playing the
+ * game rather than the fly (docs/context/08-boss-mode.md, 2026-09-13).
+ */
+export type BossAction = 'guess';
+
+/**
+ * Her starting clock: the room's, exactly like a human's. She used to get a
+ * short flat bar of her own, which broke her scoring, because the points
+ * formula pays for the percentage of *your* clock you had left.
+ */
+export function bossClockSeconds(initialSeconds: number): number {
+  return initialSeconds;
+}
+
+/** The fly's clock as a health bar. Null outside boss mode. */
+export interface BossState {
+  playerId: string;
+  /** Where her clock started this round, before any damage. */
+  startSeconds: number;
+  /** Seconds the team has taken off her so far. */
+  damageSeconds: number;
+  secondsLeft: number;
+  at: number;
+  attempt: number;
+  solved: boolean;
+  /** Out of clock or out of attempts without solving. */
+  defeated: boolean;
+  /** What she would have earned from her letters under a no-healing rule. */
+  forfeitedSeconds: number;
+  /** Her last decision, or null before she has taken a turn. */
+  decision: BossDecisionState | null;
+}
+
+/**
+ * What she decided and how sure she was. Measured from the readout that chose
+ * the move, never invented. Nothing here names the answer.
+ */
+export interface BossDecisionState {
+  action: BossAction;
+  /** How strongly her readout wanted its top letter over the rest, 0..1. */
+  confidence: number;
+  /** How much her readout wanted to spend the hint this turn, 0..1. */
+  hintWant: number;
+  /** True when she actually spent it this turn. */
+  hintSpent: boolean;
+  attempt: number;
+  /** The letters her readout wanted most this turn, strongest first. */
+  letters: string[];
+  /** True when a real simulation produced this move. */
+  brain: boolean;
+  /** The word she is typing this turn, so the 3-D fly presses real keys. */
+  typing: string;
+  /** Milliseconds of biological time simulated, and what they cost in wall time. */
+  biologicalMs: number;
+  wallMs: number;
+  /** What the brain did while it decided. Null when the brain did not answer. */
+  telemetry: BossTelemetry | null;
+}
+
+/**
+ * Everything the instrument draws, read off the running model. None of it is
+ * generated for the interface. docs/context/08-boss-mode.md
+ */
+export interface BossTelemetry {
+  /** Spike times in biological ms, one row per watched descending cell. */
+  raster: number[][];
+  /** Membrane voltage across the whole brain, 26 bins from -54 to -43 mV. */
+  voltage: number[];
+  /** Firing rate in Hz per neuron, by FlyWire anatomical class. */
+  populations: { name: string; hz: number }[];
+  /** Excitatory and inhibitory mV delivered during the window. */
+  excitatory: number;
+  inhibitory: number;
+  /** Which of the sampled neurons fired, as indices into the shared sample. */
+  cloud: number[];
+  /** Poisson rate injected per board channel, in Hz. */
+  stimulus: number[];
+  /** Size of the brain that produced this. */
+  neurons: number;
+  synapses: number;
+  /** Its 27 outputs: how much she wants each letter of the alphabet, 0..1. */
+  letterPreference: number[];
+  /** Firing rate in Hz of every readout cell, the diagram's input column. */
+  descending: number[];
+}
+
+/**
+ * A live frame of her brain, several times a second while somebody is
+ * watching. Only rooms with a watcher get it.
+ */
+export interface BossFrame {
+  /** Two bits per sampled neuron, 0 to 3 spikes, base64. */
+  cloud: string;
+  /** Membrane voltage across the whole brain, 26 bins. */
+  voltage: number[];
+  /** Firing rate in Hz per neuron, by anatomical class. */
+  populations: number[];
+  /** Spike times of the watched descending cells inside this slice, in ms. */
+  raster: number[][];
+  /** Their firing rate in Hz, the network diagram's input column. */
+  descending: number[];
+  /** What her brain wants each letter to be worth right now, 0..1. */
+  letters: number[];
+  /** Excitatory and inhibitory mV delivered in this slice. */
+  excitatory: number;
+  inhibitory: number;
+  /** Biological ms covered by this slice, and the wall ms it cost. */
+  biologicalMs: number;
+  wallMs: number;
+}
+
+/** How the fly ended her round. */
+export interface BossSummary {
+  solved: boolean;
+  attempts: number;
+  /** Out of clock or out of attempts without solving. */
+  defeated: boolean;
+  secondsLeft: number;
+  /** Every word she played, with its colours. Only ever sent once it is over. */
+  rows: { word: string; colors: TileColor[] }[];
+}
+
+// --------------------------------------------------------- end BOSS-MODE ---
+
 /** docs/context/02-game-rules.md and 03-scoring-system.md */
 export const SCORING = {
   yellowSeconds: 5,
@@ -154,6 +324,9 @@ export interface RoomSettings {
   rounds: number;
   capacity: number;
   hintEnabled: boolean;
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  /** The room plays against the fly. Absent means no. */
+  bossMode?: boolean;
 }
 
 export interface PlayerPublic {
@@ -164,6 +337,9 @@ export interface PlayerPublic {
   connected: boolean;
   /** Null in the normal mode. */
   team: TeamId | null;
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  /** The fly's seat. Never occupies a human slot and never hosts. */
+  isBot?: boolean;
 }
 
 export interface TeamPublic {
@@ -338,6 +514,9 @@ export interface RoundState extends RoundInfo {
   role: Role;
   me: SelfState;
   players: PlayerProgress[];
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  /** The fly's clock as health; null or absent outside boss mode. */
+  boss?: BossState | null;
   /** Team mode only; empty otherwise. */
   teams: TeamRoundState[];
   myTeam: TeamId | null;
@@ -369,6 +548,9 @@ export interface RoundBreakdown {
   uncoveredPoints: number;
   sendsFailed: number;
   sendPenalty: number;
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  /** Flat team bonus when the fly went down this round; 0 or absent otherwise. */
+  bossBonus?: number;
   roundPoints: number;
 }
 
@@ -445,6 +627,11 @@ export interface RoundEndPayload {
   teamStandings: TeamStanding[];
   /** Seconds until the next round starts automatically; 0 when the game ended. */
   nextRoundIn: number;
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  /** True when the team beat the fly, false when she solved. Null outside boss mode. */
+  bossDefeated?: boolean | null;
+  /** How the fly finished, on her own summary. Null outside boss mode. */
+  boss?: BossSummary | null;
 }
 
 export interface GameEndPayload {
@@ -675,6 +862,9 @@ export interface ClientToServerEvents {
   'chat:history': (ack: (r: Ack<ChatHistoryAck>) => void) => void;
   /** Observers only. In the lobby with a free seat it seats them right away. */
   'observer:sit': (payload: ObserverSitPayload, ack?: (r: EmptyAck) => void) => void;
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  /** Opening or closing her brain panel; streaming costs CPU, so it is asked for. */
+  'boss:watch': (payload: { watching: boolean }, ack?: (r: EmptyAck) => void) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -742,6 +932,11 @@ export interface ServerToClientEvents {
   'team:clocks': (payload: TeamRoundState[]) => void;
   'player:left': (payload: PlayerLeftPayload) => void;
   'time:penalty': (payload: PenaltyPayload) => void;
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  /** The fly took a turn: what she chose and how sure she was. */
+  'boss:decision': (payload: BossDecisionState & { playerId: string }) => void;
+  /** Live brain activity, only while somebody in the room is watching. */
+  'boss:frame': (payload: BossFrame) => void;
   'round:end': (payload: RoundEndPayload) => void;
   'game:end': (payload: GameEndPayload) => void;
   'reaction:show': (payload: { playerId: string; emote: Emote }) => void;

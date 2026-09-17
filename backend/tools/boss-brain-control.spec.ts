@@ -11,14 +11,14 @@
  *   random choice  a coin picks among the same eight, no brain at all
  *
  * The comparison that matters is the first against the third. The game's
- * filter (docs/context/06-boss-mode.md) does the deduction on her behalf, and
+ * filter (docs/context/08-boss-mode.md) does the deduction on her behalf, and
  * a fly choosing at random after that filter already solves most rounds. If
  * her brain does not beat the coin on the same candidates, it is decorating a
  * game the filter is winning. The silenced fly is kept because it was the
  * original control and because it shows what "no brain" looks like on the
  * panel: with zero input the readout always says the same thing.
  *
- * Measured history, all in docs/context/07-what-the-fly-can-do.md:
+ * Measured history, all in docs/context/09-what-the-fly-can-do.md:
  *   2026-09-13, filter + policy, 8 attempts: intact 3.55, cut 3.45 attempts,
  *     40/40 both — the brain contributed nothing.
  *   2026-09-13, no filter at all: 0/30 solved, 0/30 rounds differed.

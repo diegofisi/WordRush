@@ -122,12 +122,34 @@ export class Room {
     return this.everyone.some((p) => p.name.toLowerCase() === wanted);
   }
 
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
+  /**
+   * Human seats. The fly does not consume capacity, is never counted towards
+   * the minimum to start, and never keeps an abandoned room alive.
+   */
+  humanPlayers(): Player[] {
+    return this.players.filter((p) => !p.isBot);
+  }
+
+  /** The fly's seat, when the room is in boss mode. */
+  get bot(): Player | undefined {
+    return this.players.find((p) => p.isBot);
+  }
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
+
+  /**
+   * Connected players. Everything that asks "is anybody still here?" means
+   * humans: the minimum to start, and whether a room has been abandoned. The
+   * fly is always marked connected and would otherwise keep a dead room alive.
+   */
   connectedPlayers(): Player[] {
-    return this.players.filter((p) => p.connected);
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `&& !p.isBot`.
+    return this.players.filter((p) => p.connected && !p.isBot);
   }
 
   isFull(): boolean {
-    return this.players.length >= this.settings.capacity;
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `humanPlayers()` was `players`.
+    return this.humanPlayers().length >= this.settings.capacity;
   }
 
   hasObserverRoom(): boolean {
@@ -136,14 +158,16 @@ export class Room {
 
   /** No seated player left: observers alone cannot keep a room alive. */
   isEmpty(): boolean {
-    return this.players.length === 0;
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `humanPlayers()` was `players`.
+    return this.humanPlayers().length === 0;
   }
 
   addPlayer(player: Player): void {
     // Whoever takes the first seat of a host-less room hosts it.
-    if (!this.host) player.isHost = true;
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `&& !player.isBot` — the fly never hosts or joins a team.
+    if (!this.host && !player.isBot) player.isHost = true;
     this.players.push(player);
-    if (this.settings.mode === 'teams') this.autoAssign(player);
+    if (this.settings.mode === 'teams' && !player.isBot) this.autoAssign(player);
   }
 
   addObserver(observer: Player): void {
@@ -226,10 +250,11 @@ export class Room {
     const index = this.players.findIndex((p) => p.id === id);
     if (index === -1) return undefined;
     const [removed] = this.players.splice(index, 1);
-    if (removed.isHost && this.players.length > 0) {
-      const byAge = [...this.players].sort((a, b) => a.joinedAt - b.joinedAt);
+    if (removed.isHost) {
+      // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `humanPlayers()` was `players` — the fly never inherits.
+      const byAge = this.humanPlayers().sort((a, b) => a.joinedAt - b.joinedAt);
       const heir = byAge.find((p) => p.connected) ?? byAge[0];
-      heir.isHost = true;
+      if (heir) heir.isHost = true;
     }
     return removed;
   }
@@ -284,7 +309,10 @@ export class Room {
    * that emptied it, so the last-activity fallback is only a safety net.
    */
   lastDisconnectionAt(): number | null {
-    const everyone = this.everyone;
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `.filter(...)`.
+    // The fly is always "connected"; without this she keeps a dead room alive
+    // for ever and the janitor never collects it.
+    const everyone = this.everyone.filter((p) => !p.isBot);
     if (everyone.some((p) => p.connected)) return null;
     if (everyone.length === 0) return this.lastActivityAt;
     return Math.max(...everyone.map((p) => p.disconnectedAt ?? this.createdAt));

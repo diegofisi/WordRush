@@ -167,7 +167,7 @@ best splits the surviving set — deduction again.
 
 ### 9. What shipped, measured against a coin (2026-09-14)
 
-The honest intermediate in `06-boss-mode.md`: the game strikes out the
+The honest intermediate in `08-boss-mode.md`: the game strikes out the
 contradicted words and shows her **8 uniformly random survivors**; her readout
 picks one; she has **4 attempts**. `tools/boss-brain-control.spec.ts` plays each
 round three times on identical candidates — intact brain, every synapse cut,

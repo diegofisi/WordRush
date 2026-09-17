@@ -1,4 +1,4 @@
-import { IsBoolean, IsIn, IsInt, Max, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsOptional, Max, Min } from 'class-validator';
 import {
   GAME_KINDS,
   ROOM_LIMITS,
@@ -37,4 +37,10 @@ export class RoomSettingsDto implements RoomSettings {
 
   @IsBoolean()
   hintEnabled!: boolean;
+
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  /** The room plays against the fly. Optional: absent means no. */
+  @IsOptional()
+  @IsBoolean()
+  bossMode?: boolean;
 }

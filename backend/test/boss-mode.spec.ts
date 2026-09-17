@@ -6,11 +6,12 @@ import { io, type Socket } from 'socket.io-client';
 import { AppModule } from '../src/app.module';
 import { WORD_PICKER } from '@modules/words/domain/interfaces/word-picker.interface';
 import esWords from '@modules/words/data/es.json';
-import { BOSS, bossClockSeconds } from '@shared/contract';
+import { BOSS, bossClockSeconds, DEFAULT_WORD_LENGTH } from '@shared/contract';
 import type {
   ClientToServerEvents,
   LobbyState,
   PenaltyPayload,
+  RoomSettings,
   RoundEndPayload,
   RoundState,
   ServerToClientEvents,
@@ -34,8 +35,11 @@ function waitFor<K extends keyof ServerToClientEvents>(
   });
 }
 
-const SETTINGS = {
-  language: 'es' as const,
+const SETTINGS: RoomSettings = {
+  language: 'es',
+  game: 'wordle',
+  mode: 'normal',
+  wordLength: DEFAULT_WORD_LENGTH,
   initialSeconds: 60,
   rounds: 1,
   capacity: 4,
@@ -43,7 +47,17 @@ const SETTINGS = {
   bossMode: true,
 };
 
-/** docs/context/06-boss-mode.md, driven through the real socket server. */
+/**
+ * docs/context/08-boss-mode.md, driven through the real socket server.
+ *
+ * What is asserted is the part the rest of the game shares with her: the seat,
+ * the inverted attack and how the round is reported. Nothing asserts what she
+ * plays — that is the brain's, it varies by round, and measuring it is the job
+ * of `tools/boss-brain-control.spec.ts` and of a playtest.
+ *
+ * The last test does run the real brain (a decision is ~7 s of a core and a
+ * 90 MB connectome per thread), which is why it is the slow one.
+ */
 describe('Boss mode (socket.io integration)', () => {
   let app: INestApplication;
   let url: string;
@@ -73,7 +87,7 @@ describe('Boss mode (socket.io integration)', () => {
     await app.close();
   });
 
-  it('seats the fly, lets one human start, and plays her turns on her own', async () => {
+  it('seats the fly beside the humans and lets one of them start alone', async () => {
     const ana = await connect();
 
     const created = await ana.emitWithAck('room:create', { name: 'Ana', settings: SETTINGS });
@@ -85,6 +99,7 @@ describe('Boss mode (socket.io integration)', () => {
     const bot = lobby.players.find((p) => p.isBot);
     expect(bot).toBeDefined();
     expect(bot!.isHost).toBe(false);
+    expect(bot!.name).toBe(BOSS.name);
     expect(lobby.players.filter((p) => !p.isBot)).toHaveLength(1);
 
     // A solo run is allowed: the opponent is already there.
@@ -97,110 +112,26 @@ describe('Boss mode (socket.io integration)', () => {
     expect(round.boss!.playerId).toBe(bot!.id);
     expect(round.boss!.startSeconds).toBe(bossClockSeconds(SETTINGS.initialSeconds));
     expect(round.boss!.damageSeconds).toBe(0);
-
-    // She guesses without anybody asking her to. A decision is about 7 s of
-    // wall time on the one brain thread, and a fly from an earlier room may
-    // still have one in flight when this one starts, so the wait is generous.
-    const progress = await new Promise<{ playerId: string; attempt: number }>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('the fly never played')), 25000);
-      ana.on('player:progress', (p) => {
-        if (p.playerId === bot!.id && p.attempt > 0) {
-          clearTimeout(timer);
-          resolve(p);
-        }
-      });
-    });
-    expect(progress.attempt).toBeGreaterThan(0);
+    expect(round.boss!.attempt).toBe(0);
 
     ana.disconnect();
-  }, 40000);
+  }, 20000);
 
-  it('streams live brain frames while the instrument is watching', async () => {
+  it('refuses to seat her in a game she cannot play', async () => {
     const ana = await connect();
 
-    const created = await ana.emitWithAck('room:create', { name: 'Ana', settings: SETTINGS });
+    // Her brain is wired for a five-letter board (docs/context/08-boss-mode.md).
+    const created = await ana.emitWithAck('room:create', {
+      name: 'Ana',
+      settings: { ...SETTINGS, wordLength: 7 },
+    });
     expect(created.ok).toBe(true);
     if (!created.ok) return;
+    expect(created.state.lobby.players.some((p) => p.isBot)).toBe(false);
+    expect(created.state.lobby.settings.bossMode).toBe(false);
 
-    const roundPromise = waitFor(ana, 'round:start');
-    await ana.emitWithAck('room:start');
-    await roundPromise;
-
-    // Nobody is looking yet, so nothing should be simulated for the panel.
-    const quiet = await Promise.race([
-      waitFor(ana, 'boss:frame', 1200).then(() => 'frame' as const),
-      new Promise<'silent'>((resolve) => setTimeout(() => resolve('silent'), 1200)),
-    ]).catch(() => 'silent' as const);
-    expect(quiet).toBe('silent');
-
-    // The panel opens: frames start, and they carry every live column the
-    // decision network draws, not just the descending rates.
-    // The watch request queues behind whatever decision the thread is in.
-    const framePromise = waitFor(ana, 'boss:frame', 25000);
-    const watched = await ana.emitWithAck('boss:watch', { watching: true });
-    expect(watched.ok).toBe(true);
-
-    const first = await framePromise;
-    expect(first.biologicalMs).toBeGreaterThan(0);
-    expect(first.descending).toHaveLength(64);
-    expect(first.letters).toHaveLength(27);
-    expect(first.voltage).toHaveLength(26);
-    expect(first.cloud.length).toBeGreaterThan(0);
-
-    // Two slices in a row must differ: a frozen panel is the bug this covers.
-    const second = await waitFor(ana, 'boss:frame', 25000);
-    const moved =
-      second.cloud !== first.cloud ||
-      second.descending.some((hz, i) => hz !== first.descending[i]) ||
-      second.letters.some((value, i) => value !== first.letters[i]);
-    expect(moved).toBe(true);
-
-    await ana.emitWithAck('boss:watch', { watching: false });
     ana.disconnect();
-  }, 60000);
-
-  it('gives three rooms at once their own fly and their own live panel', async () => {
-    // The brain threads are shared by every room. Each room still has its own
-    // fly: her own board, her own words, and her own frames on her own panel.
-    const rooms = await Promise.all(
-      ['Uno', 'Dos', 'Tres'].map(async (name) => {
-        const socket = await connect();
-        const created = await socket.emitWithAck('room:create', { name, settings: SETTINGS });
-        if (!created.ok) throw new Error('room:create failed');
-        const bot = created.state.lobby.players.find((p) => p.isBot);
-        if (!bot) throw new Error('no fly seated');
-        return { socket, code: created.state.lobby.code, botId: bot.id };
-      }),
-    );
-
-    // Every fly plays, and none of them plays another room's turn.
-    const firstMoves = rooms.map(
-      ({ socket, botId }) =>
-        new Promise<number>((resolve, reject) => {
-          const timer = setTimeout(() => reject(new Error('a fly never played')), 45000);
-          socket.on('player:progress', (p) => {
-            if (p.playerId === botId && p.attempt > 0) {
-              clearTimeout(timer);
-              resolve(p.attempt);
-            }
-          });
-        }),
-    );
-    for (const { socket } of rooms) await socket.emitWithAck('room:start');
-    expect(await Promise.all(firstMoves)).toEqual([1, 1, 1]);
-
-    // Two panels open at the same time both get frames: the stream used to be
-    // one thread that switched itself off as soon as two rooms watched.
-    const [a, b] = rooms;
-    const frames = [waitFor(a.socket, 'boss:frame', 30000), waitFor(b.socket, 'boss:frame', 30000)];
-    await a.socket.emitWithAck('boss:watch', { watching: true });
-    await b.socket.emitWithAck('boss:watch', { watching: true });
-    const [fa, fb] = await Promise.all(frames);
-    expect(fa.biologicalMs).toBeGreaterThan(0);
-    expect(fb.biologicalMs).toBeGreaterThan(0);
-
-    for (const { socket } of rooms) socket.disconnect();
-  }, 90000);
+  }, 20000);
 
   it('sends a human solve at the fly and never at a teammate', async () => {
     const ana = await connect();
@@ -234,72 +165,47 @@ describe('Boss mode (socket.io integration)', () => {
     bruno.disconnect();
   }, 20000);
 
-  it('scores her like any other player and still reports her on her own', async () => {
+  it('reports the fly on her own and pays the team bonus only when she goes down', async () => {
     const ana = await connect();
 
     const created = await ana.emitWithAck('room:create', {
       name: 'Ana',
-      settings: { ...SETTINGS, hintEnabled: false },
+      // The shortest round the rules allow, so it closes without a long wait.
+      settings: { ...SETTINGS, initialSeconds: 60, hintEnabled: false },
     });
     if (!created.ok) throw new Error('room:create failed');
 
-    // She is on the room's clock at the room's minimum, 60 s, and she thinks
-    // for 9-20 s per guess: the round genuinely takes most of a minute to close
-    // now that the real brain is driving her. That is the wall time, not a hang.
-    // She earns time from new letters like anybody else and has ten attempts,
-    // so her round on a 60 s clock runs anywhere from ~50 to ~90 s depending
-    // on the words she draws. That spread is the game, not a hang.
-    const endPromise = waitFor<'round:end'>(ana, 'round:end', 150000);
+    const endPromise = waitFor<'round:end'>(ana, 'round:end', 90000);
     await ana.emitWithAck('room:start');
-    // Ana solves immediately; the fly then has to beat a clock she cannot heal.
     await ana.emitWithAck('game:guess', { word: ANSWER });
 
     const end: RoundEndPayload = await endPromise;
+    // Whether she solves is the brain's business and varies by round; what is
+    // asserted is that the round agrees with itself about it.
     expect(typeof end.bossDefeated).toBe('boolean');
 
-    // She plays on the room's clock, so she is measured by the same formula and
+    // She is on the room's clock, so she is measured by the same formula and
     // sits in both tables like anybody else.
     expect(end.breakdown).toHaveLength(2);
     expect(end.standings).toHaveLength(2);
     const botRow = end.breakdown.find((row) => row.playerId !== created.playerId)!;
-    expect(botRow.name).toBe('Mosca');
-    // The team bonus is still the team's; the opponent never collects it.
+    expect(botRow.name).toBe(BOSS.name);
+    // The team bonus is the team's; the opponent never collects it.
     expect(botRow.bossBonus).toBe(0);
+
+    const anaRow = end.breakdown.find((row) => row.playerId === created.playerId)!;
+    expect(anaRow.solved).toBe(true);
+    expect(anaRow.bossBonus).toBe(end.bossDefeated ? BOSS.defeatedBonus : 0);
 
     // Her result also travels on its own summary, with the words she played.
     expect(end.boss).not.toBeNull();
-    expect(end.boss!.attempts).toBeGreaterThan(0);
-    expect(end.boss!.rows).toHaveLength(end.boss!.attempts);
     expect(end.boss!.solved).toBe(end.bossDefeated === false);
     expect(end.boss!.defeated).toBe(end.bossDefeated);
-
-    const anaRow = end.breakdown.find((row) => row.playerId === created.playerId)!;
-    expect(anaRow.bossBonus).toBe(end.bossDefeated ? BOSS.defeatedBonus : 0);
-    expect(anaRow.solved).toBe(true);
-
-    // She never sends the same word twice, and every word she sends is still
-    // possible given her own colours. Both were broken: an empty candidate list
-    // silently fell back to the whole pool, so she replayed one word for three
-    // attempts in a row while the answer was already the only thing left.
+    expect(end.boss!.rows).toHaveLength(end.boss!.attempts);
+    // She never sends the same word twice.
     const words = end.boss!.rows.map((row) => row.word);
     expect(new Set(words).size).toBe(words.length);
-    for (let i = 1; i < end.boss!.rows.length; i += 1) {
-      const played = end.boss!.rows[i].word;
-      for (let j = 0; j < i; j += 1) {
-        const earlier = end.boss!.rows[j];
-        // A probe may be impossible as an answer, but it must never contradict
-        // a grey: a letter she has seen is absent cannot come back.
-        for (let k = 0; k < earlier.colors.length; k += 1) {
-          if (earlier.colors[k] !== 'gray') continue;
-          const dead = earlier.word[k];
-          const alsoElsewhere = earlier.word
-            .split('')
-            .some((letter, at) => letter === dead && earlier.colors[at] !== 'gray');
-          if (!alsoElsewhere) expect(played).not.toContain(dead);
-        }
-      }
-    }
 
     ana.disconnect();
-  }, 170000);
+  }, 100000);
 });

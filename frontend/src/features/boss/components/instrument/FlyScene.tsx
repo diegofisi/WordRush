@@ -144,7 +144,7 @@ function bandBody(mesh: THREE.Mesh, material: THREE.MeshStandardMaterial): void 
  * `public/models/fly/ATTRIBUTION.md`), shipped unmodified and rigged here.
  * Two things about the animation are not decoration: she presses the keys of
  * the word she is actually sending, and she presses them at the pace of the
- * motor population of the simulation (docs/context/06-boss-mode.md).
+ * motor population of the simulation (docs/context/08-boss-mode.md).
  */
 export const FlyScene = ({ motorHz, typing, onKey }: FlySceneProps) => {
   const holder = useRef<HTMLDivElement>(null);

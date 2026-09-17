@@ -32,6 +32,19 @@ export function scoreRound(
   result: RoundResult,
   initialSeconds: number,
   hintEnabled: boolean,
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — two optional
+  // trailing arguments, both inert outside boss mode.
+  /**
+   * The flat team reward for the round the fly went down; 0 outside boss mode
+   * and 0 for the fly herself. It sits outside the solve floor so it also
+   * rewards a player who lost their own round while the team won it.
+   */
+  bossBonus = 0,
+  /**
+   * The fly is not charged per attempt: her attempts are the only lever her
+   * brain has (docs/context/08-boss-mode.md).
+   */
+  chargeAttempts = true,
 ): RoundBreakdown {
   const base: RoundBreakdown = {
     playerId: result.playerId,
@@ -53,13 +66,15 @@ export function scoreRound(
     uncoveredPoints: 0,
     sendsFailed: 0,
     sendPenalty: 0,
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+    bossBonus,
     roundPoints: 0,
   };
 
   if (!result.solved) {
     base.greenPoints = SCORING.pointsPerGreenUnsolved * result.greens;
     base.yellowPoints = SCORING.pointsPerYellowUnsolved * result.yellows;
-    base.roundPoints = base.greenPoints + base.yellowPoints;
+    base.roundPoints = base.greenPoints + base.yellowPoints + bossBonus;
     return base;
   }
 
@@ -67,7 +82,10 @@ export function scoreRound(
   base.timeLeftPercent = percent;
   base.timePoints = percent;
   base.solveBonus = SCORING.solveBonus;
-  base.attemptPenalty = -SCORING.attemptPenalty * Math.max(0, result.attempt - 1);
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `chargeAttempts`.
+  base.attemptPenalty = chargeAttempts
+    ? -SCORING.attemptPenalty * Math.max(0, result.attempt - 1)
+    : 0;
   const position = result.position ?? 0;
   base.positionBonus =
     position >= 1 && position <= SCORING.positionBonus.length
@@ -77,10 +95,12 @@ export function scoreRound(
 
   // The solve bonus is also the minimum: penalties never eat into it, so a solve
   // (>= 40) always outscores the best possible consolation (36).
-  base.roundPoints = Math.max(
-    SCORING.solveBonus,
-    base.timePoints + base.solveBonus + base.attemptPenalty + base.positionBonus + base.hintBonus,
-  );
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `+ bossBonus`.
+  base.roundPoints =
+    Math.max(
+      SCORING.solveBonus,
+      base.timePoints + base.solveBonus + base.attemptPenalty + base.positionBonus + base.hintBonus,
+    ) + bossBonus;
   return base;
 }
 

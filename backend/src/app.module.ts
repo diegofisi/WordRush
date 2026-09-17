@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+// BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+import { BossModule } from '@modules/boss/boss.module';
 import { ChatModule } from '@modules/chat/chat.module';
 import { GameModule } from '@modules/game/game.module';
 import { GatewayModule } from '@modules/gateway/gateway.module';
@@ -16,6 +18,8 @@ import { SharedModule } from '@shared/shared.module';
     WordsModule,
     RoomsModule,
     GameModule,
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+    BossModule,
     ReactionsModule,
     ChatModule,
     GatewayModule,

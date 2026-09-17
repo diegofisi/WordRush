@@ -10,7 +10,7 @@ interface BossRowsProps {
 /**
  * Every word the fly played, with its colours. Only ever rendered on the round
  * summary: while the round runs nobody sees a letter of hers
- * (docs/context/06-boss-mode.md).
+ * (docs/context/08-boss-mode.md).
  */
 export const BossRows = ({ t, boss }: BossRowsProps) => {
   if (boss.rows.length === 0) return null;

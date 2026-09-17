@@ -7,6 +7,8 @@ import {
   IRoomRepository,
   ROOM_REPOSITORY,
 } from '../../domain/interfaces/room-repository.interface';
+// BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+import { syncBossSeat } from '@modules/boss/domain/services/boss-seat';
 
 /**
  * The host re-writes the room settings from the lobby (docs/context/02-game-rules.md
@@ -27,15 +29,22 @@ export class UpdateRoomSettingsUseCase {
     if (!room || !player) throw new DomainException('not_in_room');
     if (!player.isHost) throw new DomainException('not_host');
     if (room.status !== 'lobby') throw new DomainException('game_in_progress');
-    if (settings.capacity < room.players.length) {
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `humanPlayers()` was `players` — the fly costs no seat.
+    const seated = room.humanPlayers().length;
+    if (settings.capacity < seated) {
       throw new DomainException(
         'invalid_payload',
-        `Capacity cannot be lower than the ${room.players.length} players already in the room`,
+        `Capacity cannot be lower than the ${seated} players already in the room`,
       );
     }
 
+    const now = this.clock.now();
     room.updateSettings(settings);
-    room.touch(this.clock.now());
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+    // A rule change can make her unplayable (teams, the phrase game, 6 or 7
+    // letters): that frees her seat, and turning it back on seats her again.
+    syncBossSeat(room, now);
+    room.touch(now);
     this.bus.publish({ roomCode: room.code, event: 'lobby:update', payload: room.toLobbyState() });
   }
 }

@@ -1,4 +1,6 @@
-import { WORD_LENGTH } from '@shared/contract';
+import { BOSS } from '@shared/contract';
+/** Her board is five slots wide; the readout was trained on one. */
+const WORD_LENGTH = BOSS.wordLength;
 
 /**
  * The trained half of the fly: descending firing rates in, a wanted-letter map
@@ -21,7 +23,7 @@ export const LETTERS = ALPHABET.length;
  * *when* to spend it is a judgement, and a judgement made by a threshold I wrote
  * would be the policy coming back in through the side door. So it is a unit of
  * the readout, fitted like the letters are, and she has to learn to read her own
- * position well enough to ask (docs/context/06-boss-mode.md).
+ * position well enough to ask (docs/context/08-boss-mode.md).
  *
  * Asking is not getting: the room decides whether hints exist at all, and she
  * only has one. Her brain presses the button; the rules answer.
@@ -74,7 +76,7 @@ export class LetterReadout {
    * is in a third of all words. Summed over five letters and maximised across
    * 10,835 of them, the frequency part swamps the board part and the same word
    * wins every time, brain or no brain. Subtracting the baseline leaves only
-   * what she actually read off this board (docs/context/06-boss-mode.md).
+   * what she actually read off this board (docs/context/08-boss-mode.md).
    */
   readonly wanted: Float32Array;
 
@@ -121,7 +123,7 @@ export class LetterReadout {
  * reasonable and was a hand-tuned thumb on the scale — a rule about how to play
  * Wordle, applied on top of what the brain asked for. If she should stop
  * spending letters she already knows, her readout has to learn to stop asking
- * for them (docs/context/06-boss-mode.md, 2026-09-13).
+ * for them (docs/context/08-boss-mode.md, 2026-09-13).
  */
 export function scoreWord(word: string, wanted: Float32Array): number {
   const seen = new Set<string>();

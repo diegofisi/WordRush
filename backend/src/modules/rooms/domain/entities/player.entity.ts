@@ -9,6 +9,9 @@ export interface PlayerProps {
   joinedAt: number;
   /** Defaults to a seated player; observers join a running game. */
   role?: Role;
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  /** The fly's seat: no socket, no capacity slot, never host. */
+  isBot?: boolean;
 }
 
 export class Player {
@@ -17,6 +20,9 @@ export class Player {
   readonly token: string;
   readonly name: string;
   readonly joinedAt: number;
+  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+  /** True only for the fly. docs/context/08-boss-mode.md */
+  readonly isBot: boolean;
   isHost: boolean;
   /** Seated player or observer (docs/context/06-v1.1.md -> Observers). */
   role: Role;
@@ -47,6 +53,8 @@ export class Player {
     this.isHost = props.isHost;
     this.joinedAt = props.joinedAt;
     this.role = props.role ?? 'player';
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+    this.isBot = props.isBot === true;
   }
 
   static create(props: PlayerProps): Player {
@@ -101,6 +109,8 @@ export class Player {
       ready: this.ready,
       connected: this.connected,
       team: this.team,
+      // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+      isBot: this.isBot,
     };
   }
 

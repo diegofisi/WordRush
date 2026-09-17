@@ -32,7 +32,7 @@ const statusOf = (t: Dictionary, boss: BossViewModel) => {
 };
 
 /**
- * The fly's clock as a health bar (docs/context/06-boss-mode.md). Her board is
+ * The fly's clock as a health bar (docs/context/08-boss-mode.md). Her board is
  * colours only, exactly like a rival's: the panel gives tension, not letters.
  */
 export const BossPanel = ({ t, boss, roomCode, compact = false }: BossPanelProps) => {

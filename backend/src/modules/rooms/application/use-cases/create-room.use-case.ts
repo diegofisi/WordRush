@@ -9,6 +9,8 @@ import {
   IRoomRepository,
   ROOM_REPOSITORY,
 } from '../../domain/interfaces/room-repository.interface';
+// BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+import { syncBossSeat } from '@modules/boss/domain/services/boss-seat';
 import { generateRoomCode } from '../../domain/services/room-code.generator';
 import { CreateRoomDto } from '../dtos/create-room.dto';
 
@@ -45,6 +47,8 @@ export class CreateRoomUseCase {
       joinedAt: now,
     });
     room.addPlayer(player);
+    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
+    syncBossSeat(room, now);
     this.rooms.save(room);
     return { room, player };
   }
