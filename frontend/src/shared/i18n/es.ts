@@ -497,7 +497,6 @@ export const es = {
     /** The third, secondary option on the home game picker. */
     homeOption: 'Retar a la mosca (modo antiguo)',
     homeOptionHint: 'Modo antiguo: 5 letras, sin equipos. 1 a 8 humanos contra una mosca.',
-    homeOptionOn: 'Vais a jugar contra la mosca.',
     toggle: 'Jugad contra la mosca',
     toggleHint: 'De 1 a 8 humanos, un solo objetivo',
     on: 'vs la mosca',

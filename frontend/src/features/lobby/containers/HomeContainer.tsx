@@ -112,7 +112,17 @@ export const HomeContainer = ({ game, bossMode }: HomeContainerProps) => {
         values={values}
         nameError={nameError}
         pending={creating}
-        onChange={(patch) => setValues((current) => ({ ...current, ...patch }))}
+        onChange={(patch) =>
+          setValues((current) => {
+            const next = { ...current, ...patch };
+            // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): she only plays the five-letter word
+            // race with no teams, so those three controls snap back while she
+            // is chosen rather than quietly costing the room its opponent.
+            return next.bossMode
+              ? { ...next, game: 'wordle', mode: 'normal', wordLength: DEFAULT_WORD_LENGTH }
+              : next;
+          })
+        }
         onSubmit={() => void handleCreate()}
       />
       <JoinRoomForm

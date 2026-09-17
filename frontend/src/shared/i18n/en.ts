@@ -487,7 +487,6 @@ export const en: Dictionary = {
   boss: {
     homeOption: 'Challenge the fly (legacy mode)',
     homeOptionHint: 'Legacy mode: 5 letters, no teams. 1 to 8 humans against one fly.',
-    homeOptionOn: 'You are playing against the fly.',
     toggle: 'Take on the fly',
     toggleHint: '1 to 8 humans, one target',
     on: 'vs the fly',
