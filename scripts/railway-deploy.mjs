@@ -15,6 +15,8 @@ import path from 'node:path';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '..');
 const targets = process.argv.slice(2).length ? process.argv.slice(2) : ['backend', 'frontend'];
+// DEPLOY_REF=<commit|branch|tag> deploys that revision instead of HEAD (e.g. to roll back).
+const ref = process.env.DEPLOY_REF ?? 'HEAD';
 const fwd = (p) => p.replace(/\\/g, '/');
 // GNU tar (Git for Windows) reads "C:" as a remote host unless told otherwise; bsdtar does not.
 const tarIsGnu = execFileSync('tar', ['--version']).toString().includes('GNU tar');
@@ -35,8 +37,8 @@ for (const service of targets) {
   const tarFile = path.join(work, `${service}.tar`);
   mkdirSync(dir);
 
-  console.log(`\n→ exporting ${service}/ from HEAD to ${fwd(dir)}`);
-  execFileSync('git', ['archive', '--format=tar', '-o', fwd(tarFile), `HEAD:${service}`], { cwd: root, stdio: 'inherit' });
+  console.log(`\n→ exporting ${service}/ from ${ref} to ${fwd(dir)}`);
+  execFileSync('git', ['archive', '--format=tar', '-o', fwd(tarFile), `${ref}:${service}`], { cwd: root, stdio: 'inherit' });
   execFileSync('tar', [...tarLocal, '-xf', fwd(tarFile), '-C', fwd(dir)], { stdio: 'inherit' });
 
   console.log(`→ railway up (${service})`);

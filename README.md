@@ -73,7 +73,7 @@ One Railway project (`WordRush`) with **two services**, deployed by CI/CD.
    and ends every round in progress, so it is not triggered by frontend-only changes.
 
 It can also be run by hand from the Actions tab (**Deploy → Run workflow**, choosing
-`both`, `backend` or `frontend`). It needs one repository secret, `RAILWAY_TOKEN`: a
+`both`, `backend` or `frontend`). It needs one secret, `RAILWAY_TOKEN`, on the GitHub environment `Prod` (the one the deploy jobs use): a
 Railway **project token** for `WordRush` / `production` (Railway → project → Settings →
 Tokens). Rotate it there if it ever leaks; nothing else in the repo holds credentials.
 
