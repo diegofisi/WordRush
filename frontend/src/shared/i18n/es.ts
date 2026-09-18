@@ -176,6 +176,15 @@ export const es = {
     scoringYellows: 'No acertar, por cada letra en amarillo',
     letterTime: 'Tiempo por letras',
     letterTimeNote: 'Cada letra suma tiempo una vez. Cuando alguien acierta, el resto pierde 5 s.',
+    /** The phrase game's version of the card (docs/context/06-v1.1.md -> Guess the phrase). */
+    phraseScoringComplete: 'Completar la frase',
+    phraseScoringWord: 'Por cada palabra escrita',
+    phraseScoringMiss: (sends: number) => `Por cada frase fallada (hasta ${sends} envíos)`,
+    phraseScoringPosition: 'Primeros en completar',
+    phraseScoringUncovered: 'Sin completar, según lo descubierto',
+    phraseScoringUncoveredValue: (max: number) => `hasta +${max}`,
+    phraseLetterTimeNote:
+      'Cada aparición de una letra nueva suma 2 s. Cuando alguien completa la frase, el resto pierde 5 s. Sin pista en este juego.',
     hintOff: 'sin pista',
     shareHint: 'Comparte el enlace o el código para que entren.',
     dragHint: 'Arrastra una tarjeta al otro equipo.',

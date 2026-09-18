@@ -155,16 +155,14 @@ export const LobbyContainer = () => {
           readyCount={lobby.readyCount}
           playerCount={lobby.playerCount}
           // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): boss mode is playable alone.
-          minPlayers={
-            lobby.settings.bossMode === true ? BOSS.minHumans : ROOM_LIMITS.minPlayers
-          }
+          minPlayers={lobby.settings.bossMode === true ? BOSS.minHumans : ROOM_LIMITS.minPlayers}
           starting={starting}
           onToggleReady={() => void toggleReady()}
           onStart={() => void start()}
           onLeave={leave}
         />
       </div>
-      <ScoringCard t={t} />
+      <ScoringCard t={t} game={lobby.settings.game} />
       {lobby.isHost ? (
         <RoomSettingsDialog
           t={t}
