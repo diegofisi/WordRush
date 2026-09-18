@@ -2,6 +2,7 @@ import {
   Fragment,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent,
@@ -10,6 +11,7 @@ import {
 
 import { Card } from '@/shared/components/ui/Card';
 import { ROOM_LIMITS, type ChatChannel } from '@/shared/contract';
+import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
 import type { Dictionary } from '@/shared/i18n';
 import { cn } from '@/shared/lib/cn';
 
@@ -25,8 +27,9 @@ interface ChatPanelProps {
   channels: boolean;
   channel: ChatChannel;
   onChannel: (channel: ChatChannel) => void;
-  /** False while the round keeps me out of "(Todos)"; the composer says why. */
+  /** False while the round keeps me out of "(Todos)": only the sticker is shown. */
   canWrite: boolean;
+  /** Why text is locked; read by screen readers only, never drawn. */
   lockedReason: string | null;
   pending: boolean;
   onSend: (text: string) => void;
@@ -39,6 +42,9 @@ interface ChatPanelProps {
 
 /** Enter sends; the board's window listener must never see it. */
 const keepKeys = (event: KeyboardEvent<HTMLElement>) => event.stopPropagation();
+
+/** How long the composer takes to open; the same number as `--animate-composer-in`. */
+const OPEN_MS = 250;
 
 const Row = ({ t, message }: { t: Dictionary; message: ChatMessageViewModel }) => (
   <li className="flex flex-col gap-1">
@@ -82,6 +88,9 @@ const Row = ({ t, message }: { t: Dictionary; message: ChatMessageViewModel }) =
  * the composer at the bottom with the sticker trigger beside it, and the
  * channel switch only where text has channels. The list is `aria-live` so a
  * screen reader hears what arrives; it auto-scrolls to the newest item.
+ *
+ * While text is locked the composer is the sticker alone, centred; it opens
+ * with a 250 ms move the moment the player may write (2026-09-18).
  */
 export const ChatPanel = ({
   t,
@@ -107,6 +116,55 @@ export const ChatPanel = ({
   // One stream: the room's events, its stickers and the text messages.
   const items = toStream(messages, events);
   useEffect(toEnd, [items.length, toEnd]);
+
+  // While text is locked the composer is the sticker alone, centred: a disabled
+  // field with a cut placeholder read as a broken panel, and the field turning
+  // up is itself the sign that talking is allowed
+  // (docs/context/04-decisions-and-pending.md, 2026-09-18). The opening is
+  // animated only on the lock -> unlock transition; a panel that mounts already
+  // open (lobby, results) draws the full composer with no animation at all.
+  const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  const [opening, setOpening] = useState(false);
+  const stickerRef = useRef<HTMLSpanElement>(null);
+  const stickerLeft = useRef<number | null>(null);
+  const wasLocked = useRef(!canWrite);
+
+  useLayoutEffect(() => {
+    const node = stickerRef.current;
+    const left = node?.getBoundingClientRect().left ?? null;
+    const from = stickerLeft.current;
+    stickerLeft.current = left;
+    const opened = canWrite && wasLocked.current;
+    wasLocked.current = !canWrite;
+    if (!opened) return;
+    setOpening(true);
+    // The sticker travels from where it was (centred) to where it is now
+    // (left), measured rather than guessed so the move is exact whatever the
+    // panel's width. Reduced motion keeps the jump.
+    if (reduceMotion || !node || from === null || left === null) return;
+    const shift = from - left;
+    if (Math.abs(shift) < 1) return;
+    node.style.transition = 'none';
+    node.style.transform = `translateX(${shift}px)`;
+    requestAnimationFrame(() => {
+      node.style.transition = `transform ${OPEN_MS}ms ease-out`;
+      node.style.transform = 'translateX(0px)';
+    });
+    // The lock is the only thing that moves the sticker, so measuring on its
+    // changes alone is enough — and it keeps the transform out of the reading.
+  }, [canWrite, reduceMotion]);
+
+  // One timer ends the opening: the classes come off and the sticker goes back
+  // to having no inline style of its own.
+  useEffect(() => {
+    if (!opening) return;
+    const timer = window.setTimeout(() => {
+      setOpening(false);
+      const node = stickerRef.current;
+      if (node) node.removeAttribute('style');
+    }, OPEN_MS + 60);
+    return () => window.clearTimeout(timer);
+  }, [opening]);
 
   const disabled = !canWrite || pending;
   const submit = () => {
@@ -161,42 +219,62 @@ export const ChatPanel = ({
         </ul>
       )}
       <form
-        className="flex flex-col gap-1 border-t border-line px-3 py-2.5"
+        className={cn(
+          'flex flex-col gap-1 border-t border-line px-3',
+          // Nothing to show on a phone, where the sticker trigger lives under
+          // the keyboard: the locked composer takes no height at all.
+          canWrite || sticker ? 'py-2.5' : 'py-0',
+        )}
         onSubmit={(event) => {
           event.preventDefault();
           submit();
         }}
       >
-        <div className="flex items-center gap-2">
-          {sticker}
-          <input
-            value={draft}
-            maxLength={ROOM_LIMITS.chatMaxLength}
-            disabled={!canWrite}
-            placeholder={
-              canWrite
-                ? channel === 'team'
-                  ? t.chat.placeholderTeam
-                  : t.chat.placeholderAll
-                : (lockedReason ?? t.chat.locked)
-            }
-            aria-label={t.chat.composer}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={keepKeys}
-            onKeyUp={keepKeys}
-            className="h-10 min-w-0 flex-1 rounded-[10px] border-[1.5px] border-line bg-surface px-3 text-[14px] text-ink outline-none transition-colors placeholder:text-faint focus:border-ink disabled:opacity-60"
-          />
-          <button
-            type="submit"
-            disabled={disabled || draft.trim().length === 0}
-            className="h-10 shrink-0 rounded-[10px] bg-ink px-3.5 text-[13px] font-bold text-on-ink transition-opacity disabled:opacity-40"
-          >
-            {t.chat.send}
-          </button>
+        <div className={cn('flex items-center gap-2', !canWrite && 'justify-center')}>
+          <span ref={stickerRef} className="flex shrink-0 items-center">
+            {sticker}
+          </span>
+          {canWrite ? (
+            <>
+              <input
+                value={draft}
+                maxLength={ROOM_LIMITS.chatMaxLength}
+                placeholder={channel === 'team' ? t.chat.placeholderTeam : t.chat.placeholderAll}
+                aria-label={t.chat.composer}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={keepKeys}
+                onKeyUp={keepKeys}
+                className={cn(
+                  'h-10 min-w-0 flex-1 rounded-[10px] border-[1.5px] border-line bg-surface px-3 text-[14px] text-ink outline-none transition-colors placeholder:text-faint focus:border-ink',
+                  opening && 'animate-composer-in',
+                )}
+              />
+              <button
+                type="submit"
+                disabled={disabled || draft.trim().length === 0}
+                className={cn(
+                  'h-10 shrink-0 rounded-[10px] bg-ink px-3.5 text-[13px] font-bold text-on-ink transition-opacity disabled:opacity-40',
+                  opening && 'animate-composer-in',
+                )}
+              >
+                {t.chat.send}
+              </button>
+            </>
+          ) : (
+            // Why the field is not there, for a screen reader only.
+            <span className="sr-only">{lockedReason ?? t.chat.locked}</span>
+          )}
         </div>
-        <span className="text-right font-mono text-[10px] text-ink-3 tabular-nums">
-          {draft.length}/{ROOM_LIMITS.chatMaxLength}
-        </span>
+        {canWrite ? (
+          <span
+            className={cn(
+              'text-right font-mono text-[10px] text-ink-3 tabular-nums',
+              opening && 'animate-composer-in',
+            )}
+          >
+            {draft.length}/{ROOM_LIMITS.chatMaxLength}
+          </span>
+        ) : null}
       </form>
     </>
   );

@@ -112,7 +112,7 @@ export const GameDesktop = (props: GameViewProps) => {
             finished={props.outcome !== 'playing'}
             hint={props.hint}
             colorLabels={props.tileLabels}
-            size={phrase ? 'sm' : 'lg'}
+            size="lg"
           />
           {props.outcome === 'playing' ? (
             <Keyboard

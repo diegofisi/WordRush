@@ -45,6 +45,7 @@ light/dark theme button with correct contrast in both modes. They were not on th
 - Teams: slots in the lobby are clickable to switch team; the game view shows teammates'
   boards with letters, rivals' with colours; one clock per team; a rounds-won counter.
 - Chat panel (text + stickers) with "(Equipo)" / "(Todos)" labels and an observer label.
+  While text is locked the composer is the sticker button alone, centred (2026-09-18).
 - Observers have their own area; a QR for the room code; connected count in the lobby.
 - 7-letter words need a mobile layout pass (tiles and keyboard at ~400 px).
 - Results show every board with the word, who solved and the chat of the round.
@@ -63,9 +64,14 @@ tiles, 44 px keys, 16 px cards). What the mockup settled:
   slots.
 - Centre: the phrase card (words as dashed slots, found letters green), a 6-row board of
   the room's word length, the keyboard with a purple **FRASE** key at the end of the last
-  row. Phrase, board and keyboard always fit on one screen and never scroll.
+  row. Phrase, board and keyboard always fit on one screen and never scroll. The 52 px of
+  the mockup is a middle value, not a fixed size: since 2026-09-18 the own board takes the
+  tile from the free space it is given, between 34 and 73 px on the desktop and 30 and
+  44 px on the phone (`docs/context/04-decisions-and-pending.md`, 2026-09-18). Rival,
+  teammate and results boards keep their fixed sizes.
 - Right column: the chat (one design in both modes: "Escribe un mensaje…", sticker button,
-  purple send; disabled when text is not allowed) and the Wordle-style score card ("Si
+  purple send; while text is not allowed only the sticker button is drawn, centred, and the
+  composer opens with a 250 ms move when it is) and the Wordle-style score card ("Si
   completas ahora" → rows → big total; "Tu ronda" once over).
 - The modal: "Completa la frase. Recuerda: cada intento te resta 5 puntos. Te quedan N
   intentos." — known letters fixed, missed letters in red, footer "N % de la frase

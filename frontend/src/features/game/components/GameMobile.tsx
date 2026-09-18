@@ -100,9 +100,7 @@ export const GameMobile = (props: GameViewProps) => {
       ) : null}
 
       {/* BOSS-MODE (temporary; see docs/context/07-boss-removal.md) */}
-      {props.boss ? (
-        <BossPanel t={t} boss={props.boss} roomCode={props.roomCode} compact />
-      ) : null}
+      {props.boss ? <BossPanel t={t} boss={props.boss} roomCode={props.roomCode} compact /> : null}
 
       {props.team ? (
         <TeamStrip
@@ -131,25 +129,27 @@ export const GameMobile = (props: GameViewProps) => {
         </ul>
       ) : null}
 
-      <div className="flex justify-center">
-        {props.observer ? (
+      {props.observer ? (
+        <div className="flex justify-center">
           <ObserverCard t={t} observer={props.observer} />
-        ) : (
-          <Board
-            wordLength={props.round.wordLength}
-            maxAttempts={props.round.maxAttempts}
-            rows={props.rows}
-            draft={props.draft}
-            revealRow={props.revealRow}
-            shakeKey={props.shakeKey}
-            notice={props.guessNotice}
-            finished={props.outcome !== 'playing'}
-            hint={props.hint}
-            colorLabels={props.tileLabels}
-            size="sm"
-          />
-        )}
-      </div>
+        </div>
+      ) : (
+        // The board takes the free height itself (it is its own size container,
+        // see `Board.tsx`), so it is a child of the column, not of a row.
+        <Board
+          wordLength={props.round.wordLength}
+          maxAttempts={props.round.maxAttempts}
+          rows={props.rows}
+          draft={props.draft}
+          revealRow={props.revealRow}
+          shakeKey={props.shakeKey}
+          notice={props.guessNotice}
+          finished={props.outcome !== 'playing'}
+          hint={props.hint}
+          colorLabels={props.tileLabels}
+          size="sm"
+        />
+      )}
 
       <div className="relative mt-auto flex flex-col gap-2.5">
         <StickerOverlay t={t} sticker={props.sticker} />
