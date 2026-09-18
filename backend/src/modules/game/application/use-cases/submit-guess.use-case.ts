@@ -114,7 +114,8 @@ export class SubmitGuessUseCase {
   /**
    * Phrase game (docs/context/06-v1.1.md -> Guess the phrase): every letter of
    * the word that is anywhere in the phrase turns green and reveals all its
-   * occurrences, 2 s each; the rest is grey. Six words a round, and running
+   * occurrences, 2 s each; the rest is grey. `PHRASE_RULES.words` a round,
+   * and running
    * out of them ends nothing — only the phrase, the sends or the clock do.
    */
   private typePhraseWord(room: Room, player: Player, word: string, now: number): GuessAck {

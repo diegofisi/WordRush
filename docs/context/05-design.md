@@ -36,6 +36,11 @@ light/dark theme button with correct contrast in both modes. They were not on th
 
 ## v1.1 (2026-09-15)
 - The hint button becomes impossible to miss: large, pulsing until spent, hints left on it.
+  **Revised 2026-09-17:** the pulse, the glow and the count are gone — a plain yellow pill
+  reading "Pista" / "Hint", muted and disabled once spent; the count moved to the tooltip.
+- **Toasts come up from the bottom (2026-09-17):** bottom right from 640 px (a 360 px
+  column, 20 px in), bottom centre on the phone above the keyboard, sliding up as they
+  appear. They used to drop from the top right.
 - The language of the words (Español / English) sits in the game header as well as the lobby.
 - Teams: slots in the lobby are clickable to switch team; the game view shows teammates'
   boards with letters, rivals' with colours; one clock per team; a rounds-won counter.

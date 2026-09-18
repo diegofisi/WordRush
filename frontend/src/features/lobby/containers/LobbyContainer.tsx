@@ -6,6 +6,7 @@ import { PageLoading } from '@/shared/components/ui/PageState';
 // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `BOSS`.
 import { BOSS, ROOM_LIMITS, type RoomSettings } from '@/shared/contract';
 import { useT } from '@/shared/i18n';
+import { playSound } from '@/shared/lib/sound';
 import { inviteLinkFor, PATHS, pathForStatus } from '@/shared/routes/paths';
 import { toast } from '@/shared/stores/useToastStore';
 
@@ -78,6 +79,7 @@ export const LobbyContainer = () => {
     }
     // The chips redraw from the server's `lobby:update`, never from these values.
     setRulesOpen(false);
+    playSound('settingsSaved');
     toast.success(t.lobby.rulesSaved);
   };
 

@@ -31,7 +31,9 @@ collects the team bonus.
 4. During the round her clock is a health bar in the side panel (phone: a compact row),
    with a link that opens **her brain** on `/brain/:code` in a second tab.
 5. The round summary says whether the team beat her, lists the words she played, and shows
-   the +25 on every human's row.
+   the +25 on every human's row. Since 2026-09-17 it also carries **"Los tableros de la
+   ronda"** — a card that now exists only here, and only for her board: normal rooms lost
+   it (docs/context/04-decisions-and-pending.md, 2026-09-17).
 
 ## 3. What it needs to run
 
@@ -83,6 +85,7 @@ backend/tools/boss-control.worker.js
 backend/tools/train-boss-readout.spec.ts
 backend/tools/train-collect.worker.js
 frontend/src/features/boss/
+frontend/src/features/results/components/RoundBoards.tsx
 frontend/public/models/fly/
 scripts/build-boss-cloud.mjs
 docs/context/07-boss-removal.md   (this file)
@@ -157,11 +160,15 @@ docs/context/09-what-the-fly-can-do.md
 29. `src/features/game/components/GameDesktop.tsx` / `GameMobile.tsx` — the import and
     the `<BossPanel …>`.
 30. `src/features/results/models/results.model.ts` — `BossSummary`, the three fields and
-    the three mappings.
+    the three mappings, plus the whole `BoardViewModel` block (2026-09-17: the boards
+    card is hers alone, so the type went with her).
 31. `src/features/results/components/RoundHeader.tsx` — the banner and the two notes.
-32. `src/features/results/containers/ResultsContainer.tsx` — the import and `<BossRows>`.
+32. `src/features/results/containers/ResultsContainer.tsx` — the marked import block
+    (`BossRows` **and** `RoundBoards`), `<BossRows>`, the `<RoundBoards>` block and the
+    `boardWidth` selector that only feeds it.
 33. `src/shared/i18n/es.ts` and `en.ts` — the single `boss: { … }` group between the
-    banners, and `BossAction` from the Spanish import.
+    banners, `BossAction` from the Spanish import, and the three `results` keys that only
+    `RoundBoards` used: `boards`, `boardSolved`, `boardAttempts`.
 34. `src/vite-env.d.ts` and `.env.example` — `VITE_BOSS_ENABLED`.
 35. `package.json` — `three` and `@types/three`; then `pnpm install`.
 

@@ -35,7 +35,12 @@ export interface TeamStandingViewModel extends TeamStanding {
   barPercent: number;
 }
 
-/** A player's board at round end, letters included (the word is public). */
+// BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
+/**
+ * A board at round end, letters included (the word is public). Only the fly
+ * has one on this screen since 2026-09-17: the humans' boards were a wall of
+ * grids nobody read, and the card was only ever interesting for her.
+ */
 export interface BoardViewModel {
   playerId: string;
   name: string;
@@ -45,6 +50,7 @@ export interface BoardViewModel {
   /** Team mode: the team's colour. */
   color: TeamColor | null;
 }
+// BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
 
 export interface RoundResultsViewModel {
   mode: GameMode;
@@ -55,8 +61,6 @@ export interface RoundResultsViewModel {
   totalRounds: number;
   word: string;
   wordLength: number;
-  /** Solved boards first, then by fewest rows. */
-  boards: BoardViewModel[];
   rows: BreakdownRowViewModel[];
   standings: StandingViewModel[];
   /** Team mode: both teams' round cards, mine first; empty otherwise. */
@@ -137,19 +141,6 @@ export const toRoundResultsViewModel = (
   const myTeamRow = teamRows.find((team) => team.isMine) ?? null;
   const myTeamStanding = teamStandings.find((team) => team.isMine) ?? null;
   const teamMode = payload.mode === 'teams';
-  const boards = [...(payload.boards ?? [])]
-    .map((board) => ({
-      playerId: board.playerId,
-      name: board.name,
-      rows: board.rows,
-      solved: board.solved,
-      isMe: board.playerId === myId,
-      color: payload.teams.find((team) => team.team === board.team)?.color ?? null,
-    }))
-    .sort((first, second) => {
-      if (first.solved !== second.solved) return first.solved ? -1 : 1;
-      return first.rows.length - second.rows.length;
-    });
   return {
     mode: payload.mode,
     game: payload.game,
@@ -158,7 +149,6 @@ export const toRoundResultsViewModel = (
     totalRounds: payload.totalRounds,
     word: payload.word.toUpperCase(),
     wordLength: payload.word.length,
-    boards,
     rows,
     standings,
     teamRows,

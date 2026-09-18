@@ -9,7 +9,7 @@
  * the single place they are encoded.
  */
 
-export const CONTRACT_VERSION = 16;
+export const CONTRACT_VERSION = 17;
 
 export type Language = 'es' | 'en';
 /** docs/context/06-v1.1.md -> Guess the phrase: the second game on the same rooms. */
@@ -295,8 +295,12 @@ export const SCORING = {
 
 /** docs/context/06-v1.1.md -> Guess the phrase. */
 export const PHRASE_RULES = {
-  /** Words a player may type per round; running out does not end the round. */
-  words: 6,
+  /**
+   * Words a player may type per round; running out does not end the round.
+   * Four since 2026-09-17 (it was six): the round was long enough that the
+   * phrase was usually open by the third word and the last two were filler.
+   */
+  words: 4,
   /** Phrase sends per round (per team in team mode); spending them all ends it. */
   sends: 5,
   sendPenalty: 5,
@@ -690,6 +694,12 @@ export type ErrorCode =
 export interface ErrorPayload {
   code: ErrorCode;
   message: string;
+  /**
+   * Seconds left of the wait this refusal is about, when there is one: today
+   * only `kicked`, so the join view can count the rejoin block down instead of
+   * repeating a fixed "30 seconds" on every retry.
+   */
+  retryAfterSeconds?: number;
 }
 
 export type Ack<T> = ({ ok: true } & T) | ({ ok: false } & ErrorPayload);

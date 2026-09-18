@@ -269,10 +269,6 @@
     --tile-bd: var(--green);
     border-style: dashed;
   }
-  .hint-pulse {
-    animation: hint-pulse 1.6s ease-out infinite;
-  }
-
   .key {
     display: flex;
     align-items: center;
@@ -338,16 +334,6 @@
   }
   .mini-gray {
     background: var(--mini-gray);
-  }
-}
-
-@keyframes hint-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(229, 181, 55, 0.55);
-  }
-  60% {
-    box-shadow: 0 0 0 10px rgba(229, 181, 55, 0);
   }
 }
 
@@ -447,10 +433,12 @@
   }
 }
 
+/* A toast comes up from the bottom of the screen, where the whole stack now
+   lives (phone: bottom centre; from 640 px: bottom right). */
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;

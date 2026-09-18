@@ -9,6 +9,7 @@ import {
   type StoredSession,
 } from '@/core/session/models/session.model';
 import type { ErrorPayload, FullState, SessionAck } from '@/shared/contract';
+import { kickCooldown } from '@/shared/stores/useKickCooldown';
 import { toast } from '@/shared/stores/useToastStore';
 
 /**
@@ -109,10 +110,13 @@ export const useSessionStore = create<SessionState & SessionActions>((set, get) 
     });
     socket.on('disconnect', () => set({ connection: 'disconnected' }));
     socket.on('session:replaced', () => set({ replaced: true }));
-    // Thrown out by the host: the seat is gone, the guarded routes send me home.
-    socket.on('room:kicked', () => {
+    // Thrown out by the host: the seat is gone and the guarded routes drop me
+    // on the join view of that room, where the countdown notice — not a toast —
+    // says what happened and how long the door stays shut.
+    socket.on('room:kicked', (payload) => {
+      const name = get().session?.name ?? '';
       get().clearSession();
-      toast.error('kicked');
+      kickCooldown.start(payload.roomCode, name, payload.rejoinAfterSeconds);
     });
     // Nobody seated is left: the room is gone, and so is my place in it.
     socket.on('room:closed', () => {

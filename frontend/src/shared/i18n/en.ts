@@ -77,7 +77,7 @@ export const en: Dictionary = {
     phraseHeroWords: ['QUOTE', 'WORDS', 'FOUND', 'PIECE', 'SPEAK'],
     phraseHeadline: 'Uncover the phrase.\nLetter by letter.',
     phraseLede:
-      'A hidden phrase for up to 8 people, in Spanish or English. Nothing is given: every letter comes from the words you type. Six words, five sends and the clock running.',
+      'A hidden phrase for up to 8 people, in Spanish or English. Nothing is given: every letter comes from the words you type. Four words, five sends and the clock running.',
     phraseFeature1Title: 'Green if it is in the phrase',
     phraseFeature1Body:
       'Every letter of your word that is in the phrase uncovers all of it: +2 s per occurrence. Grey if it is not.',
@@ -97,7 +97,7 @@ export const en: Dictionary = {
     gameWordle: 'Word',
     gamePhrase: 'Guess the phrase',
     gamePhraseHint:
-      'No hint: every green already reveals a letter. Six words and five sends a round.',
+      'No hint: every green already reveals a letter. Four words and five sends a round.',
     initialTime: 'Initial time per round',
     minimumTime: (n) => `minimum ${n} s`,
     rounds: 'Rounds',
@@ -113,6 +113,8 @@ export const en: Dictionary = {
     joining: 'Joining…',
     nameRequired: 'Type your name to continue.',
     codeRequired: 'Type the room code.',
+    kickedWait: (n) =>
+      `The host removed you from the room. You can come back in ${n} ${n === 1 ? 'second' : 'seconds'}.`,
     inviteTitle: 'You have been invited to play',
     inviteSubtitle: 'Type your name and join. No account, no downloads.',
     inviteCodeLabel: 'Room code',
@@ -518,8 +520,7 @@ export const en: Dictionary = {
     network: 'Decision network',
     networkNote:
       'The trained readout, drawn with its own weights. The real descending rates go in, 27 letters come out. The brightest is the one she wants most.',
-    params: (params, samples) =>
-      `${params} parameters, fitted on ${samples} connectome samples`,
+    params: (params, samples) => `${params} parameters, fitted on ${samples} connectome samples`,
     excites: 'excites',
     inhibits: 'inhibits',
     flyNote: (hz) =>

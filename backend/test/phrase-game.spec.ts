@@ -162,4 +162,49 @@ describe('Guess the phrase (socket.io integration)', () => {
       roundPoints: 0,
     });
   });
+
+  /** 2026-09-17: four words a round, not six. The number lives in the contract. */
+  it('gives each player exactly PHRASE_RULES.words words, and refuses one more', async () => {
+    const ana = await connect();
+    const bruno = await connect();
+    const created = await ana.emitWithAck('room:create', {
+      name: 'Ana',
+      settings: {
+        language: 'es',
+        game: 'phrase',
+        mode: 'normal',
+        wordLength: 5,
+        initialSeconds: 60,
+        rounds: 1,
+        capacity: 2,
+        hintEnabled: true,
+      },
+    });
+    if (!created.ok) throw new Error(created.message);
+    const joined = await bruno.emitWithAck('room:join', {
+      roomCode: created.roomCode,
+      name: 'Bruno',
+    });
+    if (!joined.ok) throw new Error(joined.message);
+
+    const anaRound = waitFor(ana, 'round:start');
+    await ana.emitWithAck('room:start');
+    // The board is drawn from this: four rows, not six.
+    expect((await anaRound).maxAttempts).toBe(PHRASE_RULES.words);
+
+    for (let i = 0; i < PHRASE_RULES.words; i++) {
+      const typed = await ana.emitWithAck('game:guess', { word: 'canto' });
+      if (!typed.ok) throw new Error(typed.message);
+      expect(typed.attempt).toBe(i + 1);
+      // Running out of words ends nothing: the phrase, the sends or the clock do.
+      expect(typed.finished).toBe(false);
+    }
+    expect(await ana.emitWithAck('game:guess', { word: 'canto' })).toMatchObject({
+      ok: false,
+      code: 'already_finished',
+    });
+    // Her sends are untouched by it.
+    const send = await ana.emitWithAck('game:phrase', { text: 'mas vale tarde que nunca' });
+    expect(send).toMatchObject({ ok: true, correct: true });
+  });
 });

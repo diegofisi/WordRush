@@ -134,14 +134,6 @@ type FeedInput = DistributiveOmit<FeedEvent, 'id' | 'atSeconds' | 'at' | 'name' 
 
 const emptyAnnounced = (): Announced => ({ greens: [], lowTime: [], finished: [] });
 
-/** Phrase game: a letter that came back grey is not in the phrase. */
-const isRuledOut = (rows: OwnRow[], letter: string): boolean => {
-  const wanted = letter.toLowerCase();
-  return rows.some((row) =>
-    [...row.word].some((ch, index) => ch === wanted && row.colors[index] === 'gray'),
-  );
-};
-
 const roundInfoOf = (round: RoundState): RoundInfo => ({
   round: round.round,
   totalRounds: round.totalRounds,
@@ -617,8 +609,6 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
       // Every row used: nothing more to type (the phrase game ends by sends or clock).
       if (me.rows.length >= round.maxAttempts) return;
       if (draft.length >= round.wordLength) return;
-      // Phrase game: a letter already ruled out is refused, its key is disabled.
-      if (round.game === 'phrase' && isRuledOut(me.rows, letter)) return;
       playSound('keyTap');
       set({ draft: draft + letter.toUpperCase() });
     },

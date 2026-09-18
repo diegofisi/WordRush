@@ -16,8 +16,11 @@ interface HintButtonProps {
 }
 
 /**
- * The hint, impossible to miss (docs/context/06-v1.1.md): a tall yellow pill
- * that pulses until it is spent, with the hints left on it.
+ * The hint in the top bar (docs/context/06-v1.1.md): a yellow pill with the
+ * bulb and one word. No glow, no ring and no pulse since 2026-09-17 — its
+ * state is the whole message: live and yellow while there is a hint to spend,
+ * muted and disabled once it is used or the room plays without it. The detail
+ * ("1 disponible", "usada") stays in the tooltip and the accessible name.
  */
 export const HintButton = ({
   t,
@@ -36,20 +39,25 @@ export const HintButton = ({
         ? t.game.hintUsed
         : t.game.hintOff;
 
+  const label = team && !compact ? t.game.teamHint : t.common.hint;
+
   return (
     <button
       type="button"
       disabled={inactive}
       aria-busy={pending || undefined}
       onClick={onClick}
+      title={`${label} · ${caption}`}
+      aria-label={`${label} · ${caption}`}
       className={cn(
-        'flex h-12 items-center gap-2.5 rounded-full border-2 border-yellow bg-yellow-soft px-4 text-[15px] font-bold text-yellow-deep transition-opacity disabled:cursor-not-allowed disabled:opacity-60 sm:h-11 sm:px-5',
-        !inactive && 'hint-pulse',
+        'flex h-12 items-center gap-2.5 rounded-full border-2 px-4 text-[15px] font-bold transition-colors disabled:cursor-not-allowed sm:h-11 sm:px-5',
+        inactive
+          ? 'border-line bg-surface-2 text-ink-3'
+          : 'border-yellow bg-yellow-soft text-yellow-deep',
       )}
     >
       <HintIcon size={20} />
-      <span>{team && !compact ? t.game.teamHint : t.common.hint}</span>
-      {!compact ? <span className="font-medium text-yellow-mid">{caption}</span> : null}
+      <span>{label}</span>
     </button>
   );
 };

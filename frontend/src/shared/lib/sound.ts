@@ -11,6 +11,16 @@ import { useUiStore } from '@/shared/stores/useUiStore';
  * 250 ms. Everything is behind the mute toggle and the volume slider in
  * `useUiStore`; the keyboard tick has its own toggle and is off by default.
  *
+ * The cues, in the order of the table in `docs/context/06-v1.1.md -> Sound`:
+ * `roomCreated`, `playerJoined`, `playerLeft`, `gameStarted`, `tileReveal`,
+ * `keyTap`, `invalidWord`, `letterFound`, `letterPlaced`, `solved`,
+ * `rivalSolved`, `penalty`, `timeWarning`, `roundEnded`, `gameWon`,
+ * `gameLost`, `sticker`, `chatMessage`, `hintUsed`, and the two room-form
+ * cues of 2026-09-17: `optionSelect` (any option changed in the create-room
+ * form or the rules dialog: ~40 ms, quieter than everything else) and
+ * `settingsSaved` (the rules dialog saved). Those two are room furniture, not
+ * typing, so they answer to mute and volume but never to the keyboard toggle.
+ *
  * Browsers only let audio start after a user gesture. The context is created
  * lazily on the first cue and, if the browser keeps it suspended, resumed on
  * the next pointer or key event — a cue that fires before that is simply lost,
@@ -35,7 +45,9 @@ export type SoundCue =
   | 'gameLost'
   | 'sticker'
   | 'chatMessage'
-  | 'hintUsed';
+  | 'hintUsed'
+  | 'optionSelect'
+  | 'settingsSaved';
 
 interface Note {
   /** Hz at the start of the note. */
@@ -179,6 +191,17 @@ const CUES: Record<SoundCue, Cue> = {
       { frequency: 1046.5, at: 0.07, duration: 0.14, gain: 0.7 },
     ],
     group: 'hint',
+  },
+  // Picking an option in a room form: the softest cue of the set, one short
+  // click. A host walking down the settings hears a rhythm, not a fanfare.
+  optionSelect: { notes: [{ frequency: 987.77, at: 0, duration: 0.04, gain: 0.2 }] },
+  // The rules were saved: two quick soft notes, up.
+  settingsSaved: {
+    notes: [
+      { frequency: 659.25, at: 0, duration: 0.07, gain: 0.5 },
+      { frequency: 987.77, at: 0.07, duration: 0.12, gain: 0.5 },
+    ],
+    group: 'settings',
   },
 };
 

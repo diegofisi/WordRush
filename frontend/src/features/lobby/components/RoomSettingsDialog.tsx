@@ -16,6 +16,7 @@ import {
 } from '@/shared/contract';
 import { useFocusTrap } from '@/shared/hooks/useFocusTrap';
 import type { Dictionary } from '@/shared/i18n';
+import { playSound } from '@/shared/lib/sound';
 
 interface RoomSettingsDialogProps {
   t: Dictionary;
@@ -64,7 +65,12 @@ export const RoomSettingsDialog = ({
   if (!open) return null;
 
   const minCapacity = Math.max(ROOM_LIMITS.minPlayers, playerCount);
-  const patch = (next: Partial<RoomSettings>) => setValues((current) => ({ ...current, ...next }));
+  // The dialog owns these values, so it is the one that answers for them: one
+  // soft click per option changed (docs/context/06-v1.1.md -> Sound).
+  const patch = (next: Partial<RoomSettings>) => {
+    playSound('optionSelect');
+    setValues((current) => ({ ...current, ...next }));
+  };
 
   return (
     <div

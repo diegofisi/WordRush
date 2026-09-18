@@ -178,7 +178,7 @@ export function toRoundState(room: Room, player: Player, now: number): RoundStat
     game: room.settings.game,
     phraseWords: room.phrase ? phraseShape(room.phrase) : null,
     wordLength: room.settings.wordLength,
-    // Phrase game: six words a round, whatever the length.
+    // Phrase game: `PHRASE_RULES.words` a round, whatever the length.
     maxAttempts:
       room.settings.game === 'phrase' ? PHRASE_RULES.words : attemptsFor(room.settings.wordLength),
     initialSeconds: room.settings.initialSeconds,

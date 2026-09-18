@@ -120,12 +120,15 @@ describe('Room management (socket.io integration)', () => {
         token: joinedC.token,
       }),
     ).toMatchObject({ ok: false, code: 'session_expired' });
-    expect(
-      await carla.emitWithAck('room:join', { roomCode: created.roomCode, name: 'carla' }),
-    ).toMatchObject({
-      ok: false,
-      code: 'kicked',
+    // The refusal carries what is left of the block, for the countdown notice.
+    const refused = await carla.emitWithAck('room:join', {
+      roomCode: created.roomCode,
+      name: 'carla',
     });
+    expect(refused).toMatchObject({ ok: false, code: 'kicked' });
+    if (refused.ok) throw new Error('the kicked name should not be let back in');
+    expect(refused.retryAfterSeconds).toBeGreaterThan(0);
+    expect(refused.retryAfterSeconds).toBeLessThanOrEqual(ROOM_LIMITS.kickRejoinSeconds);
     // Another name walks straight in.
     const back = await carla.emitWithAck('room:join', {
       roomCode: created.roomCode,

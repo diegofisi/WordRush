@@ -28,7 +28,7 @@ export const GameDesktop = (props: GameViewProps) => {
   const { t } = props;
   const phrase = props.phrase;
   const phraseGame = props.round.game === 'phrase';
-  // Phrase game: six words and no more; the FRASE key stays live.
+  // Phrase game: `PHRASE_RULES.words` and no more; the FRASE key stays live.
   const rowsUsed = phraseGame && props.rows.length >= props.round.maxAttempts;
   // `grid-rows-[minmax(0,1fr)]`: an auto row would grow past the grid's own
   // height (tall sticker messages in the feed) and push the whole page down;
@@ -125,7 +125,6 @@ export const GameDesktop = (props: GameViewProps) => {
               onLetter={props.onLetter}
               onEnter={props.onEnter}
               onBackspace={props.onBackspace}
-              disableGray={phraseGame}
               phraseKey={
                 phrase
                   ? { label: t.game.phraseKey, disabled: phrase.locked, onClick: phrase.onOpen }

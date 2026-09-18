@@ -63,9 +63,10 @@ const ToastRow = ({
 };
 
 /**
- * Mount once in the app shell. Toasts never sit over the middle of the screen,
- * which on the game board is the clock: from 640 px up they stack in a narrow
- * top-right column under the top bar, and on phones at the bottom, above
+ * Mount once in the app shell. Toasts rise from the bottom of the screen and
+ * never sit over the middle of it, which on the game board is the clock: from
+ * 640 px up they stack in a narrow bottom-right column (the desktop keyboard is
+ * centred, so that corner is free), and on phones at the bottom centre, above
  * whatever the screen puts there (`--toast-bottom`, see `useToastSafeBottom`).
  *
  * The countdown lives here rather than in the store because only the view knows
@@ -88,8 +89,9 @@ export const Toaster = () => {
       // Phones: `fixed`, so the shell's padding does not reach it and the
       // insets are added here — to the bottom on top of whatever furniture
       // `--toast-bottom` is already clearing, and to the sides for a landscape
-      // notch. From `sm:` up the desktop corner takes over and insets are 0.
-      className="pointer-events-none fixed right-[calc(var(--spacing)*4+var(--safe-right))] bottom-[calc(var(--toast-bottom)+var(--safe-bottom))] left-[calc(var(--spacing)*4+var(--safe-left))] z-50 flex flex-col items-center gap-2 sm:inset-x-auto sm:top-20 sm:right-5 sm:bottom-auto sm:w-90 sm:max-w-[calc(100vw-2.5rem)] sm:items-end"
+      // notch. From `sm:` up the desktop corner takes over: bottom right, a
+      // 360 px column, plain insets of 20 px.
+      className="pointer-events-none fixed right-[calc(var(--spacing)*4+var(--safe-right))] bottom-[calc(var(--toast-bottom)+var(--safe-bottom))] left-[calc(var(--spacing)*4+var(--safe-left))] z-50 flex flex-col items-center gap-2 sm:inset-x-auto sm:top-auto sm:right-5 sm:bottom-5 sm:w-90 sm:max-w-[calc(100vw-2.5rem)] sm:items-end"
     >
       {items.map((item) => (
         <ToastRow

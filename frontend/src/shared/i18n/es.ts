@@ -1,12 +1,5 @@
 // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `BossAction`.
-import type {
-  BossAction,
-  Emote,
-  ErrorCode,
-  Language,
-  TeamColor,
-  TeamId,
-} from '@/shared/contract';
+import type { BossAction, Emote, ErrorCode, Language, TeamColor, TeamId } from '@/shared/contract';
 
 /** Spanish is the source dictionary: its shape is the `Dictionary` type. */
 export const es = {
@@ -70,7 +63,7 @@ export const es = {
     phraseHeroWords: ['FRASE', 'DICHO', 'LETRA', 'CINCO', 'LISTO'],
     phraseHeadline: 'Descubre la frase.\nLetra a letra.',
     phraseLede:
-      'Una frase oculta para hasta 8 personas, en español o inglés. Nada viene dado: cada letra sale de las palabras que escribes. Seis palabras, cinco envíos y el reloj corriendo.',
+      'Una frase oculta para hasta 8 personas, en español o inglés. Nada viene dado: cada letra sale de las palabras que escribes. Cuatro palabras, cinco envíos y el reloj corriendo.',
     phraseFeature1Title: 'Verde si está en la frase',
     phraseFeature1Body:
       'Cada letra de tu palabra que esté en la frase la destapa entera: +2 s por cada aparición. Gris si no está.',
@@ -91,7 +84,7 @@ export const es = {
     gameWordle: 'Palabra',
     gamePhrase: 'Adivina la frase',
     gamePhraseHint:
-      'Sin pista: cada verde ya revela una letra. Seis palabras y cinco envíos por ronda.',
+      'Sin pista: cada verde ya revela una letra. Cuatro palabras y cinco envíos por ronda.',
     initialTime: 'Tiempo inicial por ronda',
     minimumTime: (n: number) => `mínimo ${n} s`,
     rounds: 'Rondas',
@@ -107,6 +100,9 @@ export const es = {
     joining: 'Entrando…',
     nameRequired: 'Escribe tu nombre para continuar.',
     codeRequired: 'Escribe el código de la sala.',
+    /** The kick block, counted down live on the join view. */
+    kickedWait: (n: number) =>
+      `El anfitrión te expulsó de la sala. Podrás volver en ${n} ${n === 1 ? 'segundo' : 'segundos'}.`,
     inviteTitle: 'Te invitaron a jugar',
     inviteSubtitle: 'Escribe tu nombre y entra. Sin cuenta y sin descargas.',
     inviteCodeLabel: 'Código de sala',

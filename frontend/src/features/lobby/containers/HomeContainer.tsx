@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { DEFAULT_WORD_LENGTH, ROOM_LIMITS, type GameKind } from '@/shared/contract';
 import { useT } from '@/shared/i18n';
 import { lobbyPath } from '@/shared/routes/paths';
+import { kickCooldown, useKickCooldown } from '@/shared/stores/useKickCooldown';
 import { toast } from '@/shared/stores/useToastStore';
 import { useUiStore } from '@/shared/stores/useUiStore';
 import { playSound } from '@/shared/lib/sound';
@@ -53,6 +54,8 @@ export const HomeContainer = ({ game, bossMode }: HomeContainerProps) => {
 
   const { createRoom, pending: creating } = useCreateRoom();
   const { joinRoom, pending: joining } = useJoinRoom();
+  // A kick blocks this name in that room for 30 s; the notice counts it down.
+  const kickedSeconds = useKickCooldown(code, values.name);
 
   useEffect(() => {
     setValues((current) => (current.game === game ? current : { ...current, game }));
@@ -101,8 +104,16 @@ export const HomeContainer = ({ game, bossMode }: HomeContainerProps) => {
     }
     setCodeError(null);
     const result = await joinRoom(code, name);
-    if (result.ok) navigate(lobbyPath(result.value.roomCode));
-    else toast.error(result.error.message === 'timeout' ? 'timeout' : result.error.code);
+    if (result.ok) {
+      navigate(lobbyPath(result.value.roomCode));
+      return;
+    }
+    // A kick is not a toast: one notice under the field, counting down.
+    if (result.error.code === 'kicked') {
+      kickCooldown.start(code, name, result.error.retryAfterSeconds ?? ROOM_LIMITS.kickRejoinSeconds);
+      return;
+    }
+    toast.error(result.error.message === 'timeout' ? 'timeout' : result.error.code);
   };
 
   return (
@@ -112,7 +123,9 @@ export const HomeContainer = ({ game, bossMode }: HomeContainerProps) => {
         values={values}
         nameError={nameError}
         pending={creating}
-        onChange={(patch) =>
+        onChange={(patch) => {
+          // Every control but the name field is an option: it clicks.
+          if (Object.keys(patch).some((key) => key !== 'name')) playSound('optionSelect');
           setValues((current) => {
             const next = { ...current, ...patch };
             // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): she only plays the five-letter word
@@ -121,8 +134,8 @@ export const HomeContainer = ({ game, bossMode }: HomeContainerProps) => {
             return next.bossMode
               ? { ...next, game: 'wordle', mode: 'normal', wordLength: DEFAULT_WORD_LENGTH }
               : next;
-          })
-        }
+          });
+        }}
         onSubmit={() => void handleCreate()}
       />
       <JoinRoomForm
@@ -130,6 +143,7 @@ export const HomeContainer = ({ game, bossMode }: HomeContainerProps) => {
         code={code}
         codeError={codeError}
         pending={joining}
+        kickedSeconds={kickedSeconds}
         onCodeChange={(next) => {
           setCode(next);
           if (codeError) setCodeError(null);

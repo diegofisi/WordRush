@@ -73,7 +73,11 @@ export const request = <T>(
         const { ok: _ok, ...value } = response;
         resolve(ok(value as T));
       } else {
-        resolve(fail({ code: response.code, message: response.message }));
+        // Everything but the `ok` flag: some refusals carry more than the code
+        // (`retryAfterSeconds` on a kick), and the caller is the one who knows
+        // what to do with it.
+        const { ok: _ok, ...error } = response;
+        resolve(fail(error));
       }
     });
   });

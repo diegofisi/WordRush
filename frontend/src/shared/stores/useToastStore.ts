@@ -32,9 +32,17 @@ export const useToastStore = create<ToastState & ToastActions>((set) => ({
    * Pushes only. How long a toast stays up belongs to the `Toaster`, which is
    * the only place that knows whether somebody is pointing at it or has tabbed
    * to its close button; a timer started here could not be held.
+   *
+   * The same notice is never stacked on itself: retrying an action that keeps
+   * failing the same way (a kicked player pressing "Unirse" three times) says
+   * it once, not once per press.
    */
   push: (toast) => {
-    set((state) => ({ items: [...state.items, { ...toast, id: nextId++ }].slice(-MAX_VISIBLE) }));
+    set((state) =>
+      state.items.some((item) => item.code === toast.code && item.text === toast.text)
+        ? state
+        : { items: [...state.items, { ...toast, id: nextId++ }].slice(-MAX_VISIBLE) },
+    );
   },
   dismiss: (id) => set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
   reset: () => set({ items: [] }),
