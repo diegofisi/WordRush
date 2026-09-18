@@ -1,0 +1,132 @@
+# CI/CD: every push to master is verified (lint, tests, build, contract in sync) and
+# then deployed to Railway with the CLI. Only the services whose folder changed are
+# deployed: a backend deploy restarts the process and ends every round in progress
+# (rooms live in memory, see docs/context/06-v1.1.md), so it is not done for a
+# frontend-only or docs-only change.
+#
+# Needs the repository secret RAILWAY_TOKEN: a Railway *project token* for the
+# WordRush project, production environment (Project settings -> Tokens).
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      services:
+        description: 'What to deploy (both, backend, frontend)'
+        required: true
+        default: both
+        type: choice
+        options: [both, backend, frontend]
+
+concurrency:
+  group: deploy-master
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 24
+  PNPM_VERSION: 10
+
+jobs:
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/deploy.yml'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/deploy.yml'
+
+  verify:
+    name: Lint, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: |
+            backend/pnpm-lock.yaml
+            frontend/pnpm-lock.yaml
+
+      - name: Contract copies in sync
+        run: node scripts/sync-contract.mjs --check
+
+      - name: Backend
+        working-directory: backend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint:check
+          pnpm test
+          pnpm build
+
+      - name: Frontend
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm test
+          pnpm build
+
+  deploy-backend:
+    name: Deploy backend
+    needs: [changes, verify]
+    if: >-
+      (github.event_name == 'push' && needs.changes.outputs.backend == 'true') ||
+      (github.event_name == 'workflow_dispatch' && contains(fromJSON('["both","backend"]'), inputs.services))
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://wordrush-api.up.railway.app/health
+    steps:
+      - uses: actions/checkout@v4
+      - name: Railway CLI
+        run: npm install -g @railway/cli
+      - name: railway up (backend)
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        # The folder is copied out of the repository so the CLI uploads exactly the
+        # service, with no repository-level context (same as scripts/railway-deploy.mjs).
+        run: |
+          mkdir -p "$RUNNER_TEMP/backend"
+          cp -r backend/. "$RUNNER_TEMP/backend/"
+          cd "$RUNNER_TEMP/backend"
+          railway up --service backend --ci
+
+  deploy-frontend:
+    name: Deploy frontend
+    needs: [changes, verify]
+    if: >-
+      (github.event_name == 'push' && needs.changes.outputs.frontend == 'true') ||
+      (github.event_name == 'workflow_dispatch' && contains(fromJSON('["both","frontend"]'), inputs.services))
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://wordrush.up.railway.app
+    steps:
+      - uses: actions/checkout@v4
+      - name: Railway CLI
+        run: npm install -g @railway/cli
+      - name: railway up (frontend)
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/frontend"
+          cp -r frontend/. "$RUNNER_TEMP/frontend/"
+          cd "$RUNNER_TEMP/frontend"
+          railway up --service frontend --ci

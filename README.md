@@ -62,11 +62,25 @@ The project is live:
 | backend | https://wordrush-api.up.railway.app (health check at `/health`) |
 | frontend | https://wordrush.up.railway.app |
 
-One Railway project (`WordRush`) with **two services**. They were created and are deployed
-with the Railway CLI from a clean export of the last commit, so shipping a change is:
+One Railway project (`WordRush`) with **two services**, deployed by CI/CD.
+
+### Continuous deployment (GitHub Actions)
+`.github/workflows/deploy.yml` runs on every push to `master`:
+
+1. **Verify**: contract copies in sync, then lint, tests and build of both services.
+2. **Deploy** with the Railway CLI, only the services whose folder changed (`backend/**`,
+   `frontend/**`). A docs-only push deploys nothing; a backend deploy restarts the process
+   and ends every round in progress, so it is not triggered by frontend-only changes.
+
+It can also be run by hand from the Actions tab (**Deploy → Run workflow**, choosing
+`both`, `backend` or `frontend`). It needs one repository secret, `RAILWAY_TOKEN`: a
+Railway **project token** for `WordRush` / `production` (Railway → project → Settings →
+Tokens). Rotate it there if it ever leaks; nothing else in the repo holds credentials.
+
+### Manual deploy (fallback)
+The same upload can be done from a machine with the CLI logged in:
 
 ```bash
-git commit -am "..."                              # deploys upload what is committed
 pnpm deploy                                       # both; or pnpm deploy:backend / pnpm deploy:frontend
 railway service status --service backend --json   # SUCCESS when done
 ```
@@ -75,10 +89,7 @@ Requirements: `npm i -g @railway/cli`, `railway login`, and `railway link` once 
 repo root (project `WordRush`, environment `production`). The script
 `scripts/railway-deploy.mjs` exports each folder with `git archive` to a temp dir before
 `railway up`; that is the workaround for the CLI failing with `prefix not found` on
-subfolders of a git repo.
-
-If you prefer automatic deploys on push, connect GitHub to each service in the Railway UI
-and set its Root Directory (`backend` / `frontend`). The manual setup from scratch follows.
+subfolders of a git repo. The manual setup of the services from scratch follows.
 
 ### 1. `backend` service
 - Settings → Source → **Root Directory**: `backend`.
