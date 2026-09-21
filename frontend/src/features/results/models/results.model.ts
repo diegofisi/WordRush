@@ -1,14 +1,10 @@
 import type {
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-  BossSummary,
   GameEndPayload,
   GameKind,
   GameMode,
-  OwnRow,
   RoundBreakdown,
   RoundEndPayload,
   Standing,
-  TeamColor,
   TeamId,
   TeamRoundBreakdown,
   TeamStanding,
@@ -35,23 +31,6 @@ export interface TeamStandingViewModel extends TeamStanding {
   barPercent: number;
 }
 
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-/**
- * A board at round end, letters included (the word is public). Only the fly
- * has one on this screen since 2026-09-17: the humans' boards were a wall of
- * grids nobody read, and the card was only ever interesting for her.
- */
-export interface BoardViewModel {
-  playerId: string;
-  name: string;
-  rows: OwnRow[];
-  solved: boolean;
-  isMe: boolean;
-  /** Team mode: the team's colour. */
-  color: TeamColor | null;
-}
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
-
 export interface RoundResultsViewModel {
   mode: GameMode;
   game: GameKind;
@@ -77,14 +56,6 @@ export interface RoundResultsViewModel {
   myRoundPoints: number;
   myTotal: number;
   isFinal: boolean;
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-  /** True when the team beat the fly, false when she solved; null otherwise. */
-  bossDefeated: boolean | null;
-  /** The flat bonus every surviving human took; 0 when she was not beaten. */
-  bossBonus: number;
-  /** How the fly finished. Null outside boss mode. */
-  boss: BossSummary | null;
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
 }
 
 const byRoundResult = (first: RoundBreakdown, second: RoundBreakdown) => {
@@ -164,10 +135,5 @@ export const toRoundResultsViewModel = (
     myRoundPoints: teamMode ? (myTeamRow?.roundPoints ?? 0) : (myRow?.roundPoints ?? 0),
     myTotal: teamMode ? (myTeamStanding?.total ?? 0) : (myStanding?.total ?? 0),
     isFinal: gameEnd !== null || payload.nextRoundIn === 0 || payload.round >= payload.totalRounds,
-    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-    bossDefeated: payload.bossDefeated ?? null,
-    boss: payload.boss ?? null,
-    bossBonus: Math.max(0, ...rows.map((row) => row.bossBonus ?? 0)),
-    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
   };
 };

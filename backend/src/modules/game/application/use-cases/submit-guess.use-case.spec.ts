@@ -44,11 +44,9 @@ describe('SubmitGuessUseCase', () => {
     events = [];
     bus.subscribe((e) => events.push(e));
 
-    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `guessable`.
     const wordList: IWordList = {
       isAllowed: () => true,
       answers: () => [ANSWER],
-      guessable: () => [ANSWER],
     };
     scheduler = new RoundSchedulerService();
     const startRound = new StartRoundUseCase(

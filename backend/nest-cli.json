@@ -6,9 +6,7 @@
     "deleteOutDir": true,
     "tsConfigPath": "tsconfig.build.json",
     "assets": [
-      { "include": "modules/words/data/*.json", "watchAssets": true },
-      { "include": "modules/boss/data/*.json", "watchAssets": true },
-      { "include": "modules/boss/data/*.gz", "watchAssets": true }
+      { "include": "modules/words/data/*.json", "watchAssets": true }
     ]
   }
 }

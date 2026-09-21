@@ -1,5 +1,4 @@
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `BossAction`.
-import type { BossAction, Emote, ErrorCode, Language, TeamColor, TeamId } from '@/shared/contract';
+import type { Emote, ErrorCode, Language, TeamColor, TeamId } from '@/shared/contract';
 
 /** Spanish is the source dictionary: its shape is the `Dictionary` type. */
 export const es = {
@@ -438,9 +437,6 @@ export const es = {
     yourTeamWins: '¡Tu equipo ganó la partida!',
     teamTie: 'Empate entre los equipos',
     tiebreakTeams: 'Desempate: más rondas ganadas.',
-    boards: 'Los tableros de la ronda',
-    boardSolved: (n: number) => (n === 1 ? 'acertó al 1.º' : `acertó al ${n}.º`),
-    boardAttempts: (n: number) => (n === 1 ? '1 intento' : `${n} intentos`),
   },
   errors: {
     room_not_found: 'Esa sala no existe.',
@@ -494,128 +490,6 @@ export const es = {
     ok: 'OK',
     shh: 'Shhh',
   } satisfies Record<Emote, string>,
-
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-  // The whole optional "challenge the fly" mode lives in this one group, so
-  // removing it is deleting from this banner to the matching one below.
-  boss: {
-    /** The third, secondary option on the home game picker. */
-    homeOption: 'Retar a la mosca (modo antiguo)',
-    homeOptionHint: 'Modo antiguo: 5 letras, sin equipos. 1 a 8 humanos contra una mosca.',
-    toggle: 'Jugad contra la mosca',
-    toggleHint: 'De 1 a 8 humanos, un solo objetivo',
-    on: 'vs la mosca',
-    name: 'La mosca',
-    health: 'Reloj de la mosca',
-    start: (n: number) => `inicio ${n} s`,
-    damage: (n: number) => `equipo −${n} s`,
-    forfeited: (n: number) => `letras +${n} s`,
-    attempt: (n: number, of: number) => `intento ${n} de ${of}`,
-    solvedIt: 'resolvió',
-    down: 'derrotada',
-    hit: (n: number) => `−${n} s a la mosca`,
-    thinking: 'Qué está haciendo',
-    action: {
-      guess: 'juega lo que pide su cerebro',
-    } satisfies Record<BossAction, string>,
-    confidence: (n: number) => `seguridad ${n.toFixed(2)}`,
-    wants: 'Letras que pide su cerebro',
-    open: 'Ver su cerebro',
-    openHint: 'Se abre en otra pestaña',
-    close: 'Ocultar su cerebro',
-    linkLive: 'Conectado a la partida',
-    linkWaiting: 'Esperando la partida',
-    linkHelp:
-      'Esta pestaña mide el cerebro de la mosca mientras juega. Deja abierta la pestaña de la partida y los datos aparecen aquí.',
-    noBrain:
-      'Todavía no ha pensado con el conectoma en esta ronda. Aparece en cuanto tome un turno.',
-    brainTitle: 'Su cerebro mientras decidía',
-    network: 'Red de decisión',
-    networkNote:
-      'La lectura entrenada, dibujada con sus propios pesos. Entra la tasa real de las descendentes, salen las 27 letras. La más brillante es la que más quiere.',
-    params: (params: number, samples: number) =>
-      `${params} parámetros, ajustados sobre ${samples} muestras del conectoma`,
-    excites: 'excita',
-    inhibits: 'inhibe',
-    flyNote: (hz: number) =>
-      `Malla real "Shy fly" (Maf'j Alvarez, CC-BY 3.0), recoloreada como Drosophila. Teclea la palabra que de verdad envía, al ritmo de su población motora: ${hz} Hz.`,
-    stimulus: 'Estímulo · fila anterior',
-    stimulusNote: 'Poisson inyectado en cada canal, en Hz. Es toda la entrada que recibe.',
-    wantsNote:
-      'El juego descarta las palabras incompatibles con sus colores y le enseña 8 al azar. Ella elige entre esas 8 con estas letras. La deducción es del juego; la elección es suya. Medido en 120 rondas a 4 intentos sobre las mismas 8: con el cerebro intacto resolvió 43, con las sinapsis cortadas 41, una moneda 49. Su elección es real (jugó distinto que un cerebro muerto en 119 rondas) y no es mejor que el azar.',
-    cloud: 'Nube de neuronas',
-    mode: {
-      transmitter: 'Modo · neurotransmisor',
-      atlas: 'Modo · atlas',
-      circuit: 'Modo · circuito',
-    },
-    modeNote: {
-      transmitter: () =>
-        'Coloreada por el neurotransmisor real. Mezcla aditiva: las zonas densas brillan más, y eso es lo que hace legible la anatomía.',
-      atlas: () =>
-        'Gris: el atlas sin simular. Verde: excitadoras (acetilcolina y demás). Naranja: inhibidoras (GABA y glutamato). Solo se colorea lo que dispara.',
-      circuit: (synapses: number) =>
-        `64 de las 1.299 células descendentes que lee el readout, en su sitio real dentro del cerebro, y las ${synapses} sinapsis que hay entre ellas en el conectoma. El brillo de cada nodo es su frecuencia medida; una línea se enciende cuando su célula de origen dispara.`,
-    },
-    orbitOn: 'Órbita activa',
-    orbitOff: 'Órbita detenida',
-    stateLive: 'Estado del modelo en vivo',
-    stateHeld: 'Última decisión',
-    stateMean: (mean: string, firing: number) =>
-      `actividad media ${mean} · ${firing} células encendidas`,
-    cloudColour:
-      'Color por neurotransmisor real. Mezcla aditiva: donde hay más neuronas, más brilla, y así se lee la anatomía.',
-    cloudNote: (total: number, fired: number, ms: number) =>
-      `Muestra de ${total} neuronas reales. Dispararon ${fired} en los últimos ${ms} ms biológicos.`,
-    raster: 'Traza de disparos',
-    rasterNote: (rows: number, ms: number) =>
-      `Una fila por célula descendente (${rows}). Un tick por disparo, ${ms} ms biológicos.`,
-    voltage: 'Voltaje de membrana',
-    voltageNote: 'Histograma sobre todo el cerebro. Reposo −52 mV, umbral −45 mV.',
-    populations: 'Tasa por población',
-    populationsNote: 'Disparos por neurona y segundo, por clase anatómica de FlyWire.',
-    balance: 'Excit. / inhib.',
-    balanceUnit: 'corriente entrante, mV',
-    bio: 'Tiempo biológico',
-    live: 'ms bio / ms reales, en vivo',
-    bioUnit: (wall: number) => `ms simulados en ${wall} ms reales`,
-    letters: 'Letra más pedida',
-    lettersUnit: 'la que más quiere su readout',
-    confidenceLabel: 'Confianza',
-    confidenceUnit: 'margen de la decisión',
-    training: 'Cómo se entrenó',
-    trainShape: 'Readout',
-    trainShapeUnit: 'entradas · salidas, una sola matriz',
-    trainSamples: 'Muestras',
-    trainSamplesUnit: 'tableros simulados en el conectoma',
-    trainError: 'Error fuera de muestra',
-    trainErrorUnit: (flat: string) => `contra ${flat} ignorando el cerebro`,
-    trainGain: 'Aporte del cerebro',
-    trainGainUnit: 'mejor que una salida constante',
-    trainTeacher:
-      'Objetivo: las letras que de verdad estaban en la palabra. El maestro es la respuesta, no un solver — nadie le enseñó a imitar a un algoritmo.',
-    trainHint:
-      'La salida 28 es su pista: aprendió en qué tableros vale la pena gastarla. Ningún umbral escrito a mano decide eso. Si la sala no tiene pistas, la pide y las reglas le dicen que no, igual que a un humano.',
-    trainFixed:
-      'Lo único ajustado es este readout. Las 138.639 neuronas y los 2.700.513 sinapsis de antes son anatomía de FlyWire y no se tocaron nunca.',
-    trainWhen: (date: string, lambda: number) =>
-      `Entrenado el ${date} por regresión de cresta, penalización ${lambda} (la mejor fuera de muestra).`,
-    provenance:
-      'Todo lo de arriba está medido sobre el modelo en marcha: la traza son sus tiempos de disparo, el histograma es el voltaje de cada neurona, las tasas son disparos contados. Nada se genera para el dibujo.',
-    simulated: (bio: number, wall: number) => `${bio} ms de cerebro simulados en ${wall} ms`,
-    noScore: 'El jefe no puntúa: su reloj es vida, no tiempo de sobra.',
-    colBoss: 'Jefe',
-    won: 'La mosca resolvió y gana la ronda',
-    beaten: 'La mosca cayó: gana el equipo',
-    words: 'Lo que jugó la mosca',
-    solvedIn: (n: number) =>
-      n === 1 ? 'La mosca acertó al primer intento.' : `La mosca acertó en ${n} intentos.`,
-    fellAfter: (n: number) =>
-      n === 1 ? 'La mosca cayó tras 1 intento.' : `La mosca cayó tras ${n} intentos.`,
-    noScoreNote: 'Juega con tu mismo reloj y puntúa con la misma fórmula.',
-    bonusNote: (n: number) => `+${n} de bono para cada humano que aguantó la ronda.`,
-  },
-  // BOSS-MODE — end.
 };
 
 export type Dictionary = typeof es;

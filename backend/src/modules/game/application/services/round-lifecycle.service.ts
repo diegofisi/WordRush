@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md): BOSS only.
-import { BOSS, SCORING } from '@shared/contract';
+import { SCORING } from '@shared/contract';
 import { RoomEventsBus } from '@shared/events/room-events.bus';
 import { Player } from '@modules/rooms/domain/entities/player.entity';
 import { Room } from '@modules/rooms/domain/entities/room.entity';
@@ -124,34 +123,6 @@ export class RoundLifecycleService {
         secondsLeft: solverRound.secondsLeft(now),
       },
     });
-
-    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-    // The humans are a team: a human solve damages only the fly, and only the
-    // fly damages humans. Same mechanic, different target
-    // (docs/context/08-boss-mode.md). Boss mode is never a team game, so this
-    // replaces the whole branch below rather than interleaving with it.
-    if (room.settings.bossMode === true) {
-      const bossPenalty = solver.isBot
-        ? SCORING.penaltyOnRivalSolveSeconds
-        : BOSS.damageOnHumanSolve;
-      const hits: { playerId: string; secondsLeft: number; at: number }[] = [];
-      for (const rival of room.players) {
-        const round = rival.round;
-        if (rival.id === solver.id || !round || round.solved || round.finished) continue;
-        // Nobody hits their own side.
-        if (rival.isBot === solver.isBot) continue;
-        round.applyPenalty(bossPenalty);
-        hits.push({ playerId: rival.id, secondsLeft: round.secondsLeft(now), at: now });
-      }
-      this.bus.publish({
-        roomCode: room.code,
-        event: 'time:penalty',
-        payload: { fromPlayerId: solver.id, seconds: bossPenalty, clocks: hits },
-      });
-      this.finishTimedOut(room, now);
-      return;
-    }
-    // BOSS-MODE — end.
 
     const penalty = SCORING.penaltyOnRivalSolveSeconds;
     const clocks: { playerId: string; secondsLeft: number; at: number }[] = [];

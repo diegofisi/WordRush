@@ -12,17 +12,10 @@ import { SubmitGuessUseCase } from './application/use-cases/submit-guess.use-cas
 import { SubmitPhraseUseCase } from './application/use-cases/submit-phrase.use-case';
 import { TickRoomsUseCase } from './application/use-cases/tick-rooms.use-case';
 import { UseHintUseCase } from './application/use-cases/use-hint.use-case';
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-import { HintPortAdapter } from './application/services/hint-port.adapter';
-import { HINT_PORT, ROUND_BOOKKEEPING } from './domain/interfaces/round-bookkeeping.interface';
 
 @Module({
   imports: [RoomsModule, WordsModule],
   providers: [
-    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-    HintPortAdapter,
-    { provide: ROUND_BOOKKEEPING, useExisting: RoundLifecycleService },
-    { provide: HINT_PORT, useExisting: HintPortAdapter },
     RoundSchedulerService,
     RoundLifecycleService,
     RoomTickerService,
@@ -36,9 +29,6 @@ import { HINT_PORT, ROUND_BOOKKEEPING } from './domain/interfaces/round-bookkeep
     SettleRoundUseCase,
   ],
   exports: [
-    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-    ROUND_BOOKKEEPING,
-    HINT_PORT,
     StartGameUseCase,
     SubmitGuessUseCase,
     SubmitPhraseUseCase,

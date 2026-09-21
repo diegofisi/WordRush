@@ -3,8 +3,6 @@ import type { ReactNode } from 'react';
 import type { Emote, HintReveal, Language, OwnRow, PhraseSelf, RoundInfo } from '@/shared/contract';
 import type { Dictionary } from '@/shared/i18n';
 
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-import type { BossViewModel } from '@/features/boss/models/boss-view.model';
 import type { PhraseScorePreview } from '../helpers/phraseScorePreview';
 import type { ScorePreview } from '../helpers/scorePreview';
 import type { TeamScorePreview } from '../helpers/teamScorePreview';
@@ -106,9 +104,6 @@ export interface GameViewProps {
   outcome: MyOutcome;
   solvedPosition: number | null;
   rivals: RivalViewModel[];
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-  /** Null unless the room is playing against the fly. */
-  boss: BossViewModel | null;
   /** Derived seconds left per rival at the current tick. */
   rivalClocks: Record<string, number>;
   solvedCount: number;

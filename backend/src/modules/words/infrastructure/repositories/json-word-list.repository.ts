@@ -17,9 +17,6 @@ interface WordData {
 interface LoadedList {
   answers: readonly string[];
   allowed: ReadonlySet<string>;
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-  /** `allowed` as an array, built once; the fly draws her candidates from it. */
-  guessable: readonly string[];
 }
 
 /** One file per language and length; 5 letters keeps the original file name. */
@@ -49,8 +46,6 @@ export class JsonWordListRepository implements IWordList {
     return {
       answers: Object.freeze([...data.answers]),
       allowed,
-      // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-      guessable: Object.freeze([...allowed]),
     };
   }
 
@@ -61,10 +56,5 @@ export class JsonWordListRepository implements IWordList {
 
   answers(language: Language, length: WordLength): readonly string[] {
     return this.lists[language][length].answers;
-  }
-
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-  guessable(language: Language, length: WordLength): readonly string[] {
-    return this.lists[language][length].guessable;
   }
 }

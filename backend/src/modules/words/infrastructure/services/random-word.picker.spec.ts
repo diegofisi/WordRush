@@ -5,8 +5,6 @@ const answers = Array.from({ length: 100 }, (_, i) => `w${String(i).padStart(3, 
 const wordList: IWordList = {
   answers: () => answers,
   isAllowed: () => true,
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `guessable`.
-  guessable: () => answers,
 };
 
 describe('biasedIndex', () => {

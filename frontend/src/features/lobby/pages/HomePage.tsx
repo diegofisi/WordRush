@@ -8,10 +8,6 @@ import { PageLoading } from '@/shared/components/ui/PageState';
 import { useT } from '@/shared/i18n';
 import { lobbyPath } from '@/shared/routes/paths';
 
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-import { BOSS_ENABLED } from '@/features/boss/bossEnabled';
-import { BossHomeOption } from '@/features/boss/components/BossHomeOption';
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
 import { GameSwitch } from '../components/GameSwitch';
 import { Hero } from '../components/Hero';
 import { SessionExpiredNotice } from '../components/SessionExpiredNotice';
@@ -28,19 +24,6 @@ export const HomePage = () => {
   const dismissExpired = useSessionStore((state) => state.dismissExpired);
   // The game is the first choice on the page: picked on the hero, sent with the form.
   const [game, setGame] = useState<GameKind>('wordle');
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-  // Her brain only knows the five-letter word race, so choosing her puts the
-  // switch back on "Palabra" and the room on 5 letters, no teams.
-  const [bossMode, setBossMode] = useState(false);
-  const pickGame = (next: GameKind) => {
-    setGame(next);
-    if (next !== 'wordle') setBossMode(false);
-  };
-  const pickBoss = (next: boolean) => {
-    setBossMode(next);
-    if (next) setGame('wordle');
-  };
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
   const invitedCode = (searchParams.get('code') ?? '').trim().toUpperCase();
 
   // Old invitation links (`/?code=XXXX`) land on the canonical room URL, the
@@ -64,13 +47,7 @@ export const HomePage = () => {
       <TopBar
         bare
         actions={
-          <div className="flex items-center gap-2">
-            <GameSwitch t={t.home} game={game} onChange={pickGame} />
-            {/* BOSS-MODE (temporary; see docs/context/07-boss-removal.md) */}
-            {BOSS_ENABLED ? (
-              <BossHomeOption t={t} active={bossMode} onChange={pickBoss} />
-            ) : null}
-          </div>
+          <GameSwitch t={t.home} game={game} onChange={setGame} />
         }
       />
       {expired ? (
@@ -89,8 +66,7 @@ export const HomePage = () => {
           {activeGame ? (
             <ActiveGameContainer snapshot={activeGame} />
           ) : (
-            // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `bossMode`.
-            <HomeContainer game={game} bossMode={BOSS_ENABLED && bossMode} />
+            <HomeContainer game={game} />
           )}
         </section>
       </main>

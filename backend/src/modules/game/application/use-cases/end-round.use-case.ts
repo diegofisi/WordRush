@@ -1,6 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md): BOSS only.
-import { BOSS, ROOM_LIMITS, type RoundEndPayload, type TeamStanding } from '@shared/contract';
+import { ROOM_LIMITS, type RoundEndPayload, type TeamStanding } from '@shared/contract';
 import { CLOCK, type Clock } from '@shared/domain/clock';
 import { RoomEventsBus } from '@shared/events/room-events.bus';
 import { Room } from '@modules/rooms/domain/entities/room.entity';
@@ -49,15 +48,6 @@ export class EndRoundUseCase {
   execute(room: Room, now: number, options: EndRoundOptions = {}): RoundEndPayload {
     const { initialSeconds, hintEnabled, rounds, mode, game } = room.settings;
     const teamMode = mode === 'teams';
-    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-    // The team wins the round when the fly did not solve it, whether she ran
-    // out of clock or out of attempts (docs/context/08-boss-mode.md). She is
-    // scored by the same formula as everyone (she is on the room's clock) but
-    // never collects the team's bonus and is never charged per attempt.
-    const bot = room.settings.bossMode === true ? room.bot : undefined;
-    const bossDefeated = bot ? bot.round?.solved !== true : null;
-    const teamBonus = bossDefeated === true ? BOSS.defeatedBonus : 0;
-    // BOSS-MODE — end.
     const phrase = room.phrase;
     const phraseGame = game === 'phrase' && phrase !== null;
     // Team mode: points are the team's; the per-player table stays empty.
@@ -98,9 +88,6 @@ export class EndRoundUseCase {
             },
             initialSeconds,
             hintEnabled,
-            // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-            player.isBot ? 0 : teamBonus,
-            !player.isBot,
           );
           player.totalPoints += result.roundPoints;
           player.totalAttempts += result.attempt;
@@ -208,19 +195,6 @@ export class EndRoundUseCase {
       teams,
       teamStandings,
       nextRoundIn: isLast ? 0 : ROOM_LIMITS.betweenRoundsSeconds,
-      // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-      bossDefeated,
-      boss:
-        bot?.round != null
-          ? {
-              solved: bot.round.solved,
-              attempts: bot.round.attempt,
-              defeated: !bot.round.solved,
-              secondsLeft: bot.round.secondsLeft(now),
-              rows: bot.round.rows.map((row) => ({ word: row.word, colors: [...row.colors] })),
-            }
-          : null,
-      // BOSS-MODE — end.
     };
 
     room.lastRoundEnd = payload;

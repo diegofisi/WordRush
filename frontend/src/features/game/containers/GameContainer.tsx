@@ -10,10 +10,6 @@ import { useNow } from '@/shared/hooks/useNow';
 import { useToastSafeBottom } from '@/shared/hooks/useToastSafeBottom';
 import { useT } from '@/shared/i18n';
 import { percentOf, secondsLeftAt } from '@/shared/lib/format';
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-import { useBossBroadcast } from '@/features/boss/hooks/useBossBroadcast';
-import type { BossViewModel } from '@/features/boss/models/boss-view.model';
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
 import { playSound } from '@/shared/lib/sound';
 import { otherTeam } from '@/shared/lib/teamColor';
 import { resultsPath } from '@/shared/routes/paths';
@@ -114,17 +110,10 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     if (status === 'ended') navigate(resultsPath(roomCode), { replace: true });
   }, [status, roomCode, navigate]);
 
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-  const boss = useGameStore((state) => state.boss);
-  const bossFrame = useGameStore((state) => state.bossFrame);
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
-
   const rivals = useMemo(
     () =>
       Object.values(players)
         .filter((player) => player.playerId !== myId)
-        // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): the fly gets her own panel, not a rival card.
-        .filter((player) => player.playerId !== boss?.playerId)
         // Team mode: teammates are not rivals; they get their own panel.
         .filter((player) => !teamMode || roster[player.playerId]?.team !== myTeam)
         .map((player) =>
@@ -156,8 +145,6 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
       round?.maxAttempts,
       teamMode,
       myTeam,
-      // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-      boss?.playerId,
     ],
   );
 
@@ -168,35 +155,6 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     }
     return clocks;
   }, [rivals, now]);
-
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-  // Her clock ticks the way a rival's does; the bar is that against the clock
-  // she started the round with (docs/context/08-boss-mode.md).
-  const bossView = useMemo<BossViewModel | null>(() => {
-    if (!boss) return null;
-    const done = boss.solved || boss.defeated;
-    const left = done ? boss.secondsLeft : secondsLeftAt(boss, now);
-    return {
-      id: boss.playerId,
-      secondsLeft: left,
-      percent: Math.max(0, Math.min(100, percentOf(left, boss.startSeconds))),
-      startSeconds: boss.startSeconds,
-      damageSeconds: boss.damageSeconds,
-      forfeitedSeconds: boss.forfeitedSeconds,
-      attempt: boss.attempt,
-      solved: boss.solved,
-      defeated: boss.defeated,
-      rows: players[boss.playerId]?.rows ?? [],
-      wordLength: round?.wordLength ?? 5,
-      decision: boss.decision,
-      frame: bossFrame,
-    };
-  }, [boss, bossFrame, players, now, round?.wordLength]);
-
-  // The brain tab lives in another tab and has no socket of its own; this is
-  // what feeds it, and what tells the server to stream while it is open.
-  useBossBroadcast(roomCode, bossView);
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
 
   // "Hugo tiene menos de 15 s" is derived from the ticking clocks, once per rival.
   // In team mode the rival clock is the team's; the panel shows it in red.
@@ -548,8 +506,6 @@ export const GameContainer = ({ roomCode }: GameContainerProps) => {
     outcome,
     solvedPosition,
     rivals,
-    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-    boss: bossView,
     rivalClocks,
     solvedCount,
     feed,

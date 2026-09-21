@@ -13,10 +13,6 @@ import { useLeaveRoom } from '../api/leave-room/useLeaveRoom';
 import { useRestartRoom } from '../api/restart-room/useRestartRoom';
 import { BreakdownTable } from '../components/BreakdownTable';
 import { FinalBanner } from '../components/FinalBanner';
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-import { BossRows } from '@/features/boss/components/BossRows';
-import { RoundBoards } from '../components/RoundBoards';
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
 import { RoundHeader } from '../components/RoundHeader';
 import { StandingsList } from '../components/StandingsList';
 import { TeamBreakdownCards } from '../components/TeamBreakdownCards';
@@ -43,7 +39,6 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
   );
   // The typed words' length (the room's), whatever the game: the phrase game
   // has no answer word to measure.
-  const boardWidth = useSessionStore((state) => state.snapshot?.lobby.settings.wordLength ?? 5);
   const { leaveRoom } = useLeaveRoom();
   const { restartRoom, pending: restarting } = useRestartRoom();
 
@@ -124,8 +119,6 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
           />
         ) : null}
         <RoundHeader t={t} results={results} />
-        {/* BOSS-MODE (temporary; see docs/context/07-boss-removal.md) */}
-        {results.boss ? <BossRows t={t} boss={results.boss} /> : null}
         {teamMode ? (
           <TeamBreakdownCards
             t={t}
@@ -138,26 +131,6 @@ export const ResultsContainer = ({ roomCode }: ResultsContainerProps) => {
         {initialSeconds !== null ? (
           <p className="m-0 text-[13px] text-ink-3">{t.results.timeNote(initialSeconds)}</p>
         ) : null}
-        {/* BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-            The board grid is hers alone: a normal room (word race or phrase,
-            solo or teams) renders no boards card at all. */}
-        {results.boss ? (
-          <RoundBoards
-            t={t}
-            wordLength={boardWidth}
-            boards={[
-              {
-                playerId: 'boss',
-                name: t.boss.name,
-                rows: results.boss.rows,
-                solved: results.boss.solved,
-                isMe: false,
-                color: null,
-              },
-            ]}
-          />
-        ) : null}
-        {/* BOSS-MODE — end. */}
       </div>
       <div className="flex min-w-0 flex-col gap-4">
         {teamMode ? (

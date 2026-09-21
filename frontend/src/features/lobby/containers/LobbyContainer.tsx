@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useSessionStore } from '@/core/session/stores/useSessionStore';
 import { PageLoading } from '@/shared/components/ui/PageState';
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `BOSS`.
-import { BOSS, ROOM_LIMITS, type RoomSettings } from '@/shared/contract';
+import { ROOM_LIMITS, type RoomSettings } from '@/shared/contract';
 import { useT } from '@/shared/i18n';
 import { playSound } from '@/shared/lib/sound';
 import { inviteLinkFor, PATHS, pathForStatus } from '@/shared/routes/paths';
@@ -154,8 +153,7 @@ export const LobbyContainer = () => {
           isReady={lobby.me?.ready ?? false}
           readyCount={lobby.readyCount}
           playerCount={lobby.playerCount}
-          // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): boss mode is playable alone.
-          minPlayers={lobby.settings.bossMode === true ? BOSS.minHumans : ROOM_LIMITS.minPlayers}
+          minPlayers={ROOM_LIMITS.minPlayers}
           starting={starting}
           onToggleReady={() => void toggleReady()}
           onStart={() => void start()}

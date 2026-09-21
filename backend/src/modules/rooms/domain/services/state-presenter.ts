@@ -1,6 +1,5 @@
 import { attemptsFor, PHRASE_RULES } from '@shared/contract';
 import type {
-  BossState,
   FullState,
   PlayerProgress,
   RoundEndPayload,
@@ -135,34 +134,6 @@ function observerSelf(room: Room, now: number): SelfState {
   };
 }
 
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-/**
- * The fly's clock presented as health: where it started and what the team has
- * taken off it. Null when the room is not in boss mode
- * (docs/context/08-boss-mode.md).
- */
-export function toBossState(room: Room, now: number): BossState | null {
-  if (room.settings.bossMode !== true) return null;
-  const bot = room.bot;
-  const round = bot?.round;
-  if (!bot || !round) return null;
-  return {
-    playerId: bot.id,
-    startSeconds: room.settings.initialSeconds,
-    damageSeconds: round.penaltySeconds,
-    secondsLeft: round.secondsLeft(now),
-    at: now,
-    attempt: round.attempt,
-    solved: round.solved,
-    defeated: round.finished && !round.solved,
-    // She earns time from letters like anybody else, so nothing is forfeited.
-    forfeitedSeconds: 0,
-    // Her last decision arrives on its own event; a fresh snapshot starts blank.
-    decision: null,
-  };
-}
-// BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
-
 export function toRoundState(room: Room, player: Player, now: number): RoundState {
   const teammates =
     player.team === null || player.isObserver
@@ -188,8 +159,6 @@ export function toRoundState(room: Room, player: Player, now: number): RoundStat
     role: player.role,
     me: player.isObserver ? observerSelf(room, now) : toSelfState(player, now, room.phrase),
     players: room.players.map((p) => toPlayerProgress(p, now, room.phrase)),
-    // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-    boss: toBossState(room, now),
     teams: room.teams.map((team) => toTeamRoundState(team, now, room.phrase)),
     myTeam: player.isObserver ? null : player.team,
     teammates,

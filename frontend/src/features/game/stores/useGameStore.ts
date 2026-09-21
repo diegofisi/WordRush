@@ -7,9 +7,6 @@ import { playSound, playTileReveal } from '@/shared/lib/sound';
 import {
   PHRASE_RULES,
   ROOM_LIMITS,
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-  type BossFrame,
-  type BossState,
   type FullState,
   type GuessAck,
   type HintAck,
@@ -57,12 +54,6 @@ interface Announced {
 interface GameState {
   status: GameStatus;
   round: RoundInfo | null;
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-  /** The fly's clock as health; null outside boss mode. */
-  boss: BossState | null;
-  /** The most recent live slice of her brain, while somebody is watching. */
-  bossFrame: BossFrame | null;
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
   /** Seated or observing this round. */
   role: Role;
   settings: RoomSettings | null;
@@ -174,9 +165,6 @@ const teamsOf = (teams: TeamRoundState[]): Partial<Record<TeamId, TeamRoundState
 const initialState: GameState = {
   status: 'idle',
   round: null,
-  // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-  boss: null,
-  bossFrame: null,
   role: 'player',
   settings: null,
   roster: {},
@@ -229,9 +217,6 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
     set({
       status,
       round: roundInfoOf(round),
-      // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-      boss: round.boss ?? null,
-      bossFrame: null,
       role: round.role,
       me: round.me,
       mySolvedPosition:
@@ -275,9 +260,6 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
         teams: {},
         myTeam: null,
         teammates: {},
-        // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-        boss: null,
-        bossFrame: null,
       });
     }
   };
@@ -286,18 +268,6 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
     const { myId, announced, left } = get();
     set((state) => ({
       players: { ...state.players, [progress.playerId]: progress },
-      // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-      boss:
-        state.boss && state.boss.playerId === progress.playerId
-          ? {
-              ...state.boss,
-              secondsLeft: progress.secondsLeft,
-              at: progress.at,
-              attempt: progress.attempt,
-              solved: progress.solved,
-              defeated: progress.finished && !progress.solved,
-            }
-          : state.boss,
     }));
 
     if (progress.playerId === myId) {
@@ -433,11 +403,6 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
         if (payload.playerId !== get().myId) playSound('rivalSolved');
         set((state) => ({
           solvedCount: Math.max(state.solvedCount, payload.position),
-          // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-          boss:
-            state.boss && state.boss.playerId === payload.playerId
-              ? { ...state.boss, solved: true, secondsLeft: payload.secondsLeft, at: Date.now() }
-              : state.boss,
         }));
         pushFeed({
           kind: get().round?.game === 'phrase' ? 'phrase-completed' : 'solved',
@@ -445,34 +410,6 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
           position: payload.position,
         });
       });
-      // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — start.
-      socket.on('boss:frame', (frame) => set({ bossFrame: frame }));
-      socket.on('boss:decision', (payload) => {
-        set((state) =>
-          state.boss && state.boss.playerId === payload.playerId
-            ? {
-                boss: {
-                  ...state.boss,
-                  attempt: payload.attempt,
-                  decision: {
-                    action: payload.action,
-                    confidence: payload.confidence,
-                    hintWant: payload.hintWant,
-                    hintSpent: payload.hintSpent,
-                    attempt: payload.attempt,
-                    letters: payload.letters,
-                    brain: payload.brain,
-                    biologicalMs: payload.biologicalMs,
-                    wallMs: payload.wallMs,
-                    telemetry: payload.telemetry,
-                    typing: payload.typing,
-                  },
-                },
-              }
-            : {},
-        );
-      });
-      // BOSS-MODE (temporary; see docs/context/07-boss-removal.md) — end.
       // Phrase game: a hit already arrived as `player:solved`; only the misses are news.
       socket.on('phrase:attempt', (payload) => {
         if (!payload.correct) pushFeed({ kind: 'phrase-missed', playerId: payload.playerId });
@@ -484,8 +421,6 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
         if (payload.clocks.some((clock) => clock.playerId === myId)) playSound('penalty');
         set((state) => {
           const players = { ...state.players };
-          // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-          let boss = state.boss;
           let me = state.me;
           for (const clock of payload.clocks) {
             const current = players[clock.playerId];
@@ -494,15 +429,6 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
                 ...current,
                 secondsLeft: clock.secondsLeft,
                 at: clock.at,
-              };
-            }
-            // BOSS-MODE (temporary; see docs/context/07-boss-removal.md)
-            if (boss && boss.playerId === clock.playerId) {
-              boss = {
-                ...boss,
-                secondsLeft: clock.secondsLeft,
-                at: clock.at,
-                damageSeconds: boss.damageSeconds + payload.seconds,
               };
             }
             if (clock.playerId === myId && me) {
@@ -514,8 +440,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => {
               };
             }
           }
-          // BOSS-MODE (temporary; see docs/context/07-boss-removal.md): `boss` in the returned slice.
-          return { players, me, boss };
+          return { players, me };
         });
       });
       // Every sticker, mine included, is a message in the feed. The phone has no
