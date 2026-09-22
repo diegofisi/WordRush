@@ -1,0 +1,9 @@
+# Every text file is stored and checked out with LF, whatever the contributor's
+# platform or `core.autocrlf` setting. Without this a Windows checkout rewrites
+# the tree as CRLF and `prettier/prettier` then fails on every line of every
+# file — around 5000 errors across 91 files, none of them real.
+* text=auto eol=lf
+
+# Assets are bytes; normalising them would corrupt them.
+*.png binary
+*.webp binary
